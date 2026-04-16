@@ -92,46 +92,14 @@ A proposta é transformar dados financeiros em informações úteis, tornando a 
 
 ---
 
-#  Tecnologias (Sugestão)
+#  Tecnologias 
 
 ## Frontend
 
-* React.js
-* HTML
-* CSS
-* JavaScript
+*php
 
-## Backend
 
-* Node.js
-* Express
 
-## Banco de Dados
-
-* MongoDB
-
----
-
-#  Estrutura do Projeto (Exemplo)
-
-```
-meta-cash
- ┣ backend
- ┃ ┣ src
- ┃ ┃ ┣ controllers
- ┃ ┃ ┣ models
- ┃ ┃ ┣ routes
- ┃ ┃ ┗ config
- ┃ ┗ server.js
- ┣ frontend
- ┃ ┣ src
- ┃ ┃ ┣ pages
- ┃ ┃ ┣ components
- ┃ ┃ ┗ services
- ┗ README.md
-```
-
----
 
 #  Como Executar o Projeto
 

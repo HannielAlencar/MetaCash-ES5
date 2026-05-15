@@ -1,4 +1,10 @@
 <?php
+<<<<<<< Updated upstream
+=======
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+>>>>>>> Stashed changes
 include '../../../config.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

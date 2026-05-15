@@ -1,5 +1,8 @@
 <<?php include '../config.php';?>
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>

@@ -1,19 +1,43 @@
 <?php
+<<<<<<< Updated upstream
 include 'logica_dados.php';
 include '../../../config.php';
 
+=======
+// 1. Inicia a sessão (essencial para saber quem está logado)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+include 'logica_dados.php';
+include '../../../config.php';
+
+// Redireciona se não estiver logado
+if (!isset($_SESSION['id_usuario'])) {
+    header("Location: ../../Login.php/index.php");
+    exit();
+}
+
+$id_empresa = $_SESSION['id_empresa'];
+
+>>>>>>> Stashed changes
 $transacoes = [];
 $receita = 0;
 $despesa = 0;
 
 try {
+<<<<<<< Updated upstream
     // Busca os dados juntando a tabela de transacoes e categoria
     // Usamos 'AS' para que as variáveis fiquem com os mesmos nomes que o seu HTML já usa
+=======
+    
+>>>>>>> Stashed changes
     $sql = "SELECT 
                 t.descricao_transacao AS titulo, 
                 t.valor_transacao AS valor, 
                 t.tipo_transacao AS tipo, 
                 c.nome_categoria AS cat,
+<<<<<<< Updated upstream
                 DATE_FORMAT(t.data_transacao, '%d/%m/%Y') AS data
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
@@ -23,6 +47,20 @@ try {
     $transacoes = $stmt->fetchAll();
 
     // Lógica de cálculo baseada no ENUM do seu banco
+=======
+                c.id_categoria,
+                DATE_FORMAT(t.data_transacao, '%d/%m/%Y') AS data
+            FROM transacoes t
+            LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
+            WHERE t.id_empresa = :empresa
+            ORDER BY t.data_transacao DESC";
+            
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':empresa' => $id_empresa]);
+    $transacoes = $stmt->fetchAll();
+
+    // Lógica de cálculo baseada no ENUM do banco
+>>>>>>> Stashed changes
     foreach ($transacoes as $tr) {
         if ($tr['tipo'] === 'Receita') {
             $receita += (float)$tr['valor'];
@@ -31,7 +69,10 @@ try {
         }
     }
 } catch (PDOException $e) {
+<<<<<<< Updated upstream
     // Se der erro de conexão, o array fica vazio e a página não quebra
+=======
+>>>>>>> Stashed changes
     error_log("Erro ao buscar transações: " . $e->getMessage());
 }
 
@@ -102,9 +143,88 @@ if (!function_exists('formatarMoeda')) {
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     <input type="text" id="inputBusca" placeholder="Buscar transações..." class="w-full pl-12 pr-4 py-3 rounded-xl outline-none bg-gray-50 focus:bg-white border border-transparent focus:border-teal-500 transition">
                 </div>
+<<<<<<< Updated upstream
                 <div class="relative w-full md:w-auto">
                     <select id="filtroCategoria" class="w-full md:w-56 pl-10 pr-8 py-3 rounded-xl appearance-none border border-gray-200 bg-white cursor-pointer focus:ring-2 focus:ring-teal-500 outline-none">
                         <option value="todas">Todas Categorias</option>
+=======
+
+                <div class="mt-8 flex flex-col md:flex-row gap-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm items-center">
+                    <div class="relative flex-1 w-full">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="inputBusca" placeholder="Buscar transações..." class="w-full pl-12 pr-4 py-3 rounded-xl border-none bg-gray-50 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                    </div>
+                    <div class="relative w-full md:w-auto">
+                        <select id="filtroCategoria" class="w-full md:w-48 pl-10 pr-8 py-3 rounded-xl border-none bg-gray-50 appearance-none outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer">
+                            <option value="todas">Todas Categorias</option>
+                            <option value="Vendas">Vendas</option>
+                            <option value="Administrativo">Administrativo</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Salários">Salários</option>
+                            <option value="Geral">Geral</option>
+                        </select>
+                        <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    </div>
+                </div>
+            </header>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div id="containerTransacoes" class="divide-y divide-gray-50">
+
+                    <?php 
+                    $transacoes_lista = array_reverse((array)$transacoes, true);
+                    foreach ($transacoes_lista as $id => $tr): 
+                        // Agora ele compara corretamente usando a palavra 'Receita'
+                        $isEntrada = ($tr['tipo'] === 'Receita');
+                    ?>
+                    <div class="item-transacao flex justify-between items-center p-6 hover:bg-gray-50 transition group" 
+                         data-titulo="<?= strtolower($tr['titulo']) ?>" 
+                         data-categoria="<?= $tr['id_categoria'] ?>">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <i class="fas <?= $isEntrada ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-red-400' ?>"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800"><?= htmlspecialchars($tr['titulo']) ?></p>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">
+                                    <?= htmlspecialchars($tr['cat'] ?? 'Geral') ?> • <?= $tr['data'] ?>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="font-bold text-lg <?= $isEntrada ? 'text-[#2dd4bf]' : 'text-red-400' ?>">
+                            <?= ($isEntrada ? '+' : '-') . ' ' . formatarMoeda($tr['valor']) ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+
+                </div>
+                <div id="msgVazio" class="hidden p-20 text-center text-slate-400">
+                    <i class="fas fa-search fa-3x mb-4 block opacity-20"></i>
+                    Nenhum resultado encontrado.
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL NOVA TRANSAÇÃO -->
+    <div id="modalTransacao" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
+         <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <h3 class="text-xl font-bold mb-4 text-slate-800 border-b pb-4">Nova Transação</h3>
+            <form action="../Transacoes.php/salvar_transacao.php" method="POST" class="space-y-4">
+                <input type="hidden" name="origem" value="transacoes">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Título</label>
+                    <input type="text" name="titulo" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Valor (R$)</label>
+                    <input type="number" step="0.01" name="valor" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Categoria</label>
+                    <select name="cat" class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <option value="Geral">Geral</option>
+>>>>>>> Stashed changes
                         <option value="Vendas">Vendas</option>
                         <option value="Administrativo">Administrativo</option>
                         <option value="Marketing">Marketing</option>
@@ -184,8 +304,16 @@ if (!function_exists('formatarMoeda')) {
                     <input type="text" name="titulo" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500">
                 </div>
                 <div>
+<<<<<<< Updated upstream
                     <label class="text-xs font-bold text-slate-500 uppercase">Valor (R$)</label>
                     <input type="number" step="0.01" name="valor" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500">
+=======
+                    <label class="text-xs font-bold text-slate-500 uppercase">Tipo</label>
+                    <select name="tipo" class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <option value="e">Receita (+)</option>
+                        <option value="s">Despesa (-)</option>
+                    </select>
+>>>>>>> Stashed changes
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>

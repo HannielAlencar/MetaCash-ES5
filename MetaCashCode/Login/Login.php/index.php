@@ -19,6 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['id_usuario'] = $usuario['id_usuario'];
             $_SESSION['id_empresa'] = $usuario['id_empresa'];
             $_SESSION['nome_usuario'] = $usuario['nome_completo'];
+<<<<<<< Updated upstream
+=======
+            $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
+>>>>>>> Stashed changes
 
             // 5. Redireciona para o Dashboard ou Transações
             header("Location: ../../Usuario/Dashboard/index.php");

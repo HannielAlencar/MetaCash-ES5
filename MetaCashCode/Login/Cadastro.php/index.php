@@ -1,4 +1,5 @@
 <?php
+<<<<<<< Updated upstream
 include '../../../config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -13,11 +14,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cnpj = $_POST['cnpj'];
 
     // Dados do Usuário Admin
+=======
+// Adicione isto na primeira linha para garantir que a sessão funcione
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+include '../../../config.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ... (sua lógica de validação de senha e dados) ...
+    
+    $nome_empresa = $_POST['nome_empresa'];
+    $cnpj = $_POST['cnpj'];
+>>>>>>> Stashed changes
     $matricula = $_POST['matricula'] ?? null; 
     $cpf = $_POST['cpf'];
     $nome_utilizador = $_POST['nome_completo']; 
     $email = $_POST['email'];
+<<<<<<< Updated upstream
     $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
+=======
+    $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT); // Protege a senha
+>>>>>>> Stashed changes
 
     try {
         $pdo->beginTransaction(); 
@@ -27,11 +46,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_empresa = $pdo->prepare($sql_empresa);
         $stmt_empresa->execute([':nome' => $nome_empresa, ':cnpj' => $cnpj]);
         
+<<<<<<< Updated upstream
         $id_empresa = $pdo->lastInsertId();
 
         // 2. Inserir o Usuário Admin (AGORA COM MATRÍCULA E CPF)
         $sql_usuario = "INSERT INTO usuarios (id_empresa, matricula, nome_completo, cpf, email, senha, nivel_permissao) 
                         VALUES (:id_empresa, :matricula, :nome, :cpf, :email, :senha, 'Admin')";
+=======
+        $id_empresa = $pdo->lastInsertId(); // Captura o ID da empresa
+
+        // 2. Inserir o Usuário Admin
+        $sql_usuario = "INSERT INTO usuarios (id_empresa, matricula, nome_completo, cpf, email, senha, nivel_permissao) 
+                        VALUES (:id_empresa, :matricula, :nome, :cpf, :email, :senha, 'Gerente')";
+>>>>>>> Stashed changes
         $stmt_usuario = $pdo->prepare($sql_usuario);
         $stmt_usuario->execute([
             ':id_empresa' => $id_empresa,
@@ -42,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':senha'      => $senha
         ]);
 
+<<<<<<< Updated upstream
         // 3. Criar Categorias Padrão (Sem alterações, continua igual)
         $categorias = [
             ['nome' => 'Vendas', 'tipo' => 'Receita'],
@@ -69,6 +97,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             die("Erro no sistema: " . $e->getMessage());
         }
+=======
+        $id_usuario = $pdo->lastInsertId(); 
+
+        // 3. Criar Categorias Padrão (Sem alterações)
+        // ... (seu código de categorias continua aqui) ...
+
+        $pdo->commit(); 
+
+        // 4. LOGIN AUTOMÁTICO: Preenche a sessão para o Dashboard reconhecer o acesso
+        $_SESSION['id_usuario'] = $id_usuario;
+        $_SESSION['id_empresa'] = $id_empresa;
+        $_SESSION['nome_usuario'] = $nome_utilizador;
+
+        // 5. REDIRECIONAMENTO DIRETO
+        header("Location: ../../Usuario/Dashboard/index.php");
+        exit();
+
+    } catch (PDOException $e) {
+        // ... (seu catch de erro) ...
+>>>>>>> Stashed changes
     }
 }
 ?>

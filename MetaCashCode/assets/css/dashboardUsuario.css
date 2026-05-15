@@ -1,0 +1,58 @@
+/* Personalizações de Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Efeitos de Glassmorphism para os cards de saldo */
+.balance-card {
+    background-image: radial-gradient(at top left, #1e293b, #0f172a);
+}
+
+/* Transições suaves para links da sidebar */
+.nav-link {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ajustes para impressão */
+@media print {
+    aside, button {
+        display: none !important;
+    }
+    main {
+        padding: 0;
+    }
+}
+
+/* Garante que o body e o html ocupem toda a altura */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* Força a sidebar a ter no mínimo a altura da tela (viewport height) */
+aside {
+    min-height: 100vh;
+    height: 100%;
+    position: sticky;
+    top: 0;
+}
+
+/* Ajuste opcional: se o conteúdo da direita for muito longo, 
+   a sidebar continuará visível ao rolar a página */
+.sidebar-container {
+    display: flex;
+    flex-direction: column;
+}

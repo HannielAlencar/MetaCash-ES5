@@ -1,5 +1,5 @@
 <?php session_start(); 
-include '../../../config.php';
+require_once __DIR__ . '/../config.php';
 $erro = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['nome_usuario'] = $usuario['nome_completo'];
             $_SESSION['matricula'] = $usuario['matricula'];
 
-            header("Location: ../../Usuario/Dashboard/index.php");
+            header("Location: ../app/dashboardUsuario.php");
             exit();
             
         } else {
@@ -43,13 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="login.css/style.css">
+    <link rel="stylesheet" href="../assets/css/login.css">
 </head>
 <body>
 
     <div class="header-logo">
         <div class="icon">
-            <img src="img/logo.png" alt="Logo MetaCash">
+            <img src="../assets/img/logo.png" alt="Logo MetaCash">
         </div> 
         <h1>MetaCash</h1>
         <p>Gestão Financeira Empresarial</p>

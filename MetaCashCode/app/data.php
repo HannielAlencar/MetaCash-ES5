@@ -1,6 +1,6 @@
 <?php
 
-require_once '../../../config.php';
+require_once __DIR__ . '/../config.php';
 // 1. SEGURANÇA E CONEXÃO
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -13,7 +13,7 @@ if (!isset($_SESSION['id_empresa'])) {
     $id_empresa = $_SESSION['id_empresa'];
 }
 
-// 2. BUSCA TOTAIS DO BANCO DE DADOS (MySQL)
+// BUSCA TOTAIS DO BANCO DE DADOS (MySQL)
 $total_receitas = 0;
 $total_despesas = 0;
 $saldo_total = 0;
@@ -35,7 +35,7 @@ try {
     error_log("Erro ao buscar totais no data.php: " . $e->getMessage());
 }
 
-// 3. LÓGICA PARA O GRÁFICO DE LINHA (Simplificado para o momento atual)
+// LÓGICA PARA O GRÁFICO DE LINHA (Simplificado para o momento atual)
 $labels_meses = [date('M')]; // Mostra o mês atual (ex: 'May')
 $dados_receitas = [$total_receitas]; 
 $dados_despesas = [$total_despesas]; 

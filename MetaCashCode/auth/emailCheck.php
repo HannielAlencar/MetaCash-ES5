@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-mail Enviado - MetaCash</title>
-    <link rel="stylesheet" href="EmailCheck.css/style.css">
+    <link rel="stylesheet" href="../assets/css/emailCheck.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>

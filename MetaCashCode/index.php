@@ -1,9 +1,10 @@
 <?php 
-include('../MetaCash-ES5/MetaCashCode/app/data.php'); 
+$dataPath = __DIR__ . '\app\data.php';
 // 1. Verificação de segurança e inclusão de dados
-if (!file_exists('data.php')) {
-    die("Erro: O arquivo data.php não foi encontrado no diretório: " . getcwd());
+if (!file_exists($dataPath)) {
+    die("Erro: O arquivo data.php não foi encontrado no diretório: " . $dataPath);
 }
+require_once $dataPath;
 
 ?>
 <!DOCTYPE html>
@@ -13,19 +14,19 @@ if (!file_exists('data.php')) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $config['nome_app'] ?? 'MetaCash'; ?> - Gestão Financeira</title>
     
-    <link rel="stylesheet" href="../HomePB/HomePB.css/style.css">
+    <link rel="stylesheet" href="assets/css/homePB.css">
 </head>
 <body>
 
     <nav class="navbar">
         <a href="index.php" class="nav-logo">
-            <img src="img/logo.png" alt="Logo">
+            <img src="assets/img/logo.png" alt="Logo">
             <span><?php echo $config['nome_app'] ?? 'MetaCash'; ?></span>
         </a>
         <div class="nav-links">
             <!-- CORREÇÃO: Simplificação de caminhos. Removido o ".php" do nome das pastas -->
-            <a href="../..//Login/Login.php/index.php" class="btn-login">Entrar</a>
-            <a href="../../Login/Cadastro.php/index.php" class="btn-cadastro">Cadastro</a>
+            <a href="auth/login.php" class="btn-login">Entrar</a>
+            <a href="auth/cadastro.php" class="btn-cadastro">Cadastro</a>
         </div>
     </nav>
 
@@ -35,7 +36,7 @@ if (!file_exists('data.php')) {
         <p>MetaCash é a plataforma que se adapta ao seu negócio. Customize cores, layouts e crie a ferramenta perfeita.</p>
         
         <!-- CORREÇÃO: Ajuste de link (removido o .php da pasta) -->
-        <a href="../../Login/Cadastro.php/index.php" class="btn-main">
+        <a href="auth/cadastro.php" class="btn-main">
             <span>Experimentar</span> <span>+</span>
         </a>
 
@@ -95,8 +96,8 @@ if (!file_exists('data.php')) {
             <p><?php echo $cta_data['subtitulo'] ?? ''; ?></p>
             <div class="cta-btns">
             
-                <a href="../../Login/Cadastro.php/index.php" class="btn-white">Cadastrar-se Agora →</a>
-                <a href="../../Login/Login.php/index.php" class="btn-outline">Fazer Login</a>
+                <a href="auth/cadastro.php" class="btn-white">Cadastrar-se Agora →</a>
+                <a href="auth/login.php" class="btn-outline">Fazer Login</a>
             </div>
         </div>
     </section>

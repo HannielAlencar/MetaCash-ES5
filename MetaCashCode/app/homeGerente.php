@@ -6,13 +6,13 @@
     <title>MetaCash - Gestão Financeira</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="HomeG.css/style.css">
+    <link rel="stylesheet" href="../assets/css/homeGerente.css">
 </head>
 <body>
 
     <main class="container">
         <div class="logo-container">
-            <img src="../HomeGerente.php/img/logo.png" alt="MetaCash Logo" class="logo-img">
+            <img src="../assets/img/logo.png" alt="MetaCash Logo" class="logo-img">
             
             </div>
 

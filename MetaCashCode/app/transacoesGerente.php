@@ -5,6 +5,7 @@
     <title>MetaCash - Gestão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/transacoesGerente.css">
     <style>
         .text-teal { color: #2dd4bf; }
         .text-red { color: #f87171; }

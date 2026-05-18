@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetaCash - Login de Gerente</title>
-    <link rel="stylesheet" href="Gerente.css/style.css">
+    <link rel="stylesheet" href="../assets/css/loginGerente.css">
 </head>
 <body>
     <div class="main-container">
         <header class="header-section">
-            <img src="img/logo.png" alt="MetaCash Logo" class="logo">
+            <img src="../assets/img/logo.png" alt="MetaCash Logo" class="logo">
             <h1>MetaCash</h1>
             <p>Gestão Financeira Empresarial</p>
         </header>

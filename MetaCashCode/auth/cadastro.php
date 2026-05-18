@@ -1,5 +1,5 @@
 <?php
-include '../../../config.php';
+require_once __DIR__ . '/../config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verifica se as senhas batem antes de fazer qualquer coisa
@@ -42,20 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':senha'      => $senha
         ]);
 
-        // Criar Categorias Padrão (Sem alterações, continua igual)
-        $categorias = [
-            ['nome' => 'Vendas', 'tipo' => 'Receita'],
-            ['nome' => 'Salários', 'tipo' => 'Despesa'],
-            ['nome' => 'Marketing', 'tipo' => 'Despesa'],
-            ['nome' => 'Geral', 'tipo' => 'Despesa']
-        ];
-
-        $sql_cat = "INSERT INTO categoria (id_empresa, nome_categoria, tipo_categoria) VALUES (:id, :nome, :tipo)";
-        $stmt_cat = $pdo->prepare($sql_cat);
-        foreach ($categorias as $cat) {
-            $stmt_cat->execute([':id' => $id_empresa, ':nome' => $cat['nome'], ':tipo' => $cat['tipo']]);
-        }
-
         $pdo->commit(); 
         header("Location: ../Login.php/index.php?sucesso=1");
         exit();
@@ -79,14 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetaCash - Criar Conta</title>
-    <link rel="stylesheet" href="cadastro.css/style.css">
+    <link rel="stylesheet" href="../assets/css/cadastro.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="container">
     <header class="logo-header">
-        <img src="img/logo.png" alt="MetaCash Logo" class="icon-main">
+        <img src="../assets/img/logo.png" alt="MetaCash Logo" class="icon-main">
         <h1>MetaCash</h1>
         <p>Cadastre sua empresa</p>
     </header>

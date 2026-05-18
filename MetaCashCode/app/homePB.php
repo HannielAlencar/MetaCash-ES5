@@ -14,13 +14,13 @@ include('data.php');
     <title><?php echo $config['nome_app'] ?? 'MetaCash'; ?> - Gestão Financeira</title>
     
     <!-- CORREÇÃO: Removido o ".css" do nome da pasta, seguindo o padrão web -->
-    <link rel="stylesheet" href="../HomePB/HomePB.css/style.css">
+    <link rel="stylesheet" href="../assets/css/homePB.css">
 </head>
 <body>
 
     <nav class="navbar">
         <a href="index.php" class="nav-logo">
-            <img src="img/logo.png" alt="Logo">
+            <img src="../assets/img/logo.png" alt="Logo">
             <span><?php echo $config['nome_app'] ?? 'MetaCash'; ?></span>
         </a>
         <div class="nav-links">

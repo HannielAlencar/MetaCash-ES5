@@ -6,15 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função de Filtragem
     const filtrar = () => {
-        const termo = inputBusca.value.toLowerCase();
-        const categoria = filtroCategoria.value;
+        const termo = (inputBusca.value || '').toLowerCase();
+        const categoria = (filtroCategoria.value || '').toLowerCase().trim();
         let encontrados = 0;
 
         itens.forEach(item => {
-            const titulo = item.getAttribute('data-titulo');
-            const catItem = item.getAttribute('data-categoria');
+            const titulo = (item.getAttribute('data-titulo') || '').toLowerCase();
+            const catItem = (item.getAttribute('data-categoria') || '').toLowerCase().trim();
 
             const bateTexto = titulo.includes(termo);
+            // Comparação case-insensitive e sem espaços extras para categorias
             const bateCategoria = (categoria === 'todas' || catItem === categoria);
 
             if (bateTexto && bateCategoria) {
@@ -34,11 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Controle do Modal
-function toggleModal() {
-    const modal = document.getElementById('modalTransacao');
-    if (modal.classList.contains('hidden')) {
-        modal.classList.replace('hidden', 'flex');
-    } else {
-        modal.classList.replace('flex', 'hidden');
-    }
+function toggleModal(modalId = 'modalTransacao') {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.toggle('hidden');
+    modal.classList.toggle('flex');
 }

@@ -14,7 +14,7 @@
         <!-- LOGO ATUALIZADA -->
         <div class="flex items-center gap-3 mb-10 px-2">
             <div class="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
-                <img src="/MetaCashCode/Usuario/Dashboard/img/logoCyano.png" alt="MetaCash Logo" class="w-full h-full object-contain" onerror="this.src='https://via.placeholder.com/40?text=MC'">
+                <img src="../assets/img/logoCyano.png" alt="MetaCash Logo" class="w-full h-full object-contain" onerror="this.src='https://via.placeholder.com/40?text=MC'">
             </div>
             <div class="flex flex-col">
                 <span class="font-bold text-xl leading-tight">MetaCash</span>
@@ -42,7 +42,7 @@
                     <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
                 </div>
             </a>
-            <a href="../logout.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
+            <a href="../auth/logout.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
                 <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400"></i>
                 <span class="font-medium">Sair</span>
             </a>

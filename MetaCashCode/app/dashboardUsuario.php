@@ -3,10 +3,10 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-include '../../../config.php'; 
+require_once __DIR__ . '/../config.php'; 
 
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: ../../Login.php/index.php");
+    header("Location: ../auth/login.php");
     exit();
 }
 
@@ -40,11 +40,11 @@ try {
                 t.valor_transacao AS valor, 
                 t.tipo_transacao AS tipo, 
                 c.nome_categoria AS cat,
-                DATE_FORMAT(t.data_transacao, '%d/%m/%Y') AS data
+                DATE_FORMAT(t.data_registro, '%d/%m/%Y') AS data
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
             WHERE t.id_empresa = :empresa
-            ORDER BY t.data_transacao DESC
+            ORDER BY t.data_registro DESC, t.id_transacao DESC
             LIMIT 5"; 
             
     $stmt_recentes = $pdo->prepare($sql_recentes);
@@ -78,7 +78,7 @@ $dados_receitas = [];
 $dados_despesas = [];
 $dados_lucro = [];
 
-// 5.1. Inicializa os últimos 6 meses com zero (para o gráfico ter sempre uma linha desenhada, mesmo sem dados)
+// Inicializa os últimos 6 meses com zero (para o gráfico ter sempre uma linha desenhada, mesmo sem dados)
 for ($i = 5; $i >= 0; $i--) {
     $mes_num = (int)date('n', strtotime("-$i months"));
     $ano_num = date('Y', strtotime("-$i months"));
@@ -94,19 +94,19 @@ for ($i = 5; $i >= 0; $i--) {
 try {
     // 5.2. Busca no banco os dados agrupados por mês (Apenas dos últimos 6 meses)
     $sql_linha = "SELECT 
-        DATE_FORMAT(data_transacao, '%Y-%m') as mes_ano,
+        DATE_FORMAT(data_registro, '%Y-%m') as mes_ano,
         SUM(CASE WHEN tipo_transacao = 'Receita' THEN valor_transacao ELSE 0 END) as receitas,
         SUM(CASE WHEN tipo_transacao = 'Despesa' THEN valor_transacao ELSE 0 END) as despesas
         FROM transacoes 
         WHERE id_empresa = :empresa 
-        AND data_transacao >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
+        AND data_registro >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
         GROUP BY mes_ano";
         
     $stmt_linha = $pdo->prepare($sql_linha);
     $stmt_linha->execute([':empresa' => $id_empresa]);
     $resultados_linha = $stmt_linha->fetchAll();
 
-    // 5.3. Preenche os meses que tiveram movimentação com os valores reais
+    // Preenche os meses que tiveram movimentação com os valores reais
     foreach ($resultados_linha as $row) {
         $chave = $row['mes_ano'];
         if (isset($historico[$chave])) {
@@ -118,7 +118,7 @@ try {
     error_log("Erro no gráfico de linha: " . $e->getMessage());
 }
 
-// 5.4. Separa os dados em arrays simples para o Chart.js ler
+// Separa os dados em arrays simples para o Chart.js ler
 foreach ($historico as $dados) {
     $labels_meses[] = $dados['label'];
     $dados_receitas[] = $dados['receitas'];
@@ -167,9 +167,9 @@ if (empty($categorias_agrupadas)) {
     <title>MetaCash - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="../assets/css/dashboardUsuario.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Estilização para simular o efeito da imagem */
         .peer-checked\:bg-custom-dark:checked + div {
             background-color: #1e293b !important;
             color: white !important;
@@ -179,41 +179,7 @@ if (empty($categorias_agrupadas)) {
 <body class="bg-gray-50">
 
     <div class="flex min-h-screen">
-        <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col fixed h-screen shrink-0 z-40">
-            <div class="flex items-center gap-3 mb-10 px-2 pt-2">
-                <img src="./img/logoCyano.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover">
-                <div class="flex flex-col">
-                    <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
-                    <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
-                </div>
-            </div>
-
-            <nav class="flex-1 space-y-2">
-                <a href="index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition">
-                    <i class="fas fa-th-large"></i><span class="font-medium">Dashboard</span>
-                </a>
-                <a href="../Transacoes.php/index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-exchange-alt"></i><span class="font-medium">Transações</span>
-                </a>
-                <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
-                    <i class="fas fa-file-pdf"></i><span class="font-medium">Baixar Relatório</span>
-                </button>
-            </nav>
-
-            <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2">
-                <a href="../Perfil.php/index.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group">
-                    <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">U</div>
-                    <div class="flex flex-col overflow-hidden">
-                        <span class="text-sm font-bold truncate">Usuário</span>
-                        <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
-                    </div>
-                </a>
-                <a href="../logout.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
-                    <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
-                    <span class="font-medium">Sair</span>
-                </a>
-            </div>
-        </aside>
+        <?php require_once '../includes/sidebar.php'; ?>
 
         <main class="flex-1 p-8 ml-64 w-full">
             <div class="mb-8">
@@ -224,7 +190,7 @@ if (empty($categorias_agrupadas)) {
             <section class="bg-[#0f1c30] rounded-3xl p-8 text-white mb-8 shadow-2xl relative overflow-hidden">
                 <div class="relative z-10">
                     <div class="flex items-center gap-2 mb-2">
-                        <img src="img/ícone carteira.png" alt="Ícone Saldo" class="h-3 w-auto object-contain">
+                        <img src="../assets/img/iconeCarteira.png" alt="Ícone Saldo" class="h-3 w-auto object-contain">
                         <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Saldo total</span>
                     </div>
                     <div class="text-5xl font-bold mb-8 tracking-tighter <?php echo $saldo_real_lucro >= 0 ? 'text-teal-400' : 'text-rose-400'; ?>">
@@ -252,7 +218,7 @@ if (empty($categorias_agrupadas)) {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <?php 
-                $icones_cards = ['img/sifrao icone.png', 'img/seta icone.png', 'img/cartao icone.png', 'img/bonecos icone.png'];
+                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBoneco.png'];
                 $i_card = 0;
                 foreach($cards as $titulo => $info): 
                     $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : 'image_69ab13.png';
@@ -287,7 +253,7 @@ if (empty($categorias_agrupadas)) {
             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Transações Recentes</h3>
-                    <a href="../Transacoes.php/index.php" class="text-xs font-bold text-teal-600 hover:underline uppercase">Ver Extrato Completo</a>
+                    <a href="../app/transacoes.php" class="text-xs font-bold text-teal-600 hover:underline uppercase">Ver Extrato Completo</a>
                 </div>
                 <div class="divide-y divide-slate-50 px-6">
                   <?php foreach($transacoes_recentes as $id => $tr): 
@@ -324,50 +290,50 @@ if (empty($categorias_agrupadas)) {
     </div>
 
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-2xl font-extrabold text-slate-800">Baixar Relatório</h3>
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-extrabold text-slate-800">Baixar Relatório</h3>
                 <button onclick="toggleModal('modalRelatorio')" class="text-slate-400 hover:text-slate-600 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             
-            <form action="../Transacoes.php/gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
+            <form action="../app/gerarPDF.php" method="GET" target="_blank" class="space-y-4">
                 <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Tipo de Transação</label>
-                    <div class="grid grid-cols-3 gap-3">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Tipo de Transação</label>
+                    <div class="grid grid-cols-3 gap-2">
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="e" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Receita</div>
+                            <div class="text-sm font-semibold text-center py-2.5 rounded-lg border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Receita</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="s" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Despesa</div>
+                            <div class="text-sm font-semibold text-center py-2.5 rounded-lg border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Despesa</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="todos" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Ambos</div>
+                            <div class="text-sm font-semibold text-center py-2.5 rounded-lg border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Ambos</div>
                         </label>
                     </div>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Período</label>
-                    <div class="grid grid-cols-2 gap-3">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Período</label>
+                    <div class="grid grid-cols-2 gap-2">
                         <label class="cursor-pointer">
                             <input type="radio" name="periodo" value="mensal" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Mensal</div>
+                            <div class="text-sm font-semibold text-center py-2.5 rounded-lg border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Mensal</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="periodo" value="anual" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Anual</div>
+                            <div class="text-sm font-semibold text-center py-2.5 rounded-lg border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Anual</div>
                         </label>
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Mês</label>
-                    <select name="mes" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
+                <div data-campo="mes">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Mês</label>
+                    <select name="mes" class="w-full p-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
                         <option value="1">Janeiro</option>
                         <option value="2">Fevereiro</option>
                         <option value="3">Março</option>
@@ -384,25 +350,45 @@ if (empty($categorias_agrupadas)) {
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Ano</label>
-                    <select name="ano" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026" selected>2026</option>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Ano</label>
+                    <select name="ano" class="w-full p-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
+                        <?php 
+                        $ano_atual = (int)date('Y');
+                        for ($i = $ano_atual - 5; $i <= $ano_atual; $i++): 
+                        ?>
+                            <option value="<?= $i ?>" <?= $i === $ano_atual ? 'selected' : '' ?>><?= $i ?></option>
+                        <?php endfor; ?>
                     </select>
                 </div>
 
-                <div class="flex gap-4 pt-6 border-t border-slate-100">
-                    <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">Cancelar</button>
-                    <button type="submit" class="flex-1 py-4 bg-[#0d9488] text-white font-bold rounded-2xl shadow-lg hover:bg-[#0f766e] transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-download"></i> Baixar PDF
-                    </button>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-3 border border-slate-200 text-slate-600 font-bold rounded-lg hover:bg-slate-50 transition-all text-sm">Cancelar</button>
+                    <button type="submit" class="flex-1 py-3 bg-[#2dd4bf] text-white font-bold rounded-lg shadow-lg hover:bg-teal-600 transition-all text-sm">Baixar PDF</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalRelatorio = document.getElementById('modalRelatorio');
+        if (!modalRelatorio) return;
+
+        const campoMes = modalRelatorio.querySelector('[data-campo="mes"]');
+        const radios = modalRelatorio.querySelectorAll('input[name="periodo"]');
+
+        const atualizarPeriodo = () => {
+            const selecionado = modalRelatorio.querySelector('input[name="periodo"]:checked');
+            const anual = selecionado && selecionado.value === 'anual';
+            if (campoMes) {
+                campoMes.classList.toggle('hidden', anual);
+            }
+        };
+
+        radios.forEach(radio => radio.addEventListener('change', atualizarPeriodo));
+        atualizarPeriodo();
+    });
+
     const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
     function toggleModal(id) {

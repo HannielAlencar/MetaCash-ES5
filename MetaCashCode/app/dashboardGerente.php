@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>MetaCash - Gestão</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="../assets/css/dashboardGerente.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 </head>
 
 <body class="flex">
@@ -14,7 +14,7 @@
 <aside class="w-64 bg-slate-900 min-h-screen p-6 text-white flex flex-col">
     <div class="mb-10 flex items-center gap-3">
         <div class="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center">
-            <img src="img/logoCyano.png" alt="MetaCash" onerror="this.style.display='none';">
+            <img src="../assets/img/logoCyano.png" alt="MetaCash" onerror="this.style.display='none';">
             <span class="text-white font-bold text-xl"></span>
         </div>
         <div>
@@ -68,7 +68,7 @@
             </div>
         </div>
         
-        <a href="logout.php" class="flex items-center gap-3 text-slate-400 hover:text-rose-400 transition text-sm">
+        <a href="../auth/logout.php" class="flex items-center gap-3 text-slate-400 hover:text-rose-400 transition text-sm">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             Sair
         </a>

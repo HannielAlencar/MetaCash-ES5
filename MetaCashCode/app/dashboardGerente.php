@@ -1,4 +1,135 @@
-<?php include('data.php'); ?>
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../config.php';
+
+$id_empresa = $_SESSION['id_empresa'] ?? 0;
+
+$total_receitas = 0;
+$total_despesas = 0;
+$saldo_total = 0;
+$labels_meses = [];
+$dados_receitas = [];
+$dados_despesas = [];
+$dados_lucro = [];
+$categorias = [];
+$cards = [];
+$transacoes = [];
+$dados = [
+    'saldo_total' => 0,
+    'receitas_mes' => 0,
+    'despesas_mes' => 0,
+];
+
+try {
+    $stmt_totais = $pdo->prepare("SELECT 
+        SUM(CASE WHEN tipo_transacao = 'Receita' THEN valor_transacao ELSE 0 END) as receitas,
+        SUM(CASE WHEN tipo_transacao = 'Despesa' THEN valor_transacao ELSE 0 END) as despesas
+        FROM transacoes WHERE id_empresa = :empresa");
+    $stmt_totais->execute([':empresa' => $id_empresa]);
+    $resultado_totais = $stmt_totais->fetch();
+
+    if ($resultado_totais) {
+        $total_receitas = (float)$resultado_totais['receitas'];
+        $total_despesas = (float)$resultado_totais['despesas'];
+        $saldo_total = $total_receitas - $total_despesas;
+    }
+} catch (PDOException $e) {
+    error_log("Erro ao buscar totais no dashboardGerente: " . $e->getMessage());
+}
+
+$labels_meses = [date('M')];
+$dados_receitas = [$total_receitas];
+$dados_despesas = [$total_despesas];
+$dados_lucro = [$saldo_total];
+
+$dados = [
+    'saldo_total' => $saldo_total,
+    'receitas_mes' => $total_receitas,
+    'despesas_mes' => $total_despesas,
+];
+
+try {
+    $stmt_cat = $pdo->prepare("
+        SELECT c.nome_categoria, t.tipo_transacao, SUM(t.valor_transacao) as total
+        FROM transacoes t
+        LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
+        WHERE t.id_empresa = :empresa
+        GROUP BY c.nome_categoria, t.tipo_transacao
+    ");
+    $stmt_cat->execute([':empresa' => $id_empresa]);
+    $categorias_db = $stmt_cat->fetchAll();
+
+    foreach ($categorias_db as $row) {
+        $cat = $row['nome_categoria'] ?? 'Geral';
+        $valor = (float)$row['total'];
+
+        if ($row['tipo_transacao'] === 'Despesa') {
+            $categorias[$cat] = ($categorias[$cat] ?? 0) - $valor;
+        } else {
+            $categorias[$cat] = ($categorias[$cat] ?? 0) + $valor;
+        }
+    }
+} catch (PDOException $e) {
+    error_log("Erro no gráfico de categorias (dashboardGerente): " . $e->getMessage());
+}
+
+if (empty($categorias)) {
+    $categorias = ['Sem movimentação' => 0];
+}
+
+$lucro_mes = $total_receitas - $total_despesas;
+
+$cards = [
+    'Lucro Mensal' => [
+        'valor' => ($lucro_mes > 0 ? '+' : '') . number_format($lucro_mes, 2, ',', '.'),
+        'porcentagem' => '',
+        'cor' => $lucro_mes >= 0 ? 'text-teal-500' : 'text-rose-500'
+    ],
+    'Total de Receitas' => [
+        'valor' => '+' . number_format($total_receitas, 2, ',', '.'),
+        'porcentagem' => '',
+        'cor' => 'text-teal-500'
+    ],
+    'Total de Despesas' => [
+        'valor' => '-' . number_format($total_despesas, 2, ',', '.'),
+        'porcentagem' => '',
+        'cor' => 'text-rose-500'
+    ],
+    'Saldo Total' => [
+        'valor' => ($saldo_total > 0 ? '+' : '') . number_format($saldo_total, 2, ',', '.'),
+        'porcentagem' => '',
+        'cor' => $saldo_total >= 0 ? 'text-blue-500' : 'text-rose-500'
+    ],
+];
+
+try {
+    $sql_recentes = "SELECT 
+                t.descricao_transacao AS titulo, 
+                t.valor_transacao AS valor, 
+                CASE WHEN t.tipo_transacao = 'Receita' THEN 'e' ELSE 's' END AS tipo, 
+                c.nome_categoria AS cat,
+                DATE_FORMAT(t.data_registro, '%d/%m/%Y') AS data
+            FROM transacoes t
+            LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
+            WHERE t.id_empresa = :empresa
+            ORDER BY t.data_registro DESC, t.id_transacao DESC
+            LIMIT 5";
+
+    $stmt_recentes = $pdo->prepare($sql_recentes);
+    $stmt_recentes->execute([':empresa' => $id_empresa]);
+    $transacoes = $stmt_recentes->fetchAll();
+} catch (PDOException $e) {
+    error_log("Erro ao buscar transações recentes (dashboardGerente): " . $e->getMessage());
+}
+
+if (!function_exists('formatarMoeda')) {
+    function formatarMoeda($valor) {
+        return number_format($valor, 2, ',', '.');
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>

@@ -1,11 +1,3 @@
-<?php 
-
-// 1. Verificação de segurança e inclusão de dados
-if (!file_exists('data.php')) {
-    die("Erro: O arquivo data.php não foi encontrado no diretório: " . getcwd());
-}
-include('data.php'); 
-?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>

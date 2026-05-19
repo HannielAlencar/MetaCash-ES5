@@ -9,18 +9,9 @@ $id_empresa = $_SESSION['id_empresa'] ?? 0;
 $total_receitas = 0;
 $total_despesas = 0;
 $saldo_total = 0;
-$labels_meses = [];
-$dados_receitas = [];
-$dados_despesas = [];
-$dados_lucro = [];
 $categorias = [];
 $cards = [];
 $transacoes = [];
-$dados = [
-    'saldo_total' => 0,
-    'receitas_mes' => 0,
-    'despesas_mes' => 0,
-];
 
 try {
     $stmt_totais = $pdo->prepare("SELECT 

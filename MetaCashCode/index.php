@@ -1,11 +1,5 @@
 <?php 
-$dataPath = __DIR__ . '\app\data.php';
-// 1. Verificação de segurança e inclusão de dados
-if (!file_exists($dataPath)) {
-    die("Erro: O arquivo data.php não foi encontrado no diretório: " . $dataPath);
-}
-require_once $dataPath;
-
+require_once __DIR__ . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">

@@ -133,7 +133,7 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                         <i class="fas fa-wallet text-slate-400"></i>
                         <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Saldo total</span>
                     </div>
-                    <div class="text-5xl font-bold mb-8 tracking-tighter <?php echo $saldo_real_lucro >= 0 ? 'text-teal-400' : 'text-rose-400'; ?>">
+                    <div class="text-5xl font-bold mb-8 tracking-tighter <?php echo $saldo_real_lucro >= 0 ? 'text-white' : 'text-rose-400'; ?>">
                         R$ <?php echo number_format($saldo_real_lucro, 2, ',', '.'); ?>
                     </div>
                     
@@ -158,14 +158,19 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <?php 
-                $icones_cards = ['fa-dollar-sign', 'fa-arrow-up', 'fa-credit-card', 'fa-users'];
+                $icones_cards = [
+                    '/MetaCashCode/Usuario/Dashboard/img/sifrao icone.png',
+                    '/MetaCashCode/Usuario/Dashboard/img/seta icone.png',
+                    '/MetaCashCode/Usuario/Dashboard/img/cartao icone.png',
+                    '/MetaCashCode/Usuario/Dashboard/img/bonecos icone.png'
+                ];
                 $i_card = 0;
                 foreach($cards as $titulo => $info): 
-                    $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : 'fa-chart-pie';
+                    $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : '/MetaCashCode/Usuario/Dashboard/img/sifrao icone.png';
                 ?>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-[#2dd4bf] transition group">
                         <div class="flex justify-between items-start mb-4">
-                            <div class="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-700"><i class="fas <?php echo $icone_atual; ?>"></i></div>
+                            <img src="<?php echo $icone_atual; ?>" alt="Ícone <?php echo htmlspecialchars($titulo, ENT_QUOTES); ?>" class="w-10 h-10 object-contain" />
                         </div>
                         <div>
                             <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?php echo $titulo; ?></div>

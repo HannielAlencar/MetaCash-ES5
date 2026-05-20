@@ -2,8 +2,6 @@
 // Ativa buffer de saída para garantir que o redirecionamento funcione
 ob_start();
 
-include('data.php');
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $arquivo_db = 'banco.json';
     

@@ -20,8 +20,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $valor  = (float)($_POST['valor'] ?? 0);
     $tipo   = $_POST['tipo'] ?? 'e';
     $cat    = $_POST['cat'] ?? 'Geral';
-    $data   = date('d/m/Y');
+    $data_raw = trim($_POST['data'] ?? '');
     $origem = $_POST['origem'] ?? 'dashboard';
+
+    $data_obj = null;
+    if ($data_raw !== '') {
+        $data_obj = DateTime::createFromFormat('Y-m-d', $data_raw);
+        if (!$data_obj) {
+            $data_obj = DateTime::createFromFormat('d/m/Y', $data_raw);
+        }
+        if (!$data_obj) {
+            $data_obj = date_create($data_raw);
+        }
+    }
+    if (!$data_obj) {
+        $data_obj = new DateTime();
+    }
+    $data = $data_obj->format('d/m/Y');
 
     // 3. Atualiza os totais
     if ($tipo === 'e') {
@@ -60,4 +75,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit();
 }
-?>Transacoes
+?>

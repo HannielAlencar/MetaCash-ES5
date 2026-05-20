@@ -3,44 +3,126 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-if (!file_exists('data.php')) {
-    die("ERRO: O arquivo data.php não foi encontrado na pasta: " . __DIR__);
+$arquivo_banco = __DIR__ . '/banco.json';
+if (!file_exists($arquivo_banco)) {
+    die("ERRO: O arquivo banco.json não foi encontrado na pasta: " . __DIR__);
 }
 
-include('data.php');
+$data = json_decode(file_get_contents($arquivo_banco), true);
+if ($data === null) {
+    die("ERRO: Falha ao carregar os dados do arquivo banco.json");
+}
 
-$cards = isset($cards) ? $cards : [];
-$transacoes = isset($transacoes) ? $transacoes : [];
+$transacoes = [];
+$meses_totais = [];
+$categorias_totais = [];
 
-// --- LÓGICA DE CÁLCULO DE SALDO REAL ---
+foreach ((array)($data['transacoes'] ?? []) as $tr) {
+    if (!is_array($tr)) {
+        continue;
+    }
+
+    $tipo = strtolower(trim($tr['tipo'] ?? ''));
+    $tipo = ($tipo === 'entrada' || $tipo === 'e') ? 'e' : 's';
+    $valor = abs((float)($tr['valor'] ?? 0));
+    $categoria = trim($tr['cat'] ?? 'Geral');
+    $data_raw = trim($tr['data'] ?? '');
+
+    $data_obj = DateTime::createFromFormat('d/m/Y', $data_raw);
+    if (!$data_obj) {
+        $data_obj = DateTime::createFromFormat('Y-m-d', $data_raw);
+    }
+    if (!$data_obj) {
+        $data_obj = new DateTime();
+    }
+
+    $mes_key = $data_obj->format('Y-m');
+    if ($tipo === 'e') {
+        $meses_totais[$mes_key]['receitas'] = ($meses_totais[$mes_key]['receitas'] ?? 0) + $valor;
+    } else {
+        $meses_totais[$mes_key]['despesas'] = ($meses_totais[$mes_key]['despesas'] ?? 0) + $valor;
+    }
+
+    $categorias_totais[$categoria] = ($categorias_totais[$categoria] ?? 0) + $valor;
+
+    $transacoes[] = [
+        'titulo' => trim($tr['titulo'] ?? 'Sem título'),
+        'cat' => $categoria,
+        'tipo' => $tipo,
+        'valor' => $valor,
+        'data' => $data_obj->format('d/m/Y'),
+        'data_obj' => $data_obj,
+        'descricao' => trim($tr['descricao'] ?? $tr['titulo'] ?? 'Sem descrição')
+    ];
+}
+
+usort($transacoes, function ($a, $b) {
+    return $b['data_obj']->getTimestamp() <=> $a['data_obj']->getTimestamp();
+});
+
+$labels_meses = [];
+$dados_receitas = [];
+$dados_despesas = [];
+$dados_lucro = [];
+
+if (!empty($meses_totais)) {
+    ksort($meses_totais);
+    $ultimos_meses = array_slice($meses_totais, -7, 7, true);
+    $meses_pt = [1 => 'Jan', 2 => 'Fev', 3 => 'Mar', 4 => 'Abr', 5 => 'Mai', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago', 9 => 'Set', 10 => 'Out', 11 => 'Nov', 12 => 'Dez'];
+    foreach ($ultimos_meses as $mes_key => $valores) {
+        [$ano, $mes] = explode('-', $mes_key);
+        $mes_int = (int)$mes;
+        $labels_meses[] = ($meses_pt[$mes_int] ?? $mes) . '/' . substr($ano, -2);
+        $receitas_mes = $valores['receitas'] ?? 0;
+        $despesas_mes = $valores['despesas'] ?? 0;
+        $dados_receitas[] = $receitas_mes;
+        $dados_despesas[] = $despesas_mes;
+        $dados_lucro[] = $receitas_mes - $despesas_mes;
+    }
+}
+
+if (empty($labels_meses)) {
+    $labels_meses = ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar'];
+    $dados_receitas = [0, 0, 0, 0, 0, 0, 0];
+    $dados_despesas = [0, 0, 0, 0, 0, 0, 0];
+    $dados_lucro = [0, 0, 0, 0, 0, 0, 0];
+}
+
+arsort($categorias_totais);
+$categorias_labels = array_keys($categorias_totais);
+$categorias_valores = array_values($categorias_totais);
+
 $total_receitas = 0;
 $total_despesas = 0;
+$count_receitas = 0;
+$count_despesas = 0;
+$cards = $data['cards'] ?? [];
+
+// --- LÓGICA DE CÁLCULO DE SALDO REAL ---
 
 if (is_array($transacoes)) {
     foreach ($transacoes as $tr) {
         $valor = (float)$tr['valor'];
         if ($tr['tipo'] == 'e') {
             $total_receitas += $valor;
+            $count_receitas++;
         } elseif ($tr['tipo'] == 's') {
             $total_despesas += $valor;
+            $count_despesas++;
         }
     }
 }
 
-$saldo_real_lucro = $total_receitas - $total_despesas;
-
-$labels_meses = isset($labels_meses) ? $labels_meses : ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar'];
-$dados_receitas = isset($dados_receitas) ? $dados_receitas : [0,0,0,0,0,0,0];
-$dados_despesas = isset($dados_despesas) ? $dados_despesas : [0,0,0,0,0,0,0];
-
-$dados_lucro = [];
-foreach ($dados_receitas as $index => $receita) {
-    $despesa = isset($dados_despesas[$index]) ? $dados_despesas[$index] : 0;
-    $dados_lucro[] = $receita - $despesa;
+if (empty($cards)) {
+    $cards = [
+        'faturamento' => ['valor' => number_format(($total_receitas / 1000), 1, ',', '.') . 'k', 'porcentagem' => '+0.0%', 'cor' => 'text-teal-500'],
+        'entradas' => ['valor' => (string)$count_receitas, 'porcentagem' => '+0.0%', 'cor' => 'text-teal-500'],
+        'saidas' => ['valor' => (string)$count_despesas, 'porcentagem' => '-0.0%', 'cor' => 'text-rose-500'],
+        'saldo' => ['valor' => number_format(($total_receitas - $total_despesas) / 1000, 1, ',', '.') . 'k', 'porcentagem' => '+0.0%', 'cor' => 'text-teal-500']
+    ];
 }
 
-$categorias_labels = isset($categorias_labels) ? $categorias_labels : [];
-$categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
+$saldo_real_lucro = $total_receitas - $total_despesas;
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -106,10 +188,10 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
             <section class="bg-[#0f1c30] rounded-3xl p-8 text-white mb-8 shadow-2xl relative overflow-hidden">
                 <div class="relative z-10">
                     <div class="flex items-center gap-2 mb-2">
-                        <img src="img/ícone carteira.png" alt="Ícone Saldo" class="h-3 w-auto object-contain">
+                        <i class="fas fa-wallet text-slate-400"></i>
                         <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Saldo total</span>
                     </div>
-                    <div class="text-5xl font-bold mb-8 tracking-tighter <?php echo $saldo_real_lucro >= 0 ? 'text-teal-400' : 'text-rose-400'; ?>">
+                    <div class="text-5xl font-bold mb-8 tracking-tighter <?php echo $saldo_real_lucro >= 0 ? 'text-white' : 'text-rose-400'; ?>">
                         R$ <?php echo number_format($saldo_real_lucro, 2, ',', '.'); ?>
                     </div>
                     
@@ -142,7 +224,6 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-[#2dd4bf] transition group">
                         <div class="flex justify-between items-start mb-4">
                             <img src="<?php echo $icone_atual; ?>" alt="Ícone Métrica" class="w-10 h-10 object-contain">
-                            <span class="px-2 py-0.5 rounded-lg bg-gray-50 text-xs font-bold <?php echo $info['cor']; ?>"><?php echo $info['porcentagem']; ?></span>
                         </div>
                         <div>
                             <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?php echo $titulo; ?></div>

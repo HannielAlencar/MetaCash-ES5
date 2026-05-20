@@ -1,7 +1,21 @@
 {
-    "saldo_total": 181444,
-    "receitas_mes": 174222,
+    "saldo_total": 241232,
+    "receitas_mes": 234010,
     "transacoes": [
+        {
+            "titulo": "Dez",
+            "valor": 45788,
+            "tipo": "e",
+            "cat": "Geral",
+            "data": "09\/04\/2026"
+        },
+        {
+            "titulo": "titulos",
+            "valor": 14000,
+            "tipo": "e",
+            "cat": "Geral",
+            "data": "21\/05\/2026"
+        },
         {
             "titulo": "Dez",
             "valor": 13000,

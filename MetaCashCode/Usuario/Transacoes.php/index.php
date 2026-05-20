@@ -151,6 +151,10 @@ include 'logica_dados.php';
                         <option value="s">Saída (-)</option>
                     </select>
                 </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Data</label>
+                    <input type="date" name="data" value="<?php echo date('Y-m-d'); ?>" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleModal()" class="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition">Cancelar</button>
                     <button type="submit" class="flex-1 py-3 bg-[#2dd4bf] text-white font-bold rounded-xl hover:bg-teal-600 shadow-lg transition">Salvar</button>

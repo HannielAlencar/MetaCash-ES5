@@ -3,8 +3,23 @@
 ini_set('display_errors', 0);
 date_default_timezone_set('America/Sao_Paulo');
 
-// Importa os dados (Variável $transacoes)
-require_once('data.php'); 
+$arquivo_banco = __DIR__ . '/banco.json';
+if (!file_exists($arquivo_banco)) {
+    die("ERRO: O arquivo banco.json não foi encontrado na pasta: " . __DIR__);
+}
+
+$data = json_decode(file_get_contents($arquivo_banco), true);
+if ($data === null) {
+    die("ERRO: Falha ao carregar os dados do arquivo banco.json");
+}
+
+$transacoes = [];
+foreach ((array)($data['transacoes'] ?? []) as $tr) {
+    $tipo = strtolower(trim($tr['tipo'] ?? ''));
+    $tipo = ($tipo === 'entrada' || $tipo === 'e') ? 'e' : 's';
+    $tr['tipo'] = $tipo;
+    $transacoes[] = $tr;
+}
 
 // 2. Captura e Tratamento de Filtros
 $formato      = $_GET['formato']      ?? 'pdf';

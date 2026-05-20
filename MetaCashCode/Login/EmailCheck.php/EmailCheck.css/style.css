@@ -1,0 +1,167 @@
+/* Configurações Globais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    /* Imagem de Fundo (Sem degradê) */
+    background-image: url('img/fundo.png');
+    background-size: cover;           
+    background-position: center;      
+    background-repeat: no-repeat;     
+    background-attachment: fixed;     
+    
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+}
+
+/* Camada de sobreposição para organizar o conteúdo */
+.background-overlay {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Navegação superior (Voltar ao login) */
+.top-nav {
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 20px;
+}
+
+.back-link {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* Cartão Central Branco */
+.card {
+    background: #ffffff;
+    color: #333;
+    width: 100%;
+    max-width: 450px;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* Ícone de Sucesso (Check Verde) */
+.icon-success {
+    width: 60px;
+    height: 60px;
+    background-color: #e6f7f0;
+    color: #27ae60;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.icon-success svg {
+    width: 30px;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #1a2a3a;
+}
+
+.description {
+    font-size: 15px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.description strong {
+    color: #2c9caf;
+}
+
+/* Caixa de Instruções (Azul claro) */
+.steps-box {
+    background-color: #f0f7f7;
+    border: 1px solid #d1e5e5;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+.steps-box h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.steps-box ul {
+    list-style: none;
+}
+
+.steps-box li {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+/* Botão Principal */
+.btn-primary {
+    display: block;
+    background-color: #224466;
+    color: white;
+    text-decoration: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #1a3550;
+}
+
+/* Texto de Reenvio */
+.resend-text {
+    font-size: 14px;
+    color: #333;
+}
+
+.resend-text a {
+    color: #2c9caf;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* Rodapé */
+.footer-help {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 13px;
+    color: #ffffff;
+}
+
+.footer-help a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.copyright {
+    margin-top: 20px;
+    color: #ffffff; /* Cor branca sólida, sem transparência */
+    opacity: 1;      /* Garante que a opacidade esteja no máximo */
+    font-weight: 400;
+}

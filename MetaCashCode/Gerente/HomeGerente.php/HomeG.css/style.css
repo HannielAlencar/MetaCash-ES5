@@ -1,0 +1,125 @@
+/* Configurações Gerais */
+:root {
+    --primary-teal: #3dc4b7;
+    --text-white: #ffffff;
+    --btn-white: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    /* Caminho da sua imagem conforme solicitado */
+    background: url('../img/fundo.png') no-repeat center center fixed;
+    background-size: cover; /* Faz a imagem cobrir a tela toda */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-white);
+    overflow: hidden;
+}
+
+/* Camada de escurecimento opcional (overlay) para garantir leitura se a imagem for clara */
+body::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.3); 
+    z-index: -1;
+}
+
+.container {
+    text-align: center;
+    z-index: 1;
+}
+
+.logo-box {
+    background: linear-gradient(135deg, #4de8d8, #2ca195);
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 20px;
+    font-size: 40px;
+    font-weight: 700;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 40px;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.btn {
+    padding: 14px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: var(--btn-white);
+    color: #1a3a4a;
+    display: flex;
+    align-items: center;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn::after {
+    content: " →";
+    margin-left: 8px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(13, 27, 36, 0.6);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
+}
+
+.dot {
+    height: 8px;
+    width: 8px;
+    background-color: var(--primary-teal);
+    border-radius: 50%;
+    margin-right: 10px;
+    box-shadow: 0 0 10px var(--primary-teal);
+}
+
+footer {
+    position: absolute;
+    bottom: 30px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}

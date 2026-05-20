@@ -1,0 +1,214 @@
+/* --- Reset e Estilos Globais --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    /* Alinha ao topo em vez do centro */
+    justify-content: flex-start; 
+    
+    /* Empurra o conteúdo exatamente 10% para baixo do topo */
+    padding-top: 10vh; 
+    
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 40px;
+    
+    /* Configuração do fundo MetaCash */
+    background-image: url('../img/fundo.png'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: #0b1f33;
+}
+
+/* --- Elementos de Topo (Fora do Card) --- */
+.header-icon-top {
+    background-color: #1e3a5a;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.main-title {
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.main-subtitle {
+    color: #ffffff;
+    opacity: 0.9;
+    font-size: 16px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* --- Card Branco Principal --- */
+.card {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+/* --- Formulário e Inputs --- */
+.input-group {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-label {
+    display: block;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 14px;
+    color: #9ca3af;
+}
+
+.eye-icon {
+    position: absolute;
+    right: 14px;
+    color: #9ca3af;
+    cursor: pointer;
+}
+
+input[type="password"], 
+input[type="email"] {
+    width: 100%;
+    padding: 12px 40px 12px 42px; /* Espaço para ícones esquerda e direita */
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: border-color 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* --- Caixa de Requisitos (Nova Senha) --- */
+.requirements-box {
+    background-color: #f0f7f9;
+    border: 1px solid #d1e5eb;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+.requirements-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.requirements-box ul {
+    list-style: none;
+}
+
+.requirements-box ul li {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.requirements-box ul li::before {
+    content: "•";
+    margin-right: 8px;
+    color: #9ca3af;
+}
+
+/* --- Botão Principal --- */
+.btn-submit {
+    width: 100%;
+    background-color: #1e3a5a;
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #162a42;
+}
+
+/* --- Links de Navegação --- */
+.back-link, .back-link:visited {
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    align-self: flex-start; /* Alinha à esquerda fora do card */
+    max-width: 440px;
+    opacity: 0.8;
+}
+
+.back-to-login-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: #0d9488;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.back-to-login-link:hover {
+    text-decoration: underline;
+}
+
+/* --- Rodapé --- */
+footer {
+    margin-top: 30px;
+    color: #ffffff;
+    opacity: 0.7;
+    font-size: 13px;
+    text-align: center;
+}

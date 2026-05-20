@@ -1,0 +1,28 @@
+{
+    "saldo_total": 181444,
+    "receitas_mes": 174222,
+    "transacoes": [
+        {
+            "titulo": "Dez",
+            "valor": 13000,
+            "tipo": "saida",
+            "cat": "Compras",
+            "data": "20\/05\/2026"
+        },
+        {
+            "titulo": "aluguel",
+            "valor": 4000,
+            "tipo": "saida",
+            "cat": "Geral",
+            "data": "20\/05\/2026"
+        },
+        {
+            "titulo": "receita",
+            "valor": 150000,
+            "tipo": "entrada",
+            "cat": "Geral",
+            "data": "20\/05\/2026"
+        }
+    ],
+    "despesas_mes": -7222
+}

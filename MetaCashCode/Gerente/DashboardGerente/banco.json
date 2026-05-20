@@ -1,0 +1,126 @@
+{
+    "saldo_total": 214640,
+    "receitas_mes": 681493,
+    "despesas_mes": 466853,
+    "transacoes": [
+        {
+            "titulo": "justus",
+            "valor": 3244,
+            "tipo": "e",
+            "cat": "Vendas",
+            "data": "19\/05\/2026"
+        },
+        {
+            "titulo": "justus",
+            "valor": 3244,
+            "tipo": "s",
+            "cat": "Administrativo",
+            "data": "19\/05\/2026"
+        },
+        {
+            "titulo": "justus",
+            "valor": 3244,
+            "tipo": "s",
+            "cat": "Administrativo",
+            "data": "19\/05\/2026"
+        },
+        {
+            "titulo": "justus",
+            "valor": 3244,
+            "tipo": "s",
+            "cat": "Administrativo",
+            "data": "19\/05\/2026"
+        },
+        {
+            "titulo": "Venda",
+            "valor": 124125,
+            "tipo": "e",
+            "cat": "Vendas",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "top",
+            "valor": 300000,
+            "tipo": "e",
+            "cat": "Geral",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "Venda",
+            "valor": 60000,
+            "tipo": "s",
+            "cat": "Marketing",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "asd",
+            "valor": 127000,
+            "tipo": "e",
+            "cat": "Geral",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "asdasd",
+            "valor": 123121,
+            "tipo": "s",
+            "cat": "Administrativo",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "Venda",
+            "valor": 20000,
+            "tipo": "s",
+            "cat": "Salários",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "Venda",
+            "valor": 150000,
+            "tipo": "s",
+            "cat": "Administrativo",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "Venda",
+            "valor": 20000,
+            "tipo": "s",
+            "cat": "Geral",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "sas",
+            "valor": 83000,
+            "tipo": "s",
+            "cat": "Marketing",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "Venda",
+            "valor": 123124,
+            "tipo": "e",
+            "cat": "Vendas",
+            "data": "14\/05\/2026"
+        },
+        {
+            "titulo": "marcelo",
+            "valor": 3000,
+            "tipo": "e",
+            "cat": "Geral",
+            "data": "2026-03-03"
+        },
+        {
+            "titulo": "rubens",
+            "valor": 1000,
+            "tipo": "s",
+            "cat": "Marketing",
+            "data": "2026-03-03"
+        },
+        {
+            "titulo": "rubens",
+            "valor": 1000,
+            "tipo": "e",
+            "cat": "Vendas",
+            "data": "2026-03-03"
+        }
+    ]
+}

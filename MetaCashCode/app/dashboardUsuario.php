@@ -40,7 +40,7 @@ try {
                 t.valor_transacao AS valor, 
                 t.tipo_transacao AS tipo, 
                 c.nome_categoria AS cat,
-                DATE_FORMAT(t.data_registro, '%d/%m/%Y') AS data
+                TO_CHAR(t.data_registro, 'DD/MM/YYYY') AS data
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
             WHERE t.id_empresa = :empresa
@@ -94,12 +94,12 @@ for ($i = 5; $i >= 0; $i--) {
 try {
     // 5.2. Busca no banco os dados agrupados por mês (Apenas dos últimos 6 meses)
     $sql_linha = "SELECT 
-        DATE_FORMAT(data_registro, '%Y-%m') as mes_ano,
+        TO_CHAR(data_registro, 'YYYY-MM') as mes_ano,
         SUM(CASE WHEN tipo_transacao = 'Receita' THEN valor_transacao ELSE 0 END) as receitas,
         SUM(CASE WHEN tipo_transacao = 'Despesa' THEN valor_transacao ELSE 0 END) as despesas
         FROM transacoes 
         WHERE id_empresa = :empresa 
-        AND data_registro >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
+        AND data_registro >= CURRENT_DATE - INTERVAL '6 months'
         GROUP BY mes_ano";
         
     $stmt_linha = $pdo->prepare($sql_linha);

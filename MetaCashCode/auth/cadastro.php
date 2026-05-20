@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 2. Inserir o Usuário Admin (AGORA COM MATRÍCULA E CPF)
         $sql_usuario = "INSERT INTO usuarios (id_empresa, matricula, nome_completo, cpf, email, senha, nivel_permissao) 
-                        VALUES (:id_empresa, :matricula, :nome, :cpf, :email, :senha, 'Admin')";
+                        VALUES (:id_empresa, :matricula, :nome, :cpf, :email, :senha, 'Gerente')";
         $stmt_usuario = $pdo->prepare($sql_usuario);
         $stmt_usuario->execute([
             ':id_empresa' => $id_empresa,
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         $pdo->commit(); 
-        header("Location: ../Login.php/index.php?sucesso=1");
+        header("Location: ../app/dashboardUsuario.php");
         exit();
 
     } catch (PDOException $e) {

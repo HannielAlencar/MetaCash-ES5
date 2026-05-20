@@ -1,10 +1,9 @@
 <?php
-// Configurações do PostgreSQL no Docker
-$host = 'db';                // AQUI É O SEGREDO: O nome do container do banco
-$port = '5432';              // Porta padrão do Postgres
-$db   = 'metacash';          // Nome do banco criado no docker-compose
-$user = 'postgres';          // Usuário padrão
-$pass = '1234';   // A senha exata que você colocou no docker-compose.yml
+$host = 'db';
+$port = '5432';
+$db   = 'metacash';
+$user = 'postgres';
+$pass = '1234';
 
 $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=prefer";
 
@@ -16,7 +15,6 @@ $options = [
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
-     // echo "Conexão com PostgreSQL realizada com sucesso!"; 
 } catch (PDOException $e) {
     die("Erro na conexão com o banco de dados PostgreSQL: " . $e->getMessage());
 }

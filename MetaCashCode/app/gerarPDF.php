@@ -31,7 +31,7 @@ try {
                 t.valor_transacao AS valor,
                 t.tipo_transacao AS tipo,
                 c.nome_categoria AS categoria,
-                DATE_FORMAT(t.data_registro, '%d/%m/%Y') AS data
+                TO_CHAR(t.data_registro, 'DD/MM/YYYY') AS data
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
             WHERE t.id_empresa = :empresa";
@@ -44,9 +44,9 @@ try {
     
     // Filtrar por período
     if ($periodo === 'mensal') {
-        $sql .= " AND YEAR(t.data_registro) = :ano AND MONTH(t.data_registro) = :mes";
+        $sql .= " AND EXTRACT(YEAR FROM t.data_registro) = :ano AND EXTRACT(MONTH FROM t.data_registro) = :mes";
     } else {
-        $sql .= " AND YEAR(t.data_registro) = :ano";
+        $sql .= " AND EXTRACT(YEAR FROM t.data_registro) = :ano";
     }
     
     $sql .= " ORDER BY t.data_registro DESC, t.id_transacao DESC";

@@ -16,7 +16,7 @@ try {
                 t.valor_transacao AS valor, 
                 t.tipo_transacao AS tipo, 
                 c.nome_categoria AS cat,
-                DATE_FORMAT(t.data_registro, '%d/%m/%Y') AS data
+                TO_CHAR(t.data_registro, 'DD/MM/YYYY') AS data
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
             WHERE t.id_empresa = :empresa

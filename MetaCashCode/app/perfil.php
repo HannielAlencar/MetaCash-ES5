@@ -203,7 +203,7 @@
                                     <div class="text-[10px] text-slate-500 flex items-center gap-2"><i class="fas fa-times text-red-400"></i> Caractere especial (!@#$...)</div>
                                 </div>
                             </div>
-                            <!-- BOTÃO ATUALIZADO -->
+                            
                             <button type="submit" class="bg-slate-100 text-slate-600 px-6 py-2.5 rounded-lg text-sm hover:bg-red-50 hover:text-red-600 transition duration-300 flex items-center gap-2 border border-slate-200 hover:border-red-200 shadow-sm">
                                 <i class="fas fa-key text-xs"></i> Alterar Senha
                             </button>

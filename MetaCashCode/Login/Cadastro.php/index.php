@@ -21,6 +21,16 @@
     </style>
 </head>
 <body class="h-screen overflow-hidden relative text-slate-800 flex items-center justify-center">
+    <!-- Pop-up de Sucesso -->
+    <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-2xl text-green-600"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Conta criada com sucesso</h3>
+        </div>
+    </div>
+
     <div class="noise-overlay"></div>
 
     <a href="/MetaCashCode/Home/HomePB/index.php" class="fixed top-4 left-6 z-20 inline-flex items-center gap-2 text-white font-medium hover:text-slate-200 transition-colors">
@@ -42,44 +52,44 @@
             <form id="signupForm" action="#" method="POST" class="space-y-2.5">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome da Empresa *</label>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome da Empresa <span class="text-red-500">*</span></label>
                         <input type="text" id="empresa" placeholder="Empresa LTDA" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome do Responsável *</label>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome do Responsável <span class="text-red-500">*</span></label>
                         <input type="text" id="responsavel" placeholder="João Silva" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">E-mail *</label>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">E-mail <span class="text-red-500">*</span></label>
                         <input type="email" id="email" placeholder="email@gmail.com" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Matricula *</label>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Matricula <span class="text-red-500">*</span></label>
                         <input type="text" id="matricula" placeholder="M29L0" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CNPJ *</label>
-                        <input type="text" id="cnpj" placeholder="00.000.000/0000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CNPJ <span class="text-red-500">*</span></label>
+                        <input type="text" id="cnpj" maxlength="18" placeholder="00.000.000/0000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CPF *</label>
-                        <input type="text" id="cpf" placeholder="000.000.000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CPF <span class="text-red-500">*</span></label>
+                        <input type="text" id="cpf" maxlength="14" placeholder="000.000.000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Senha *</label>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Senha <span class="text-red-500">*</span></label>
                         <input type="password" id="senha" placeholder="••••••••" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Confirmar Senha *</label>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Confirmar Senha <span class="text-red-500">*</span></label>
                         <input type="password" id="confirmaSenha" placeholder="••••••••" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                 </div>
@@ -120,6 +130,26 @@
         const form = document.getElementById('signupForm');
         const senhaInput = document.getElementById('senha');
         const confirmaSenhaInput = document.getElementById('confirmaSenha');
+        const cpfInput = document.getElementById('cpf');
+        const cnpjInput = document.getElementById('cnpj');
+        const successPopup = document.getElementById('successPopup');
+
+        cpfInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = v;
+        });
+
+        cnpjInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+            v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+            v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+            v = v.replace(/(\d{4})(\d)/, '$1-$2');
+            e.target.value = v;
+        });
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
@@ -154,11 +184,9 @@
             if (!emailRegex.test(document.getElementById('email').value)) {
                 return alert("Por favor, insira um e-mail válido.");
             }
-            
             if (!cpfRegex.test(document.getElementById('cpf').value)) {
                 return alert("CPF inválido! Use o formato 000.000.000-00");
             }
-
             if (!cnpjRegex.test(document.getElementById('cnpj').value)) {
                 return alert("CNPJ inválido! Use o formato 00.000.000/0000-00");
             }
@@ -167,13 +195,24 @@
             if (s.length < 8 || !/[A-Z]/.test(s) || !/[a-z]/.test(s) || !/\d/.test(s) || !/[!@#$%^&*(),.?":{}|<>]/.test(s)) {
                 return alert("A senha não atende aos requisitos mínimos.");
             }
-
             if (s !== confirmaSenhaInput.value) {
                 return alert("As senhas não coincidem!");
             }
 
-            alert("Cadastro realizado com sucesso!");
-            form.submit();
+            // Sistema de armazenamento local para login
+            localStorage.setItem('userEmail', document.getElementById('email').value);
+            localStorage.setItem('userPassword', s);
+
+            // Exibir Popup
+            successPopup.classList.remove('hidden');
+            setTimeout(() => successPopup.classList.remove('opacity-0'), 10);
+            
+            setTimeout(() => {
+                successPopup.classList.add('opacity-0');
+                setTimeout(() => {
+                    window.location.href = "/MetaCashCode/Usuario/Dashboard/index.php";
+                }, 500);
+            }, 3000);
         });
     </script>
 </body>

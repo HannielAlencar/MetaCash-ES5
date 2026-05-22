@@ -3,6 +3,13 @@
     "receitas_mes": 924840,
     "transacoes": [
         {
+            "titulo": "",
+            "valor": 0,
+            "tipo": "e",
+            "cat": "Vendas",
+            "data": "08\/04\/2026"
+        },
+        {
             "titulo": "jhjjh",
             "valor": 55555,
             "tipo": "e",

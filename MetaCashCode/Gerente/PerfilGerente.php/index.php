@@ -207,3 +207,13 @@
 
 </body>
 </html>
+
+<script>
+
+function toggleRelatorioModal() {
+            const modal = document.getElementById('modalRelatorio');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+ }
+
+</script>

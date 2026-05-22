@@ -239,6 +239,12 @@ $registros = $historico_registros;
         }
     }
 
+    function toggleRelatorioModal() {
+            const modal = document.getElementById('modalRelatorio');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+    }
+
     // Fecha modais ao clicar fora
     window.onclick = function(event) {
         const mRel = document.getElementById('modalRelatorio');

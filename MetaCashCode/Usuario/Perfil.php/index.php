@@ -26,14 +26,14 @@
             <a href="../Dashboard/index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 transition">
                 <i class="fas fa-th-large"></i><span class="font-medium">Dashboard</span>
             </a>
-            <a href="transacoes.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 transition">
+            <a href="../Transacoes.php/index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 transition">
                 <i class="fas fa-exchange-alt"></i><span class="font-medium">Transações</span>
             </a>
         </nav>
 
         <!-- RODAPÉ DA SIDEBAR -->
         <div class="mt-auto pt-6 border-t border-slate-800 space-y-4">
-            <a href="perfil.php" class="bg-[#1e3a5f]/60 p-3 rounded-2xl flex items-center gap-3 border border-[#2dd4bf]/50 transition hover:bg-[#1e3a5f]/80 block">
+            <a href="../Perfil.php/index.php" class="bg-[#1e3a5f]/60 p-3 rounded-2xl flex items-center gap-3 border border-[#2dd4bf]/50 transition hover:bg-[#1e3a5f]/80 block">
                 <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0">
                     U
                 </div>

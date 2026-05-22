@@ -224,5 +224,14 @@ $equipe = [
         if (event.target == mRel) toggleModal('modalRelatorio');
     }
     </script>
+
+    <script>
+
+function toggleRelatorioModal() {
+            const modal = document.getElementById('modalRelatorio');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+}
+</script>
 </body>
 </html>

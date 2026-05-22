@@ -153,7 +153,17 @@
                     <button class="w-full mt-3 border border-red-200 text-red-500 py-3 rounded-xl font-bold">Restaurar Padrão</button>
                 </section>
             </div>
+            
         </div>
     </main>
 </body>
 </html>
+
+<script>
+
+function toggleRelatorioModal() {
+            const modal = document.getElementById('modalRelatorio');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+}
+</script>

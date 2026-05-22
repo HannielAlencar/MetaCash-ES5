@@ -258,80 +258,73 @@
         </main>
     </div>
 
-    <!-- MODAL RELATÓRIO (Idêntico ao modal de transações) -->
-    <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-2xl font-extrabold text-slate-800">Baixar Relatório</h3>
-                <button onclick="toggleModal('modalRelatorio')" class="text-slate-400 hover:text-slate-600 transition">
-                    <i class="fas fa-times text-xl"></i>
+    <!-- MODAL BAIXAR RELATÓRIO -->
+    <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 class="text-xl font-bold text-slate-800">Baixar Relatório</h3>
+                <button onclick="toggleRelatorioModal()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <form action="/MetaCashCode/Usuario/Transacoes.php/gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
+            <form action="gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
                 <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Tipo de Transação</label>
-                    <div class="grid grid-cols-3 gap-3">
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Tipo de Transação</label>
+                    <div class="grid grid-cols-3 gap-2">
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="e" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Receita</div>
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Receita</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="s" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Despesa</div>
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Despesa</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="todos" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Ambos</div>
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Ambos</div>
                         </label>
                     </div>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Período</label>
-                    <div class="grid grid-cols-2 gap-3">
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Período</label>
+                    <div class="grid grid-cols-2 gap-2">
                         <label class="cursor-pointer">
-                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Mensal</div>
+                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='block'">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Mensal</div>
                         </label>
                         <label class="cursor-pointer">
-                            <input type="radio" name="periodo" value="anual" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Anual</div>
+                            <input type="radio" name="periodo" value="anual" class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='none'">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Anual</div>
                         </label>
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Mês</label>
-                    <select name="mes" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
-                        <option value="1">Janeiro</option>
-                        <option value="2">Fevereiro</option>
-                        <option value="3">Março</option>
-                        <option value="4">Abril</option>
-                        <option value="5" selected>Maio</option>
-                        <option value="6">Junho</option>
-                        <option value="7">Julho</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
+                <div id="campoMesRelatorio">
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Mês</label>
+                    <select name="mes" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+                        <option value="03">Março</option><option value="04">Abril</option>
+                        <option value="05" selected>Maio</option><option value="06">Junho</option>
+                        <option value="07">Julho</option><option value="08">Agosto</option>
+                        <option value="09">Setembro</option><option value="10">Outubro</option>
+                        <option value="11">Novembro</option><option value="12">Dezembro</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Ano</label>
-                    <select name="ano" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Ano</label>
+                    <select name="ano" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500 transition">
                         <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
                     </select>
                 </div>
 
-                <div class="flex gap-4 pt-6 border-t border-slate-100">
-                    <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">Cancelar</button>
-                    <button type="submit" class="flex-1 py-4 bg-[#0d9488] text-white font-bold rounded-2xl shadow-lg hover:bg-[#0f766e] transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-download"></i> Baixar PDF
+                <div class="flex gap-3 pt-4 border-t">
+                    <button type="button" onclick="toggleRelatorioModal()" class="flex-1 py-3 border border-slate-300 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-slate-800 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">
+                        <i class="fas fa-download mr-2"></i> Baixar PDF
                     </button>
                 </div>
             </form>
@@ -345,6 +338,12 @@
             modal.classList.toggle('hidden');
             modal.classList.toggle('flex');
         }
+    }
+
+    function toggleRelatorioModal() {
+            const modal = document.getElementById('modalRelatorio');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
     }
 
     // Fecha modais ao clicar fora

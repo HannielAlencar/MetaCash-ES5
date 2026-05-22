@@ -1,6 +1,12 @@
 <?php
 // O arquivo logica_dados.php deve estar na mesma pasta que este index.php
 include 'logica_dados.php'; 
+// Define o fuso horário para o padrão de Brasília/São Paulo
+date_default_timezone_set('America/Sao_Paulo');
+$receitas_mes = $dados_financeiros['receitas_mes'] ?? 0;
+$despesas_mes = $dados_financeiros['despesas_mes'] ?? 0;
+$saldo_total = $dados_financeiros['saldo_total'] ?? 0;
+$transacoes_count = count($transacoes);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -11,6 +17,28 @@ include 'logica_dados.php';
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../transacoes.css/style.css"> 
+    <style>
+        /* CSS para remover o spinner do input number */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        
+        /* Animação do Popup */
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+        .fade-in-out {
+            animation: fadeInOut 3s ease-in-out forwards;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
 
@@ -26,12 +54,10 @@ include 'logica_dados.php';
             </div>
 
             <nav class="flex-1 space-y-2">
-                <!-- Dashboard (Inativo nesta tela) -->
                 <a href="../Dashboard/index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
                     <i class="fas fa-th-large"></i><span class="font-medium">Dashboard</span>
                 </a>
                 
-                <!-- Transações (Ativo nesta tela) -->
                 <a href="index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition">
                     <i class="fas fa-exchange-alt"></i><span class="font-medium">Transações</span>
                 </a>
@@ -85,6 +111,26 @@ include 'logica_dados.php';
                         <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     </div>
                 </div>
+
+                <!-- CARDS DE RESUMO -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Total de Receitas</p>
+                        <p class="text-2xl font-bold text-teal-500 mt-1"><?= formatarMoeda($receitas_mes) ?></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Total de Despesas</p>
+                        <p class="text-2xl font-bold text-red-400 mt-1"><?= formatarMoeda($despesas_mes) ?></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Saldo do Período</p>
+                        <p class="text-2xl font-bold text-slate-800 mt-1"><?= formatarMoeda($saldo_total) ?></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Transações no Período</p>
+                        <p class="text-2xl font-bold text-slate-800 mt-1"><?= $transacoes_count ?></p>
+                    </div>
+                </div>
             </header>
 
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -95,26 +141,24 @@ include 'logica_dados.php';
                         $isEntrada = ($tr['tipo'] == 'e');
                     ?>
                     <div class="item-transacao flex justify-between items-center p-6 hover:bg-gray-50 transition group" 
-                         data-titulo="<?= strtolower($tr['titulo']) ?>" 
-                         data-categoria="<?= $tr['cat'] ?? 'Geral' ?>">
+                           data-titulo="<?= strtolower($tr['titulo']) ?>" 
+                           data-categoria="<?= $tr['cat'] ?? 'Geral' ?>">
                         <div class="flex items-center gap-4">
                             <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                                 <i class="fas <?= $isEntrada ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-red-400' ?>"></i>
                             </div>
                             <div>
                                 <p class="font-bold text-slate-800"><?= $tr['titulo'] ?></p>
-                                <p class="text-xs text-slate-400 uppercase font-semibold"><?= $tr['cat'] ?? 'Geral' ?> • <?= $tr['data'] ?></p>
+                                <p class="text-xs text-slate-400 uppercase font-semibold"><?= $tr['cat'] ?? 'Geral' ?> • <?= $tr['data'] ?> <?= date('H:i') ?></p>
                             </div>
                         </div>
-                        <div class="font-bold text-lg <?= $isEntrada ? 'text-[#2dd4bf]' : 'text-red-400' ?>">
-                            <?= ($isEntrada ? '+' : '-') . ' ' . formatarMoeda($tr['valor']) ?>
+                        <div class="flex items-center gap-6">
+                            <div class="font-bold text-lg <?= $isEntrada ? 'text-[#2dd4bf]' : 'text-red-400' ?>">
+                                <?= ($isEntrada ? '+' : '-') . ' ' . formatarMoeda($tr['valor']) ?>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>
-                </div>
-                <div id="msgVazio" class="hidden p-20 text-center text-slate-400">
-                    <i class="fas fa-search fa-3x mb-4 block opacity-20"></i>
-                    Nenhum resultado encontrado.
                 </div>
             </div>
         </main>
@@ -124,10 +168,10 @@ include 'logica_dados.php';
     <div id="modalTransacao" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
          <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
             <h3 class="text-xl font-bold mb-4 text-slate-800 border-b pb-4">Nova Transação</h3>
-            <form action="../Dashboard/salvar_transacao.php" method="POST" class="space-y-4">
+            <form id="formTransacao" action="../Dashboard/salvar_transacao.php" method="POST" class="space-y-4">
                 <input type="hidden" name="origem" value="transacoes">
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase">Título</label>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Descrição</label>
                     <input type="text" name="titulo" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
                 </div>
                 <div>
@@ -157,7 +201,7 @@ include 'logica_dados.php';
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleModal()" class="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition">Cancelar</button>
-                    <button type="submit" class="flex-1 py-3 bg-[#2dd4bf] text-white font-bold rounded-xl hover:bg-teal-600 shadow-lg transition">Salvar</button>
+                    <button type="button" onclick="adicionarEConfirmar()" class="flex-1 py-3 bg-[#2dd4bf] text-white font-bold rounded-xl hover:bg-teal-600 shadow-lg transition">Adicionar</button>
                 </div>
             </form>
         </div>
@@ -236,7 +280,33 @@ include 'logica_dados.php';
         </div>
     </div>
 
+    <!-- POPUP SUCESSO -->
+    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold">
+        Transação cadastrada com sucesso
+    </div>
+
     <script>
+        // Função para mostrar popup ao recarregar a página
+        window.onload = function() {
+            if (localStorage.getItem('transacaoSucesso') === 'true') {
+                const popup = document.getElementById('popupSucesso');
+                popup.classList.remove('hidden');
+                popup.classList.add('fade-in-out');
+                
+                setTimeout(() => {
+                    popup.classList.add('hidden');
+                    popup.classList.remove('fade-in-out');
+                    localStorage.removeItem('transacaoSucesso');
+                }, 3000);
+            }
+        };
+
+        function adicionarEConfirmar() {
+            // Marca no navegador que a transação foi iniciada
+            localStorage.setItem('transacaoSucesso', 'true');
+            document.getElementById('formTransacao').submit();
+        }
+
         function toggleRelatorioModal() {
             const modal = document.getElementById('modalRelatorio');
             modal.classList.toggle('hidden');

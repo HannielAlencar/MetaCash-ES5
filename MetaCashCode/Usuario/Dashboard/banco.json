@@ -1,7 +1,112 @@
 {
-    "saldo_total": 241232,
-    "receitas_mes": 234010,
+    "saldo_total": 542299,
+    "receitas_mes": 924840,
     "transacoes": [
+        {
+            "titulo": "jhjjh",
+            "valor": 55555,
+            "tipo": "e",
+            "cat": "Marketing",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "vvvvvvv",
+            "valor": 35000,
+            "tipo": "s",
+            "cat": "Administrativo",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "ffffffff",
+            "valor": 111111,
+            "tipo": "e",
+            "cat": "Vendas",
+            "data": "28\/02\/2026"
+        },
+        {
+            "titulo": "testee",
+            "valor": 144444,
+            "tipo": "e",
+            "cat": "Administrativo",
+            "data": "06\/05\/2026"
+        },
+        {
+            "titulo": "asdasd",
+            "valor": 12222,
+            "tipo": "e",
+            "cat": "Administrativo",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "cccc",
+            "valor": 122222,
+            "tipo": "e",
+            "cat": "Administrativo",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "qrerer",
+            "valor": 110000,
+            "tipo": "s",
+            "cat": "Geral",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "adad",
+            "valor": 131313,
+            "tipo": "s",
+            "cat": "Administrativo",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "asda",
+            "valor": 100000,
+            "tipo": "s",
+            "cat": "Marketing",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "xccxcxc",
+            "valor": 12500,
+            "tipo": "e",
+            "cat": "Administrativo",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "qweqwe",
+            "valor": 30000,
+            "tipo": "e",
+            "cat": "Geral",
+            "data": "20\/05\/2026"
+        },
+        {
+            "titulo": "Mark",
+            "valor": 1222,
+            "tipo": "e",
+            "cat": "Marketing",
+            "data": "15\/01\/2026"
+        },
+        {
+            "titulo": "trasacaoo",
+            "valor": 13200,
+            "tipo": "e",
+            "cat": "Administrativo",
+            "data": "11\/03\/2026"
+        },
+        {
+            "titulo": "asdd",
+            "valor": 123450,
+            "tipo": "s",
+            "cat": "Geral",
+            "data": "22\/05\/2026"
+        },
+        {
+            "titulo": "menos cem",
+            "valor": -100,
+            "tipo": "e",
+            "cat": "Geral",
+            "data": "22\/05\/2026"
+        },
         {
             "titulo": "Dez",
             "valor": 45788,
@@ -31,12 +136,26 @@
             "data": "20\/05\/2026"
         },
         {
-            "titulo": "receita",
-            "valor": 150000,
+            "titulo": "aluguel",
+            "valor": 50000,
+            "tipo": "saida",
+            "cat": "Moradia",
+            "data": "21\/05\/2026"
+        },
+        {
+            "titulo": "titulos",
+            "valor": 55000,
             "tipo": "entrada",
             "cat": "Geral",
-            "data": "20\/05\/2026"
+            "data": "21\/04\/2026"
+        },
+        {
+            "titulo": "asdadsd",
+            "valor": 123454,
+            "tipo": "entrada",
+            "cat": "Geral",
+            "data": "18\/03\/2026"
         }
     ],
-    "despesas_mes": -7222
+    "despesas_mes": 382541
 }

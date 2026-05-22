@@ -15,23 +15,27 @@
             position: relative;
             display: flex;
             align-items: center;
+            width: 100%;
         }
-        /* Ajuste para o campo de senha não ficar embaixo do ícone */
         .input-container input {
             width: 100%;
-            padding-right: 40px; /* Espaço para o ícone não cobrir o texto */
+            /* Padding esquerdo para o ícone, padding direito padrão */
+            padding: 12px 15px 12px 40px; 
+            box-sizing: border-box;
         }
-        /* Estilo para o ícone do olho */
-        .toggle-password {
+        .input-container i.left-icon {
             position: absolute;
-            right: 15px; /* Define a distância da borda direita */
-            cursor: pointer;
+            left: 15px;
             color: #666;
-            z-index: 10; /* Garante que fique clicável por cima do campo */
-            pointer-events: auto; /* Garante que o clique seja detectado */
         }
-        .toggle-password:hover {
-            color: #333;
+        .error-msg {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
         }
     </style>
 </head>
@@ -49,34 +53,29 @@
         <h2>Entrar</h2>
 
         <?php if(isset($_GET['erro'])): ?>
-            <div class="error-msg">E-mail ou senha incorretos!</div>
+            <div class="error-msg" id="msgErro">
+                <?php 
+                    if($_GET['erro'] == 'senha') echo "Senha incorreta!";
+                    elseif($_GET['erro'] == 'email') echo "E-mail não cadastrado!";
+                    else echo "E-mail ou senha incorretos!";
+                ?>
+            </div>
         <?php endif; ?>
         
-        <form action="processar.php" method="POST">
+        <form action="processar.php" method="POST" id="loginForm" onsubmit="return validarLogin()">
             <div class="form-group">
                 <label>E-mail</label>
                 <div class="input-container">
-                    <i class="fa-regular fa-envelope"></i>
-                    <input type="email" name="email" placeholder="seu@email.com" 
-                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
-                           title="Por favor, insira um e-mail válido" required>
+                    <i class="fa-regular fa-envelope left-icon"></i>
+                    <input type="email" name="email" id="email" placeholder="seu@email.com" required>
                 </div>
             </div>
 
-            
-
             <div class="form-group">
                 <label>Senha</label>
-                <!-- Container com posição relativa forçada -->
-                <div class="input-container" style="position: relative; display: flex; align-items: center;">
-                    <i class="fa-solid fa-lock" style="position: absolute; left: 10px; z-index: 5;"></i>
-                    
-                    <input type="password" name="senha" id="password" placeholder="••••••••" required 
-                           style="width: 100%; padding-left: 35px; padding-right: 40px; box-sizing: border-box;">
-                    
-                    <!-- Ícone do olho com posicionamento absoluto forçado à direita -->
-                    <i class="fa-regular fa-eye toggle-password" id="togglePassword" 
-                       style="position: absolute; right: 15px; cursor: pointer; color: #666; z-index: 10;"></i>
+                <div class="input-container">
+                    <i class="fa-solid fa-lock left-icon"></i>
+                    <input type="password" name="senha" id="password" placeholder="••••••••" required>
                 </div>
             </div>
 
@@ -96,15 +95,23 @@
     <p class="copyright">© 2026 MetaCash. Todos os direitos reservados.</p>
 
     <script>
-        const togglePassword = document.querySelector('#togglePassword');
-        const password = document.querySelector('#password');
+        function validarLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
 
-        togglePassword.addEventListener('click', function () {
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
+            if (email.trim() === "" || password.trim() === "") {
+                alert("Por favor, preencha todos os campos.");
+                return false;
+            }
+
+            if (!emailPattern.test(email)) {
+                alert("Por favor, insira um formato de e-mail válido.");
+                return false;
+            }
+
+            return true;
+        }
     </script>
 </body>
 </html>

@@ -75,7 +75,7 @@ $transacoes_count = count($transacoes);
                         <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
                     </div>
                 </a>
-                <a href="../logout.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
+                <a href="/MetaCashCode/Login/Login.php/index.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
                     <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
                     <span class="font-medium">Sair</span>
                 </a>

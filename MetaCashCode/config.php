@@ -41,6 +41,8 @@ $options = [
 try {
     // Cria a instância do PDO para a conexão
     $pdo = new PDO($dsn, $user, $pass, $options);
+    $pdo->exec("SET TIME ZONE 'America/Sao_Paulo'");
+    date_default_timezone_set('America/Sao_Paulo');
 } catch (PDOException $e) {
     // Em caso de erro na conexão, exibe a mensagem e encerra
     die("Erro na conexão com o banco de dados: " . $e->getMessage());

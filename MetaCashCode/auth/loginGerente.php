@@ -19,7 +19,7 @@
                 <h2>Login de Gerente</h2>
             </div>
 
-            <form action="processa_login.php" method="POST">
+            <form action="loginGerente.php" method="POST">
                 <div class="input-group">
                     <label for="cpf">CPF</label>
                     <input 
@@ -55,11 +55,11 @@
             </form>
 
             <div class="info-box">
-                <p><strong>Acesso Gerencial:</strong> Esta área é exclusiva para gerentes e administradores. Se você é um colaborador, utilize o <a href="#">login padrão</a>.</p>
+                <p><strong>Acesso Gerencial:</strong> Esta área é exclusiva para gerentes e administradores. Se você é um colaborador, utilize o <a href="../auth/login.php">login padrão</a>.</p>
             </div>
 
             <div class="card-footer">
-                <p>Não tem uma conta? <a href="../Cadastro.php/index.php">Cadastre-se</a></p>
+                <p>Não tem uma conta? <a href="../auth/cadastro.php">Cadastre-se</a></p>
             </div>
         </main>
 
@@ -68,16 +68,6 @@
         </footer>
     </div>
 
-    <script>
-        // Função simples para mostrar/esconder a senha
-        function toggleVisibility() {
-            const senhaInput = document.getElementById('senha');
-            if (senhaInput.type === "password") {
-                senhaInput.type = "text";
-            } else {
-                senhaInput.type = "password";
-            }
-        }
-    </script>
+    <script src="../assets/js/loginGerente.js"></script>
 </body>
 </html>

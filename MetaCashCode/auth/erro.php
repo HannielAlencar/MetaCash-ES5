@@ -25,7 +25,7 @@
             $url_recuperacao = "solicitar_token.php"; 
         ?>
 
-<a href="<?= '../Esquecer-senha.php/esqueceu-senha.php' ?>" class="btn-recovery">
+<a href="<?= '../auth/esqueceuSenha.php' ?>" class="btn-recovery">
     Solicitar Nova Recuperação
 </a>
     </div>

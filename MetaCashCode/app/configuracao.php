@@ -163,7 +163,7 @@
                     <option>Receita</option>
                     <option>Despesa</option>
                 </select>
-                <button class="bg-teal-400 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-teal-500 transition-colors">+ Adicionar</button>
+                <button class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-4 py-2 rounded-md font-bold text-sm shadow-lg hover:opacity-90 transition">+ Adicionar</button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">

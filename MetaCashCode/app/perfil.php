@@ -1,3 +1,40 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../config.php';
+
+$id_usuario = $_SESSION['id_usuario'] ?? null;
+$nome_usuario = $_SESSION['nome_usuario'] ?? 'Usuario';
+$email_usuario = $_SESSION['email_usuario'] ?? 'usuario@exemplo.com';
+$matricula_usuario = $_SESSION['matricula'] ?? '000000';
+$cpf_usuario = $_SESSION['cpf_usuario'] ?? '000.000.000-00';
+$papel_usuario = $_SESSION['nivel_permissao'] ?? 'Membro';
+
+if ($id_usuario) {
+    try {
+        $stmt = $pdo->prepare('SELECT nome_completo, email, matricula, cpf, nivel_permissao FROM usuarios WHERE id_usuario = :id LIMIT 1');
+        $stmt->execute([':id' => $id_usuario]);
+        $usuario = $stmt->fetch();
+
+        if ($usuario) {
+            $nome_usuario = $usuario['nome_completo'] ?: $nome_usuario;
+            $email_usuario = $usuario['email'] ?: $email_usuario;
+            $matricula_usuario = $usuario['matricula'] ?: $matricula_usuario;
+            $cpf_usuario = $usuario['cpf'] ?: $cpf_usuario;
+            $papel_usuario = $usuario['nivel_permissao'] ?: $papel_usuario;
+        }
+    } catch (PDOException $e) {
+        error_log('Erro ao carregar perfil: ' . $e->getMessage());
+    }
+}
+
+if (function_exists('mb_substr')) {
+    $iniciais = mb_strtoupper(mb_substr($nome_usuario, 0, 1));
+} else {
+    $iniciais = strtoupper(substr($nome_usuario, 0, 1));
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7,50 +44,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
+<body class="bg-[#f8fafc]">
 
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col sticky top-0 h-screen shrink-0">
-        <!-- LOGO ATUALIZADA -->
-        <div class="flex items-center gap-3 mb-10 px-2">
-            <div class="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
-                <img src="../assets/img/logoCyano.png" alt="MetaCash Logo" class="w-full h-full object-contain" onerror="this.src='https://via.placeholder.com/40?text=MC'">
-            </div>
-            <div class="flex flex-col">
-                <span class="font-bold text-xl leading-tight">MetaCash</span>
-                <span class="text-[10px] text-gray-400">Gestão Empresarial</span>
-            </div>
-        </div>
+    <div class="flex min-h-screen">
+        <?php require_once '../includes/sidebar.php'; ?>
 
-        <nav class="flex-1 space-y-3">
-            <a href="../Dashboard/index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 transition">
-                <i class="fas fa-th-large"></i><span class="font-medium">Dashboard</span>
-            </a>
-            <a href="transacoes.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 transition">
-                <i class="fas fa-exchange-alt"></i><span class="font-medium">Transações</span>
-            </a>
-        </nav>
-
-        <!-- RODAPÉ DA SIDEBAR -->
-        <div class="mt-auto pt-6 border-t border-slate-800 space-y-4">
-            <a href="perfil.php" class="bg-[#1e3a5f]/60 p-3 rounded-2xl flex items-center gap-3 border border-[#2dd4bf]/50 transition hover:bg-[#1e3a5f]/80 block">
-                <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0">
-                    U
-                </div>
-                <div class="flex flex-col overflow-hidden">
-                    <span class="text-sm font-bold truncate">Usuário</span>
-                    <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
-                </div>
-            </a>
-            <a href="../auth/logout.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
-                <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400"></i>
-                <span class="font-medium">Sair</span>
-            </a>
-        </div>
-    </aside>
-
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="flex-1 p-10 w-full">
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="flex-1 p-10 ml-64 w-full">
         <!-- Cabeçalho da Página -->
         <header class="mb-8">
             <a href="javascript:history.back()" class="text-sm text-slate-500 hover:text-teal-600 flex items-center gap-2 mb-4 transition">
@@ -75,14 +75,14 @@
                     <!-- Header do Perfil (Avatar) -->
                     <div class="flex items-center gap-4 mb-8">
                         <div class="w-20 h-20 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] text-3xl font-bold">
-                            U
+                            <?= htmlspecialchars($iniciais, ENT_QUOTES, 'UTF-8') ?>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-slate-800">Usuário</h3>
+                            <h3 class="text-xl font-bold text-slate-800"><?= htmlspecialchars($nome_usuario, ENT_QUOTES, 'UTF-8') ?></h3>
                             <span class="inline-block bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-1">
-                                <i class="fas fa-shield-alt mr-1"></i> Membro
+                                <i class="fas fa-shield-alt mr-1"></i> <?= htmlspecialchars($papel_usuario, ENT_QUOTES, 'UTF-8') ?>
                             </span>
-                            <p class="text-sm text-slate-400">usuario@exemplo.com</p>
+                            <p class="text-sm text-slate-400"><?= htmlspecialchars($email_usuario, ENT_QUOTES, 'UTF-8') ?></p>
                         </div>
                     </div>
 
@@ -93,7 +93,7 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nome Completo</label>
                                 <div class="relative">
                                     <i class="far fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" value="Usuário" disabled class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed">
+                                    <input type="text" value="<?= htmlspecialchars($nome_usuario, ENT_QUOTES, 'UTF-8') ?>" disabled class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed">
                                 </div>
                                 <p class="text-[10px] text-slate-400 mt-1 italic">Este campo não pode ser alterado</p>
                             </div>
@@ -103,7 +103,7 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Matrícula</label>
                                 <div class="relative">
                                     <i class="far fa-id-badge absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" value="2024001" disabled class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed">
+                                    <input type="text" value="<?= htmlspecialchars($matricula_usuario, ENT_QUOTES, 'UTF-8') ?>" disabled class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed">
                                 </div>
                                 <p class="text-[10px] text-slate-400 mt-1 italic">Este campo não pode ser alterado</p>
                             </div>
@@ -113,7 +113,7 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">CPF</label>
                                 <div class="relative">
                                     <i class="far fa-address-card absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" value="123.456.789-00" disabled class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed">
+                                    <input type="text" value="<?= htmlspecialchars($cpf_usuario, ENT_QUOTES, 'UTF-8') ?>" disabled class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed">
                                 </div>
                                 <p class="text-[10px] text-slate-400 mt-1 italic">Este campo não pode ser alterado</p>
                             </div>
@@ -123,7 +123,7 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Papel</label>
                                 <div class="w-full px-4 py-3 rounded-xl bg-sky-100 border border-sky-200 text-sky-700 flex items-center gap-3">
                                     <i class="fas fa-user-tag text-sky-500"></i>
-                                    <span class="font-bold text-sm">Membro</span>
+                                    <span class="font-bold text-sm"><?= htmlspecialchars($papel_usuario, ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                                 <p class="text-[10px] text-slate-400 mt-1">Definido pelo gerente da empresa</p>
                             </div>
@@ -133,14 +133,14 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Email</label>
                                 <div class="relative">
                                     <i class="far fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="email" value="usuario@exemplo.com" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition">
+                                    <input type="email" value="<?= htmlspecialchars($email_usuario, ENT_QUOTES, 'UTF-8') ?>" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition">
                                 </div>
                                 <p class="text-[10px] text-teal-600 mt-1 italic"><i class="fas fa-check"></i> Este campo pode ser alterado</p>
                             </div>
                         </div>
 
                         <div class="flex justify-end pt-4">
-                            <button type="submit" class="bg-[#0f172a] text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition shadow-lg flex items-center gap-2">
+                            <button type="submit" class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition flex items-center gap-2">
                                 <i class="fas fa-save"></i> Salvar Alterações
                             </button>
                         </div>
@@ -203,7 +203,7 @@
                                     <div class="text-[10px] text-slate-500 flex items-center gap-2"><i class="fas fa-times text-red-400"></i> Caractere especial (!@#$...)</div>
                                 </div>
                             </div>
-                            
+                            <!-- BOTÃO ATUALIZADO -->
                             <button type="submit" class="bg-slate-100 text-slate-600 px-6 py-2.5 rounded-lg text-sm hover:bg-red-50 hover:text-red-600 transition duration-300 flex items-center gap-2 border border-slate-200 hover:border-red-200 shadow-sm">
                                 <i class="fas fa-key text-xs"></i> Alterar Senha
                             </button>
@@ -212,7 +212,8 @@
                 </div>
             </section>
         </div>
-    </main>
+        </main>
+    </div>
 
 </body>
 </html>

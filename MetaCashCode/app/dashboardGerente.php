@@ -200,7 +200,7 @@ if (!function_exists('formatarMoeda')) {
                 <h1 class="text-2xl font-bold text-slate-800">Visão Geral Financeira</h1>
                 <p class="text-slate-500 text-sm">Acompanhe o desempenho financeiro da sua empresa</p>
             </div>
-            <button class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+            <button class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-4 py-2 rounded-lg transition font-medium flex items-center gap-2 shadow-lg hover:opacity-90">
                 <span>+</span> Adicionar Transação
             </button>
         </div>
@@ -287,15 +287,6 @@ if (!function_exists('formatarMoeda')) {
         </div>
     </main>
 
-    <script id="financeData" type="application/json">
-    {
-        "labels": <?php echo json_encode($labels_meses); ?>,
-        "receitas": <?php echo json_encode($dados_receitas); ?>,
-        "despesas": <?php echo json_encode($dados_despesas); ?>,
-        "categorias": <?php echo json_encode($categorias); ?>
-    }
-    </script>
-
-    <script src="Script/script.js"></script>
+    <script src="../assets/js/dashboardGerente.js"></script>
 </body>
 </html>

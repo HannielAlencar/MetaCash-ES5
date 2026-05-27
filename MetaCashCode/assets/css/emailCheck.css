@@ -1,3 +1,4 @@
+/* Configurações Globais */
 * {
     margin: 0;
     padding: 0;
@@ -6,8 +7,7 @@
 }
 
 body {
-    /* Imagem de Fundo (Sem degradê) */
-    background-image: url('img/fundo.png');
+    background-image: url('../img/fundo.png');
     background-size: cover;           
     background-position: center;      
     background-repeat: no-repeat;     

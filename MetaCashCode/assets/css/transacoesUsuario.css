@@ -172,3 +172,24 @@ body {
 .modal-active {
     display: flex !important;
 }
+
+        /* CSS para remover o spinner do input number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    appearance: textfield;
+}
+        
+        /* Animação do Popup */
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+.fade-in-out {
+    animation: fadeInOut 3s ease-in-out forwards;
+}

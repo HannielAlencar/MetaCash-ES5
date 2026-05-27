@@ -87,7 +87,7 @@
                     <h1 class="text-3xl font-bold text-slate-800">Transações</h1>
                     <p class="text-slate-500">Gerencie todas as transações financeiras</p>
                 </div>
-                <button class="bg-[#2dd4bf] text-white px-6 py-3 rounded-lg font-bold hover:bg-teal-600 transition shadow-md">
+                <button class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition">
                     + Adicionar Transação
                 </button>
             </header>

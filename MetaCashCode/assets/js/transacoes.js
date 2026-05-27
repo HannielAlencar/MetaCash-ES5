@@ -32,6 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listeners para os inputs
     inputBusca.addEventListener('keyup', filtrar);
     filtroCategoria.addEventListener('change', filtrar);
+    const params = new URLSearchParams(window.location.search);
+    const sucesso = params.get('success');
+    const popup = document.getElementById('popupSucesso');
+    if (sucesso === '1' && popup) {
+        popup.classList.remove('hidden');
+        popup.classList.add('fade-in-out');
+
+        setTimeout(() => {
+            popup.classList.add('hidden');
+            popup.classList.remove('fade-in-out');
+            params.delete('success');
+            const newUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
+            window.history.replaceState({}, '', newUrl);
+        }, 3000);
+    }
 });
 
 // Controle do Modal
@@ -41,3 +56,20 @@ function toggleModal(modalId = 'modalTransacao') {
     modal.classList.toggle('hidden');
     modal.classList.toggle('flex');
 }
+
+function adicionarEConfirmar() {
+    document.getElementById('formTransacao').submit();
+}
+
+function toggleRelatorioModal() {
+    toggleModal('modalRelatorio');
+}
+
+// Fecha modais ao clicar fora
+window.onclick = function(event) {
+    const mRel = document.getElementById('modalRelatorio');
+    const mTra = document.getElementById('modalTransacao');
+    if (event.target == mRel) toggleModal('modalRelatorio');
+    if (event.target == mTra) toggleModal('modalTransacao');
+}
+

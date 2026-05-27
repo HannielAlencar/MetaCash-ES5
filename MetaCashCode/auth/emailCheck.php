@@ -11,7 +11,7 @@
 
     <div class="background-overlay">
         <header class="top-nav">
-            <a href="login.php" class="back-link">← Voltar ao login</a>
+            <a href="../auth/login.php" class="back-link">← Voltar ao login</a>
         </header>
 
         <main class="container">
@@ -39,7 +39,7 @@
                     </ul>
                 </div>
 
-                <a href="../Login.php/index.php" class="btn-primary">Voltar ao login</a>
+                <a href="../auth/login.php" class="btn-primary">Voltar ao login</a>
 
                 <p class="resend-text">
                     Não recebeu? <a href="#">Enviar novamente</a>

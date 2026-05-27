@@ -1,3 +1,33 @@
+<?php
+require_once __DIR__ . '/../config.php';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+
+    if ($email) {
+        // 1. Gerar um token único e seguro
+        $token = bin2hex(random_bytes(32));
+        
+        // 2. Definir expiração (ex: 1 hora a partir de agora)
+        $expiracao = date("Y-m-d H:i:s", strtotime('+1 hour'));
+
+        $link = "../auth/redefinirSenha.php?token=" . $token;
+
+        $assunto = "Recuperação de Senha - MetaCash";
+        $mensagem = "Clique no link para redefinir sua senha: " . $link;
+        $headers = "From: no-reply@metacash.com";
+
+        header("Location: ../auth/redefinirSenha.php?status=enviado&email=" . urlencode($email));
+        exit(); 
+
+    } else {
+        // Se o e-mail for inválido ou vazio
+        header("Location: ../auth/esqueceuSenha.php?erro=email_invalido");
+        exit();
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -14,7 +44,7 @@
 <body>
 
 <div class="back-link-container">
-    <a href="../Login.php/index.php" class="back-link">
+    <a href="../auth/login.php" class="back-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>

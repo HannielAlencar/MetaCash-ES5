@@ -64,115 +64,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaCash - Criar Conta</title>
+    <title>Criar Conta - MetaCash</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/cadastro.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
 </head>
-<body>
-
-<div class="container">
-    <header class="logo-header">
-        <img src="../assets/img/logo.png" alt="MetaCash Logo" class="icon-main">
-        <h1>MetaCash</h1>
-        <p>Cadastre sua empresa</p>
-    </header>
-
-    <div class="card">
-        <h2>Criar Conta</h2>
-        
-        <?php if(isset($_GET['erro'])): ?>
-            <div class="alert error"><?php echo htmlspecialchars($_GET['erro']); ?></div>
-        <?php endif; ?>
-        <?php if(isset($_GET['sucesso'])): ?>
-            <div class="alert success">Cadastro realizado com sucesso!</div>
-        <?php endif; ?>
-
-        <form action="" method="POST">
-            <div class="grid">
-                <div class="input-group">
-                    <label>Nome da Empresa <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>🏢</i>
-                        <input type="text" name="nome_empresa" placeholder="Empresa LTDA" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Nome do Responsável <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>👤</i>
-                        <input type="text" name="nome_completo" placeholder="João Silva" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>E-mail <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>✉️</i>
-                        <input type="email" name="email" placeholder="contato@empresa.com" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label> Matrícula <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>🏷️</i>
-                        <input type="text" name="matricula" placeholder="0021840" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>CNPJ <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>📄</i>
-                        <input type="text" name="cnpj" placeholder="00.000.000/0000-00" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>CPF <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>👤</i>
-                        <input type="text" name="cpf" placeholder="000.000.000-00" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Senha <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>🔒</i>
-                        <input type="password" name="senha" placeholder="••••••••" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Confirmar Senha <span>*</span></label>
-                    <div class="input-with-icon">
-                        <i>🔒</i>
-                        <input type="password" name="confirmar_senha" placeholder="••••••••" required>
-                    </div>
-                </div>
+<body class="h-screen overflow-hidden relative text-slate-800 flex items-center justify-center">
+    <!-- Pop-up de Sucesso -->
+    <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-2xl text-green-600"></i>
             </div>
-
-            <div class="requirements-container">
-                <p>Requisitos de Senha:</p>
-                <div class="requirements-grid">
-                    <span>✕ Mínimo de 8 caracteres</span>
-                    <span>✕ Letra maiúscula (A-Z)</span>
-                    <span>✕ Letra minúscula (a-z)</span>
-                    <span>✕ Número (0-9)</span>
-                    <span>✕ Caractere especial (!@#$...)</span>
-                </div>
-            </div>
-
-            <div class="terms">
-                <input type="checkbox" id="termos" name="termos" required>
-                <label for="termos">Eu aceito os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a></label>
-            </div>
-
-            <button type="submit" class="btn-submit">Criar Conta</button>
-        </form>
-
-        <p class="login-link">Já tem uma conta? <a href="../Login.php/index.php">Fazer login</a></p>
+            <h3 class="text-lg font-bold text-slate-800">Conta criada com sucesso</h3>
+        </div>
     </div>
-    
-    <footer class="footer-copyright">
-        © 2026 MetaCash. Todos os direitos reservados.
-    </footer>
-</div>
 
+    <div class="noise-overlay"></div>
+
+    <a href="../app/homePB.php" class="fixed top-4 left-6 z-20 inline-flex items-center gap-2 text-white font-medium hover:text-slate-200 transition-colors">
+        <i class="fas fa-arrow-left text-sm"></i> Voltar
+    </a>
+
+    <div class="relative z-10 w-full max-w-xl px-4">
+        <div class="flex flex-col items-center mb-4">
+            <div class="mb-2">
+                <img src="../assets/img/logo.php" alt="Logo MetaCash" class="w-14 h-14 object-contain">
+            </div>
+            <h1 class="text-white text-xl font-bold tracking-tight">MetaCash</h1>
+            <p class="text-slate-300 text-xs font-medium">Cadastre sua empresa</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-2xl p-6">
+            <h2 class="text-lg font-bold mb-4">Criar Conta</h2>
+            
+            <form id="signupForm" action="cadastro.php" method="POST" class="space-y-2.5">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome da Empresa <span class="text-red-500">*</span></label>
+                        <input type="text" id="empresa" name="nome_empresa" placeholder="Empresa LTDA" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome do Responsável <span class="text-red-500">*</span></label>
+                        <input type="text" id="responsavel" name="nome_completo" placeholder="Joao Silva" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">E-mail <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="email@gmail.com" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Matricula <span class="text-red-500">*</span></label>
+                        <input type="text" id="matricula" name="matricula" placeholder="M29L0" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CNPJ <span class="text-red-500">*</span></label>
+                        <input type="text" id="cnpj" name="cnpj" maxlength="18" placeholder="00.000.000/0000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CPF <span class="text-red-500">*</span></label>
+                        <input type="text" id="cpf" name="cpf" maxlength="14" placeholder="000.000.000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Senha <span class="text-red-500">*</span></label>
+                        <input type="password" id="senha" name="senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Confirmar Senha <span class="text-red-500">*</span></label>
+                        <input type="password" id="confirmaSenha" name="confirmar_senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 mt-1">
+                    <p class="text-[10px] font-bold text-slate-700 mb-1">Requisitos de Senha:</p>
+                    <div class="grid grid-cols-2 gap-1 text-[9px] text-slate-500">
+                        <p id="req-length"><i class="fas fa-times text-red-400 mr-1"></i> 8+ caracteres</p>
+                        <p id="req-upper"><i class="fas fa-times text-red-400 mr-1"></i> Maiúscula</p>
+                        <p id="req-lower"><i class="fas fa-times text-red-400 mr-1"></i> Minúscula</p>
+                        <p id="req-num"><i class="fas fa-times text-red-400 mr-1"></i> Número</p>
+                        <p id="req-special"><i class="fas fa-times text-red-400 mr-1"></i> Caractere especial</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 py-1">
+                    <input type="checkbox" id="terms" name="terms" class="rounded border-slate-300 text-blue-900" required>
+                    <label for="terms" class="text-[11px] text-slate-600">
+                        Eu aceito os 
+                        <a href="../app/termos.php" target="_blank" class="text-blue-900 font-bold underline">Termos</a> 
+                        e a 
+                        <a href="../app/politica.php" target="_blank" class="text-blue-900 font-bold underline">Política</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full bg-[#0a1b2e] hover:bg-[#1a2f45] text-white font-bold py-2 rounded-lg transition-all shadow-md text-sm">
+                    Criar Conta
+                </button>
+            </form>
+
+            <p class="text-center text-[11px] text-slate-500 mt-3">Já tem uma conta? <a href="../auth/login.php" class="text-blue-900 font-bold hover:underline">Fazer login</a></p>
+        </div>
+
+        <p class="text-center text-[10px] text-slate-400 mt-3">© <?php echo date('Y'); ?> MetaCash. Todos os direitos reservados.</p>
+    </div>
+
+<script src="../assets/js/cadastro.js"></script>
 </body>
 </html>

@@ -20,8 +20,8 @@
         <p class="subtitle">Gestão Financeira Empresarial Simples e Eficiente</p>
 
         <nav class="button-group">
-            <a href="../Login.php/index.php" class="btn">Entrar</a>
-            <a href="../LoginGerente.php/index.php" class="btn">Entrar como gerente</a>
+            <a href="../auth/login.php" class="btn">Entrar</a>
+            <a href="../auth/loginGerente.php" class="btn">Entrar como gerente</a>
         </nav>
 
         <div class="status-badge">

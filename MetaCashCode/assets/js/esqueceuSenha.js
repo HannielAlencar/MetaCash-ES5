@@ -11,6 +11,6 @@ document.getElementById('form-validacao').addEventListener('submit', function(e)
         window.location.href = "../EmailCheck.php/index.php"; 
     } else {
         // Se o código expirou ou é inválido
-        window.location.href = "../Falha.php/falha.php";
+        window.location.href = "../auth/login.php";
     }
 });

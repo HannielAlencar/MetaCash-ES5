@@ -1,77 +1,83 @@
 <?php
-require_once __DIR__ . '/../config.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require_once __DIR__ . '/../config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    //  Pega os dados do formulário
-    $titulo = $_POST['titulo'] ?? 'Sem título';
-    $valor  = (float)($_POST['valor'] ?? 0);
-    $tipo   = $_POST['tipo'] ?? 'e';
-    $cat    = $_POST['cat'] ?? 'Geral';
-    $origem = $_POST['origem'] ?? 'dashboard';
+    $id_empresa = $_SESSION['id_empresa'] ?? null;
+    $id_usuario = $_SESSION['id_usuario'] ?? null;
 
-    // Traduz para o formato que o seu Banco de Dados exige
-    $tipo_banco = ($tipo === 'e') ? 'Receita' : 'Despesa';
-    $data_transacao = date('Y-m-d'); // data no formato Ano-Mês-Dia
-    $data_registro = date('Y-m-d H:i:s'); // data e hora no formato Ano-Mês-Dia Hora:Min:Seg
+    if (!$id_empresa || !$id_usuario) {
+        header('Location: ../auth/login.php');
+        exit();
+    }
 
-    $id_empresa = $_SESSION['id_empresa']; 
-    $id_usuario = $_SESSION['id_usuario'];
+    $titulo = trim($_POST['titulo'] ?? 'Sem titulo');
+    $valor = (float)($_POST['valor'] ?? 0);
+    $tipo_raw = $_POST['tipo'] ?? 'e';
+    $cat = trim($_POST['cat'] ?? 'Geral');
+    $data_raw = trim($_POST['data'] ?? '');
+
+    $tipo = $tipo_raw === 's' || $tipo_raw === 'Despesa' ? 'Despesa' : 'Receita';
+
+    $data_obj = DateTime::createFromFormat('Y-m-d', $data_raw);
+    if (!$data_obj) {
+        $data_obj = new DateTime();
+    }
+    $data_transacao = $data_obj->format('Y-m-d');
+
+    if ($valor <= 0) {
+        header('Location: ../app/transacoes.php?erro=valor');
+        exit();
+    }
 
     try {
-        // Normaliza a categoria escolhida
-        $cat = trim($cat);
-        if ($cat === '') {
-            $cat = 'Geral';
-        }
+        $pdo->beginTransaction();
 
-        // Descobre o ID da Categoria baseada no nome ('Vendas', 'Geral', etc)
-        $stmt_cat = $pdo->prepare("SELECT id_categoria FROM categoria WHERE nome_categoria = :nome AND id_empresa = :empresa LIMIT 1");
-        $stmt_cat->execute([':nome' => $cat, ':empresa' => $id_empresa]);
-        $categoria_db = $stmt_cat->fetch();
+        $sql_categoria = "SELECT id_categoria FROM categoria WHERE id_empresa = :empresa AND nome_categoria = :nome AND tipo_categoria = :tipo LIMIT 1";
+        $stmt_categoria = $pdo->prepare($sql_categoria);
+        $stmt_categoria->execute([
+            ':empresa' => $id_empresa,
+            ':nome' => $cat,
+            ':tipo' => $tipo
+        ]);
+        $categoria = $stmt_categoria->fetch();
 
-        // Se não existir, cria a categoria para a empresa
-        if (!$categoria_db) {
-            $stmt_nova = $pdo->prepare("INSERT INTO categoria (id_empresa, nome_categoria, tipo_categoria) VALUES (:empresa, :nome, :tipo)");
-            $stmt_nova->execute([
-                ':empresa' => $id_empresa,
-                ':nome'    => $cat,
-                ':tipo'    => $tipo_banco
-            ]);
-            $id_categoria = $pdo->lastInsertId();
+        if ($categoria) {
+            $id_categoria = (int)$categoria['id_categoria'];
         } else {
-            $id_categoria = $categoria_db['id_categoria'];
+            $sql_nova_categoria = "INSERT INTO categoria (id_empresa, nome_categoria, tipo_categoria) VALUES (:empresa, :nome, :tipo)";
+            $stmt_nova_categoria = $pdo->prepare($sql_nova_categoria);
+            $stmt_nova_categoria->execute([
+                ':empresa' => $id_empresa,
+                ':nome' => $cat,
+                ':tipo' => $tipo
+            ]);
+            $id_categoria = (int)$pdo->lastInsertId();
         }
 
-        // 4. Salva no Banco de Dados (MySQL)
-        $sql = "INSERT INTO transacoes (id_empresa, id_usuario, id_categoria, tipo_transacao, valor_transacao, data_transacao, data_registro, descricao_transacao) 
-                VALUES (:empresa, :usuario, :cat, :tipo, :valor, :data_transacao, :data_registro, :descricao)";
-                
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':empresa'   => $id_empresa,
-            ':usuario'   => $id_usuario,
-            ':cat'       => $id_categoria,
-            ':tipo'      => $tipo_banco,
-            ':valor'     => $valor,
-            ':data_transacao' => $data_transacao,
-            ':data_registro'  => $data_registro,
+        $sql_transacao = "INSERT INTO transacoes (id_empresa, id_usuario, id_categoria, tipo_transacao, valor_transacao, data_transacao, descricao_transacao) VALUES (:empresa, :usuario, :categoria, :tipo, :valor, :data, :descricao)";
+        $stmt_transacao = $pdo->prepare($sql_transacao);
+        $stmt_transacao->execute([
+            ':empresa' => $id_empresa,
+            ':usuario' => $id_usuario,
+            ':categoria' => $id_categoria,
+            ':tipo' => $tipo,
+            ':valor' => $valor,
+            ':data' => $data_transacao,
             ':descricao' => $titulo
         ]);
 
-        // 5. Redirecionamento
-if ($origem === 'transacoes') {
-            header("Location: ../app/transacoes.php");
-        } else {
-            header("Location: ../app/dashboardUsuario.php"); 
-        }
+        $pdo->commit();
+
+        header('Location: ../app/transacoes.php?success=1');
         exit();
     } catch (PDOException $e) {
-        // Se der erro de chave estrangeira ou conexão, ele avisa na tela
-        die("Erro ao salvar no banco de dados: " . $e->getMessage());
+        $pdo->rollBack();
+        error_log('Erro ao salvar transacao: ' . $e->getMessage());
+        header('Location: ../app/transacoes.php?erro=salvar');
+        exit();
     }
 }
 ?>

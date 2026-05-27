@@ -23,7 +23,7 @@
     <p class="main-subtitle">Crie uma nova senha segura</p>
 
     <div class="card">
-        <form action="../Login.php/index.php" method="POST">
+        <form action="../auth/login.php" method="POST">
             
             <div class="input-group">
                 <label class="input-label">Nova Senha</label>
@@ -68,7 +68,7 @@
             </button>
         </form>
 
-        <a href="../Login.php/index.php" class="back-to-login-link">Voltar ao login</a>
+        <a href="../auth/login.php" class="back-to-login-link">Voltar ao login</a>
     </div>
 
     <footer>

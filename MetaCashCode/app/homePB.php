@@ -19,14 +19,14 @@ include('data.php');
 <body>
 
     <nav class="navbar">
-        <a href="index.php" class="nav-logo">
+        <a href="../index.php" class="nav-logo">
             <img src="../assets/img/logo.png" alt="Logo">
             <span><?php echo $config['nome_app'] ?? 'MetaCash'; ?></span>
         </a>
         <div class="nav-links">
             <!-- CORREÇÃO: Simplificação de caminhos. Removido o ".php" do nome das pastas -->
-            <a href="../..//Login/Login.php/index.php" class="btn-login">Entrar</a>
-            <a href="../../Login/Cadastro.php/index.php" class="btn-cadastro">Cadastro</a>
+            <a href="../auth/login.php" class="btn-login">Entrar</a>
+            <a href="../auth/cadastro.php" class="btn-cadastro">Cadastro</a>
         </div>
     </nav>
 
@@ -36,7 +36,7 @@ include('data.php');
         <p>MetaCash é a plataforma que se adapta ao seu negócio. Customize cores, layouts e crie a ferramenta perfeita.</p>
         
         <!-- CORREÇÃO: Ajuste de link (removido o .php da pasta) -->
-        <a href="../../Login/Cadastro.php/index.php" class="btn-main">
+        <a href="../auth/cadastro.php" class="btn-main">
             <span>Experimentar</span> <span>+</span>
         </a>
 
@@ -96,8 +96,8 @@ include('data.php');
             <p><?php echo $cta_data['subtitulo'] ?? ''; ?></p>
             <div class="cta-btns">
             
-                <a href="../../Login/Cadastro.php/index.php" class="btn-white">Cadastrar-se Agora →</a>
-                <a href="../../Login/Login.php/index.php" class="btn-outline">Fazer Login</a>
+                <a href="../auth/cadastro.php" class="btn-white">Cadastrar-se Agora →</a>
+                <a href="../auth/login.php" class="btn-outline">Fazer Login</a>
             </div>
         </div>
     </section>

@@ -1,0 +1,163 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    /* Define a imagem de fundo */
+    background-image: url('../assets/img/fundo.png'); 
+    background-size: cover; 
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    /* Cor sólida de fundo (apenas se a imagem falhar) */
+    background-color: #ffffff; 
+    
+    /* Alinhamento central */
+    min-height: 100vh; 
+    margin: 0; /* Importante para remover espaços em branco nas bordas */
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 20px;
+    color: #fff;
+
+    font-family: 'Inter', sans-serif; 
+    background: radial-gradient(circle at 70% 30%, #2b6a7a 0%, #152c3f 50%, #0a111a 100%);
+    background-attachment: fixed;
+}
+
+/* Camada de escurecimento opcional para o fundo (melhora a leitura) */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(13, 21, 37, 0.7); /* Ajuste o 0.7 para mais ou menos brilho */
+    z-index: -1;
+}
+
+.container { width: 100%; max-width: 680px; text-align: center; position: relative; }
+
+.logo-header { margin-bottom: 30px; }
+
+/* Alteramos o .icon-main para comportar a imagem da logo */
+.icon-main { 
+    width: 60px; /* Ajuste o tamanho da sua logo aqui */
+    height: auto;
+    margin: 0 auto 15px; 
+    display: block; 
+}
+
+.logo-header h1 { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
+.logo-header p { color: #94a3b8; font-size: 15px; }
+
+/* Restante do código mantido para preservar o layout */
+.card { 
+    background: #fff; 
+    color: #1e293b;
+    padding: 40px; 
+    border-radius: 12px; 
+    text-align: left; 
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); 
+}
+
+.card h2 { font-size: 24px; font-weight: 700; margin-bottom: 25px; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.input-group label { 
+    display: block; 
+    font-size: 13px; 
+    font-weight: 600; 
+    color: #475569; 
+    margin-bottom: 8px; 
+}
+
+.input-group label span { color: #ef4444; }
+
+.input-with-icon { position: relative; display: flex; align-items: center; }
+
+.input-with-icon i { 
+    position: absolute; 
+    left: 12px; 
+    font-style: normal; 
+    color: #94a3b8; 
+}
+
+.input-with-icon input {
+    width: 100%; 
+    padding: 12px 40px 12px 12px; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 8px; 
+    font-size: 14px;
+    transition: border 0.2s;
+}
+
+.input-with-icon .right-icon {
+    right: 12px;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.right-icon {
+    position: absolute;
+    font-size: 16px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.toggle-password.disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+}
+
+.right-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.requirements-container { 
+    background-color: #f0f7ff; 
+    padding: 20px; 
+    border-radius: 8px; 
+    margin: 20px 0;
+    border: 1px solid #e0e7ff;
+}
+
+.requirements-container p { font-weight: 700; font-size: 13px; margin-bottom: 12px; color: #1e293b; }
+
+.requirements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.requirements-grid span { color: #64748b; font-size: 12px; display: flex; align-items: center; }
+
+.terms { font-size: 13px; color: #64748b; margin: 20px 0; display: flex; align-items: center; gap: 8px; }
+.terms a { color: #3b82f6; text-decoration: none; }
+
+.btn-submit { 
+    background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%); 
+    color: white; 
+    width: 100%; 
+    padding: 14px; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: 700; 
+    cursor: pointer;
+}
+
+.login-link { text-align: center; margin-top: 20px; font-size: 14px; }
+.login-link a { color: #3b82f6; text-decoration: none; font-weight: 600; }
+
+.footer-copyright { margin-top: 30px; color: #94a3b8; font-size: 12px; }
+
+@media (max-width: 600px) { .grid, .requirements-grid { grid-template-columns: 1fr; } }
+
+.noise-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none; z-index: 0; opacity: 0.1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}

@@ -1,0 +1,178 @@
+/* --- Reset e Estilos Globais --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-image: url('../img/fundo.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #0b1f33; /* Fallback */
+}
+
+/* --- Link Voltar ao login --- */
+.back-link-container {
+    width: 100%;
+    max-width: 440px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.back-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.back-link:hover {
+    opacity: 1;
+}
+
+.back-link svg {
+    margin-right: 8px;
+}
+
+/* --- Card Branco --- */
+.card {
+    background-color: #ffffff;
+    width: 90%;
+    max-width: 440px;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.icon-header {
+    background-color: #1e3a5a;
+    color: #ffffff;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+h2 {
+    color: #111827;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+/* --- Formulário --- */
+.input-group {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-label {
+    display: block;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 14px;
+    color: #9ca3af;
+}
+
+input[type="email"] {
+    width: 100%;
+    padding: 12px 12px 12px 42px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    color: #1f2937;
+    transition: border-color 0.2s;
+}
+
+input[type="email"]:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* --- Botão --- */
+.btn-submit {
+    width: 100%;
+    background-color: #26466d;
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s;
+    margin-bottom: 24px;
+}
+
+.btn-submit:hover {
+    background-color: #1e3a5a;
+}
+
+/* --- Info Box --- */
+.info-box {
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: left;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+/* --- Footer --- */
+footer {
+    margin-top: 30px;
+    text-align: center;
+    color: #ffffff;
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+/* --- Responsividade --- */
+@media (max-width: 480px) {
+    .card { padding: 25px; }
+    h2 { font-size: 20px; }
+}

@@ -7,201 +7,350 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .modal-backdrop { backdrop-filter: blur(6px); }
         
-        /* Estilos Sidebar */
-        .bg-sidebar { background-color: #0d1b2a; }
-        .bg-active { background-color: #26a69a; }
-        .bg-button-nav { background-color: #1b3a57; }
-        .text-sidebar { color: #94a3b8; }
-
-        /* Estilos Conteúdo */
-        .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .input-field { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 4px; outline: none; background: #fff; }
-        .input-field:focus { border-color: #2dd4bf; ring: 2px ring #2dd4bf; }
-        .btn-update { background-color: #26a69a; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.875rem; }
-        .btn-update:hover { background-color: #1f8a80; }
+        /* Definição de styles para os componentes de Configuração */
+        .card {
+            background-color: white;
+            border-radius: 1.5rem; /* 24px */
+            border: 1px solid #e2e8f0; /* slate-200 */
+            padding: 2rem; /* 32px */
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+        }
+        .input-field {
+            width: 100%;
+            border-radius: 0.75rem; /* 12px */
+            border: 1px solid #cbd5e1; /* slate-300 */
+            padding: 0.75rem 1rem;
+            margin-top: 0.5rem;
+            outline: none;
+            font-size: 0.875rem;
+            color: #334155;
+            transition: all 0.2s;
+            background-color: #f8fafc;
+        }
+        .input-field:focus {
+            border-color: #2dd4bf;
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.1);
+        }
+        .btn-update {
+            background-color: #0f172a;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-update:hover {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+        }
+        .btn-update:active {
+            transform: translateY(0);
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
     </style>
 </head>
-<body class="flex min-h-screen">
-
-    <!-- SIDEBAR (Conforme image_9cd836.png) -->
-    <aside class="flex flex-col w-64 bg-sidebar text-white p-4 sticky top-0 h-screen">
-        <div class="flex items-center gap-3 mb-8 px-2">
-            <div class="bg-teal-500 p-2 rounded-lg text-white">
-                <i class="fa-solid fa-building-columns text-xl"></i>
-            </div>
-            <div>
-                <h1 class="text-lg font-bold leading-none">MetaCash</h1>
-                <p class="text-[10px] text-gray-400 uppercase tracking-wider">Gestão Empresarial</p>
-            </div>
-        </div>
-
-        <hr class="border-gray-700 mb-6">
-
-        <nav class="flex-1 space-y-1">
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sidebar hover:text-white transition-colors">
-                <i class="fa-solid fa-chart-pie w-5"></i> <span class="text-sm font-medium">Dashboard</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sidebar hover:text-white transition-colors">
-                <i class="fa-solid fa-receipt w-5"></i> <span class="text-sm font-medium">Transações</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sidebar hover:text-white transition-colors">
-                <i class="fa-solid fa-users w-5"></i> <span class="text-sm font-medium">Equipe</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sidebar hover:text-white transition-colors">
-                <i class="fa-solid fa-file-lines w-5"></i> <span class="text-sm font-medium">Gerenciar Páginas</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sidebar hover:text-white transition-colors">
-                <i class="fa-solid fa-clock-rotate-left w-5"></i> <span class="text-sm font-medium">Histórico</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-3 bg-active rounded-lg text-white font-semibold mt-2">
-                <i class="fa-solid fa-gear w-5"></i> <span class="text-sm">Configurações</span>
-            </a>
-
-            <button class="w-full flex items-center justify-center py-3 bg-button-nav rounded-lg text-sm text-white font-medium mt-4">
-                Baixar Relatório
-            </button>
-        </nav>
-
-        <div class="mt-auto">
-            <hr class="border-gray-700 mb-6">
-            <div class="bg-[#1b3a57] rounded-xl p-3 flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-teal-400 rounded-full flex items-center justify-center text-white font-bold">U</div>
-                <div class="overflow-hidden">
-                    <p class="text-sm font-semibold truncate">Usuário</p>
-                    <p class="text-xs text-gray-400 truncate">usuario@exemplo.com</p>
+<body class="bg-gray-50">
+    <div class="flex min-h-screen">
+        <!-- SIDEBAR FIXA -->
+        <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col fixed h-screen shrink-0 z-40">
+            <div class="flex items-center gap-3 mb-10 px-2 pt-2">
+                <!-- LOGO COM PROTEÇÃO CONTRA LOOP DE ERRO -->
+                <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=MetaCash&background=2dd4bf&color=0f172a';}">
+                <div class="flex flex-col">
+                    <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
+                    <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
                 </div>
             </div>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sidebar hover:text-red-400 transition-colors">
-                <i class="fa-solid fa-right-from-bracket w-5"></i> <span class="text-sm">Sair</span>
-            </a>
-        </div>
-    </aside>
 
-    <!-- CONTEÚDO PRINCIPAL (Conforme image_9cdc1c.png) -->
-    <main class="flex-1 p-10 overflow-y-auto">
-        <header class="mb-8">
-            <h1 class="text-2xl font-bold text-slate-800">Configurações</h1>
-            <p class="text-slate-500 text-sm">Personalize sua experiência no MetaCash</p>
-        </header>
+            <!-- Navegação principal com fonte e tamanho sincronizados com o Dashboard de Usuário -->
+            <nav class="flex-1 space-y-2">
+                <!-- Dashboard -->
+                <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-th-large w-5"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <!-- Transações -->
+                <a href="../app/transacoesGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span class="font-medium">Transações</span>
+                </a>
+                <!-- Equipe -->
+                <a href="../app/gerenciaEquipe.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="font-medium">Equipe</span>
+                </a>
+                <!-- Gerenciar Páginas -->
+                <a href="../app/gerenciaPaginas.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-file-alt w-5"></i>
+                    <span class="font-medium">Gerenciar Páginas</span>
+                </a>
+                <!-- Histórico -->
+                <a href="../app/historico.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-history w-5"></i>
+                    <span class="font-medium">Histórico</span>
+                </a>
+                <!-- Configurações (Ativo) -->
+                <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition">
+                    <i class="fas fa-cog w-5"></i>
+                    <span class="font-medium">Configurações</span>
+                </a>
 
-        <!-- Sessão: Informações da Empresa -->
-        <section class="card">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i class="fa-solid fa-building"></i></div>
-                <h2 class="font-bold text-slate-700 text-lg">Informações da Empresa</h2>
+                <!-- Botão de Download na Sidebar (Atualizado com mesmo visual, hover e ícone do fluxo usuário) -->
+                <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
+                    <i class="fas fa-file-pdf w-5"></i>
+                    <span class="font-medium">Baixar Relatório</span>
+                </button>
+            </nav>
+
+            <!-- Profile Footer -->
+            <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2">
+                <a href="../app/PerfilGerente.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group">
+                    <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">U</div>
+                    <div class="flex flex-col overflow-hidden">
+                        <span class="text-sm font-bold truncate">Usuário</span>
+                        <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
+                    </div>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
+                    <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
+                    <span class="font-medium">Sair</span>
+                </a>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="flex-1 p-10 ml-64 overflow-y-auto">
+            <header class="mb-8">
+                <h1 class="text-3xl font-extrabold text-[#0f172a] tracking-tight">Configurações</h1>
+                <p class="text-slate-500 mt-1 text-sm">Personalize sua experiência no MetaCash</p>
+            </header>
+
+            <!-- Seção: Informações da Empresa -->
+            <section class="card">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-blue-100 p-2.5 rounded-xl text-blue-600"><i class="fa-solid fa-building text-sm"></i></div>
+                    <h2 class="font-bold text-slate-800 text-lg">Informações da Empresa</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Nome da Empresa <span class="text-red-500">*</span></label>
+                        <input type="text" class="input-field" value="Minha Empresa">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">CNPJ <span class="text-red-500">*</span></label>
+                        <input type="text" class="input-field" placeholder="00.000.000/0000-00">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Data de Início da Contabilidade <span class="text-red-500">*</span></label>
+                        <input type="date" class="input-field">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Ano Fiscal <span class="text-red-500">*</span></label>
+                        <input type="number" class="input-field" value="2026">
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button class="btn-update"><i class="fa-solid fa-rotate text-xs"></i> Atualizar</button>
+                </div>
+            </section>
+
+            <!-- Seção: Sua Logo -->
+            <section class="card">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-blue-100 p-2.5 rounded-xl text-blue-600"><i class="fa-solid fa-upload text-sm"></i></div>
+                    <h2 class="font-bold text-slate-800 text-lg">Sua Logo</h2>
+                </div>
+                <div class="border-dashed border-2 border-slate-200 rounded-2xl p-8 flex flex-col items-start bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                    <button class="bg-[#0f172a] text-white px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:bg-slate-800 transition-all shadow-sm">Escolher Arquivo</button>
+                    <p class="text-[11px] text-slate-400 uppercase font-semibold tracking-wider">Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB</p>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button class="btn-update"><i class="fa-solid fa-rotate text-xs"></i> Atualizar</button>
+                </div>
+            </section>
+
+            <!-- Seção: Saldo Inicial -->
+            <section class="card">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-blue-100 p-2.5 rounded-xl text-blue-600"><i class="fa-solid fa-dollar-sign text-sm"></i></div>
+                    <h2 class="font-bold text-slate-800 text-lg">Saldo Inicial</h2>
+                </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600 uppercase">Nome da Empresa <span class="text-red-500">*</span></label>
-                    <input type="text" class="input-field" value="Minha Empresa">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Saldo Total (R$) <span class="text-red-500">*</span></label>
+                    <input type="text" class="input-field" value="0,00">
+                    <p class="text-xs text-slate-400 mt-3 italic leading-relaxed">
+                        Este é o saldo que sua empresa tinha antes de começar a usar o MetaCash. <br>
+                        O sistema calcula automaticamente: Saldo Inicial + Receitas - Despesas.
+                    </p>
                 </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-600 uppercase">CNPJ <span class="text-red-500">*</span></label>
-                    <input type="text" class="input-field" placeholder="00.000.000/0000-00">
+                <div class="flex justify-end mt-6">
+                    <button class="btn-update"><i class="fa-solid fa-rotate text-xs"></i> Atualizar</button>
                 </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-600 uppercase">Data de Início da Contabilidade <span class="text-red-500">*</span></label>
-                    <input type="date" class="input-field">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-600 uppercase">Ano Fiscal <span class="text-red-500">*</span></label>
-                    <input type="number" class="input-field" value="2026">
-                </div>
-            </div>
-            <div class="flex justify-end mt-4">
-                <button class="btn-update"><i class="fa-solid fa-rotate"></i> Atualizar</button>
-            </div>
-        </section>
+            </section>
 
-        <!-- Sessão: Sua Logo -->
-        <section class="card">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i class="fa-solid fa-upload"></i></div>
-                <h2 class="font-bold text-slate-700 text-lg">Sua Logo</h2>
-            </div>
-            <div class="border-dashed border-2 border-slate-200 rounded-lg p-6 flex flex-col items-start">
-                <button class="bg-sky-100 text-sky-600 px-4 py-2 rounded-md font-semibold text-sm mb-2">Escolher Arquivo</button>
-                <p class="text-[11px] text-slate-400 uppercase">Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB</p>
-            </div>
-            <div class="flex justify-end mt-4">
-                <button class="btn-update"><i class="fa-solid fa-rotate"></i> Atualizar</button>
-            </div>
-        </section>
+            <!-- Seção: Categorias Personalizadas -->
+            <section class="card">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-blue-100 p-2.5 rounded-xl text-blue-600"><i class="fa-solid fa-tags text-sm"></i></div>
+                    <h2 class="font-bold text-slate-800 text-lg">Categorias Personalizadas</h2>
+                </div>
+                
+                <div class="bg-slate-50 p-5 rounded-2xl flex flex-wrap md:flex-nowrap gap-3 mb-6 border border-slate-100 shadow-inner">
+                    <input type="text" class="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20" placeholder="Nome da categoria...">
+                    <select class="border border-slate-200 rounded-xl px-4 py-3 bg-white text-sm font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20 min-w-[120px]">
+                        <option>Receita</option>
+                        <option>Despesa</option>
+                    </select>
+                    <button class="bg-[#2dd4bf] hover:bg-teal-500 text-[#0f172a] px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95">+ Adicionar</button>
+                </div>
 
-        <!-- NOVA Sessão: Saldo Inicial -->
-        <section class="card">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i class="fa-solid fa-dollar-sign"></i></div>
-                <h2 class="font-bold text-slate-700 text-lg">Saldo Inicial</h2>
-            </div>
-            <div>
-                <label class="text-xs font-bold text-slate-600 uppercase">Saldo Total (R$) <span class="text-red-500">*</span></label>
-                <input type="text" class="input-field" value="0,00">
-                <p class="text-[11px] text-slate-400 mt-2 italic leading-tight">
-                    Este é o saldo que sua empresa tinha antes de começar a usar o MetaCash. <br>
-                    O sistema calcula automaticamente: Saldo Inicial + Receitas - Despesas.
-                </p>
-            </div>
-            <div class="flex justify-end mt-4">
-                <button class="btn-update"><i class="fa-solid fa-rotate"></i> Atualizar</button>
-            </div>
-        </section>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Coluna Receitas -->
+                    <div>
+                        <h3 class="text-xs font-bold text-teal-600 mb-4 uppercase tracking-wider">Receitas</h3>
+                        <?php 
+                        $receitas = ["Venda de Produtos", "Prestação de Serviços", "Rendimentos", "Outras Receitas"];
+                        foreach($receitas as $r): ?>
+                            <div class="flex justify-between items-center border border-slate-200 rounded-xl px-4 py-3 mb-2.5 text-sm text-slate-600 bg-white hover:border-slate-300 transition-colors shadow-sm">
+                                <span class="font-medium">• <?php echo $r; ?></span>
+                                <i class="fa-solid fa-xmark text-slate-400 cursor-pointer hover:text-red-500 transition-colors"></i>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
 
-        <!-- Sessão: Categorias Personalizadas -->
-        <section class="card">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i class="fa-solid fa-tags"></i></div>
-                <h2 class="font-bold text-slate-700 text-lg">Categorias Personalizadas</h2>
+                    <!-- Coluna Despesas -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">Despesas</h3>
+                        <?php 
+                        $despesas = ["Folha de Pagamento (Pessoal)", "Despesas Operacionais (Fixas)", "Fornecedores (Insumos)", "Marketing e Vendas", "Impostos e Taxas", "TI e Equipamentos", "Outras Despesas"];
+                        foreach($despesas as $d): ?>
+                            <div class="flex justify-between items-center border border-slate-200 rounded-xl px-4 py-3 mb-2.5 text-sm text-slate-600 bg-white hover:border-slate-300 transition-colors shadow-sm">
+                                <span class="font-medium">• <?php echo $d; ?></span>
+                                <i class="fa-solid fa-xmark text-slate-400 cursor-pointer hover:text-red-500 transition-colors"></i>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Botão Salvar Geral -->
+            <div class="flex justify-end pb-10">
+                <button class="bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL BAIXAR RELATÓRIO -->
+    <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 class="text-xl font-bold text-slate-800">Baixar Relatório</h3>
+                <button onclick="toggleRelatorioModal()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             
-            <div class="bg-slate-50 p-4 rounded-lg flex flex-wrap md:flex-nowrap gap-2 mb-6 border border-slate-100">
-                <input type="text" class="flex-1 border border-slate-300 rounded-md px-3 text-sm" placeholder="Nome da categoria...">
-                <select class="border border-slate-300 rounded-md px-3 bg-white text-sm">
-                    <option>Receita</option>
-                    <option>Despesa</option>
-                </select>
-                <button class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-4 py-2 rounded-md font-bold text-sm shadow-lg hover:opacity-90 transition">+ Adicionar</button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Coluna Receitas -->
+            <form action="gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
                 <div>
-                    <h3 class="text-xs font-bold text-teal-600 mb-3 uppercase tracking-wider">Receitas</h3>
-                    <?php 
-                    $receitas = ["Venda de Produtos", "Prestação de Serviços", "Rendimentos", "Outras Receitas"];
-                    foreach($receitas as $r): ?>
-                        <div class="flex justify-between items-center border border-slate-200 rounded-md px-3 py-2 mb-2 text-sm text-slate-600 bg-white">
-                            <span>• <?php echo $r; ?></span>
-                            <i class="fa-solid fa-xmark text-red-400 cursor-pointer hover:text-red-600"></i>
-                        </div>
-                    <?php endforeach; ?>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Tipo de Transação</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="e" class="hidden peer">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Receita</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="s" class="hidden peer">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Despesa</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="todos" checked class="hidden peer">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Ambos</div>
+                        </label>
+                    </div>
                 </div>
 
-                <!-- Coluna Despesas -->
                 <div>
-                    <h3 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Despesas</h3>
-                    <?php 
-                    $despesas = ["Folha de Pagamento (Pessoal)", "Despesas Operacionais (Fixas)", "Fornecedores (Insumos)", "Marketing e Vendas", "Impostos e Taxas", "TI e Equipamentos", "Outras Despesas"];
-                    foreach($despesas as $d): ?>
-                        <div class="flex justify-between items-center border border-slate-200 rounded-md px-3 py-2 mb-2 text-sm text-slate-600 bg-white">
-                            <span>• <?php echo $d; ?></span>
-                            <i class="fa-solid fa-xmark text-red-400 cursor-pointer hover:text-red-600"></i>
-                        </div>
-                    <?php endforeach; ?>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Período</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='block'">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Mensal</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="anual" class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='none'">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Anual</div>
+                        </label>
+                    </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Botão Salvar Geral -->
-        <div class="flex justify-end pb-10">
-            <button class="bg-[#0d1b2a] text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 hover:bg-slate-800 shadow-lg transition-all">
-                <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
-            </button>
+                <div id="campoMesRelatorio">
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Mês</label>
+                    <select name="mes" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+                        <option value="03">Março</option><option value="04">Abril</option>
+                        <option value="05" selected>Maio</option><option value="06">Junho</option>
+                        <option value="07">Julho</option><option value="08">Agosto</option>
+                        <option value="09">Setembro</option><option value="10">Outubro</option>
+                        <option value="11">Novembro</option><option value="12">Dezembro</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Ano</label>
+                    <select name="ano" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t">
+                    <button type="button" onclick="toggleRelatorioModal()" class="flex-1 py-3 border border-slate-300 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-slate-800 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">
+                        <i class="fas fa-download mr-2"></i> Baixar PDF
+                    </button>
+                </div>
+            </form>
         </div>
-    </main>
+    </div>
 
+    <script>
+    function toggleModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+    }
+
+    function toggleRelatorioModal() {
+            const modal = document.getElementById('modalRelatorio');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+    }
+
+    // Fecha modais ao clicar fora
+    window.onclick = function(event) {
+        const mRel = document.getElementById('modalRelatorio');
+        if (event.target == mRel) toggleModal('modalRelatorio');
+    }
+    </script>
 </body>
 </html>

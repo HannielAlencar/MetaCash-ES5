@@ -1,3 +1,4 @@
+/* Importação de fonte (opcional, mas recomendada para o visual moderno) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
 
 :root {
@@ -49,6 +50,8 @@ body {
 .logo strong { display: block; font-size: 1.1rem; }
 .logo span { font-size: 0.75rem; color: var(--text-muted); }
 
+/* Sidebar styles in this page are handled by Tailwind classes, so generic nav rules should not override them. */
+/*
 nav { flex: 1; }
 
 nav a {
@@ -68,6 +71,7 @@ nav a:hover, nav a.active {
     color: var(--text-white);
     border-left-color: var(--sidebar-active);
 }
+*/
 
 .sidebar-footer {
     padding: 20px;

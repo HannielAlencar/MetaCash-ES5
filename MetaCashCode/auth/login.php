@@ -30,7 +30,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['cpf_usuario'] = $usuario['cpf'];
                 $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
 
-                header("Location: /app/dashboardUsuario.php");
+
+                // Direcionamento dinâmico baseado no papel
+                $nivel = $usuario['nivel_permissao'];
+                
+                if ($nivel === 'Admin') {
+                    // Direciona para o fluxo de Admin
+                    header("Location: ../app/empresasADMIN.php"); 
+                } elseif ($nivel === 'Gerente') {
+                    // Direciona para o fluxo do Gerente
+                    header("Location: ../app/dashboardGerente.php");
+                } else {
+                    // Padrão (Membro)
+                    header("Location: ../app/dashboardUsuario.php");
+                }
                 exit();
             }
 

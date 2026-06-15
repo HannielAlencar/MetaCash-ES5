@@ -1,10 +1,56 @@
 <?php
-// Garante que o PHP vai olhar exatamente na mesma pasta onde este index.php está
-if (file_exists(__DIR__ . '../app/api.php')) {
-    include __DIR__ . '../app/api.php';
-} else {
-    // Se por acaso o api.php estiver uma pasta acima:
-    include __DIR__ . '../app/api.php';
+// Define um array de fallback por padrão para evitar quebras de variáveis nulas caso o carregamento falhe
+$data = [
+    'transacoes' => [],
+    'resumo' => ['receitas' => '0,00', 'despesas' => '0,00', 'saldo' => '0,00']
+];
+
+// Caminhos inteligentes possíveis para encontrar o arquivo api.php
+$caminhos_api = [
+    __DIR__ . '/api.php',                      // Mesma pasta do arquivo atual (app/)
+    __DIR__ . '/../app/api.php',               // Pasta raiz e depois entrando em app/
+    dirname(__DIR__) . '/app/api.php',         // Pasta pai de forma absoluta e depois app/
+    __DIR__ . '/../api.php'                    // Pasta pai direta (MetaCashCode/)
+];
+
+$carregado = false;
+foreach ($caminhos_api as $caminho) {
+    if (file_exists($caminho)) {
+        include $caminho;
+        $carregado = true;
+        break;
+    }
+}
+
+// Se não achar api.php, tenta carregar o config.php ou data.php como plano B
+if (!$carregado) {
+    $caminhos_fallback = [
+        __DIR__ . '/config.php',
+        __DIR__ . '/../config.php',
+        __DIR__ . '/shared_data.php',
+        __DIR__ . '/../shared_data.php'
+    ];
+    foreach ($caminhos_fallback as $caminho_fb) {
+        if (file_exists($caminho_fb)) {
+            include $caminho_fb;
+            break;
+        }
+    }
+}
+
+// Garante que a estrutura básica do array $data exista após os includes
+if (!isset($data) || !is_array($data)) {
+    $data = [];
+}
+if (!isset($data['transacoes']) || !is_array($data['transacoes'])) {
+    $data['transacoes'] = isset($transacoes) && is_array($transacoes) ? $transacoes : [];
+}
+if (!isset($data['resumo']) || !is_array($data['resumo'])) {
+    $data['resumo'] = [
+        'receitas' => number_format(isset($total_receitas) ? $total_receitas : 0, 2, ',', '.'),
+        'despesas' => number_format(isset($total_despesas) ? $total_despesas : 0, 2, ',', '.'),
+        'saldo' => number_format(isset($saldo_real_lucro) ? $saldo_real_lucro : 0, 2, ',', '.')
+    ];
 }
 ?>
 <!DOCTYPE html>
@@ -20,71 +66,71 @@ if (file_exists(__DIR__ . '../app/api.php')) {
 <body class="bg-gray-50 min-h-screen flex">
 
     <!-- SIDEBAR FIXA -->
-        <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col fixed h-screen shrink-0 z-40">
-            <div class="flex items-center gap-3 mb-10 px-2 pt-2">
-                <!-- LOGO COM PROTEÇÃO CONTRA LOOP DE ERRO -->
-                <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=MetaCash&background=2dd4bf&color=0f172a';}">
-                <div class="flex flex-col">
-                    <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
-                    <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
+    <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col fixed h-screen shrink-0 z-40">
+        <div class="flex items-center gap-3 mb-10 px-2 pt-2">
+            <!-- LOGO COM PROTEÇÃO CONTRA LOOP DE ERRO -->
+            <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=MetaCash&background=2dd4bf&color=0f172a';}">
+            <div class="flex flex-col">
+                <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
+                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
+            </div>
+        </div>
+
+        <!-- Navegação principal com fonte e tamanho sincronizados com o Dashboard de Usuário -->
+        <nav class="flex-1 space-y-2">
+            <!-- Dashboard -->
+            <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fas fa-th-large w-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+            <!-- Transações -->
+            <a href="../app/transacoesGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition">
+                <i class="fas fa-exchange-alt w-5"></i>
+                <span class="font-medium">Transações</span>
+            </a>
+            <!-- Equipe -->
+            <a href="../app/gerenciaEquipe.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fas fa-users w-5"></i>
+                <span class="font-medium">Equipe</span>
+            </a>
+            <!-- Gerenciar Páginas -->
+            <a href="../app/gerenciaPaginas.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fas fa-file-alt w-5"></i>
+                <span class="font-medium">Gerenciar Páginas</span>
+            </a>
+            <!-- Histórico -->
+            <a href="../app/historico.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fas fa-history w-5"></i>
+                <span class="font-medium">Histórico</span>
+            </a>
+            <!-- Configurações -->
+            <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fas fa-cog w-5"></i>
+                <span class="font-medium">Configurações</span>
+            </a>
+
+            <!-- Botão de Download na Sidebar -->
+            <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
+                <i class="fas fa-file-pdf w-5"></i>
+                <span class="font-medium">Baixar Relatório</span>
+            </button>
+        </nav>
+
+        <!-- Profile Footer -->
+        <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2">
+            <a href="../app/PerfilGerente.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group">
+                <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">U</div>
+                <div class="flex flex-col overflow-hidden">
+                    <span class="text-sm font-bold truncate">Usuário</span>
+                    <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
                 </div>
-            </div>
-
-            <!-- Navegação principal com fonte e tamanho sincronizados com o Dashboard de Usuário -->
-            <nav class="flex-1 space-y-2">
-                <!-- Dashboard -->
-                <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-th-large w-5"></i>
-                    <span class="font-medium">Dashboard</span>
-                </a>
-                <!-- Transações -->
-                <a href="../app/transacoesGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition">
-                    <i class="fas fa-exchange-alt w-5"></i>
-                    <span class="font-medium">Transações</span>
-                </a>
-                <!-- Equipe (Ativo) -->
-                <a href="../app/gerenciaEquipe.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-users w-5"></i>
-                    <span class="font-medium">Equipe</span>
-                </a>
-                <!-- Gerenciar Páginas -->
-                <a href="../app/gerenciaPaginas.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-file-alt w-5"></i>
-                    <span class="font-medium">Gerenciar Páginas</span>
-                </a>
-                <!-- Histórico -->
-                <a href="../app/historico.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-history w-5"></i>
-                    <span class="font-medium">Histórico</span>
-                </a>
-                <!-- Configurações -->
-                <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-cog w-5"></i>
-                    <span class="font-medium">Configurações</span>
-                </a>
-
-                <!-- Botão de Download na Sidebar (Atualizado com mesmo visual, hover e ícone do fluxo usuário) -->
-                <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
-                    <i class="fas fa-file-pdf w-5"></i>
-                    <span class="font-medium">Baixar Relatório</span>
-                </button>
-            </nav>
-
-            <!-- Profile Footer -->
-            <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2">
-                <a href="../app/PerfilGerente.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group">
-                    <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">U</div>
-                    <div class="flex flex-col overflow-hidden">
-                        <span class="text-sm font-bold truncate">Usuário</span>
-                        <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
-                    </div>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
-                    <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
-                    <span class="font-medium">Sair</span>
-                </a>
-            </div>
-        </aside>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
+                <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
+                <span class="font-medium">Sair</span>
+            </a>
+        </div>
+    </aside>
 
     <main class="flex-1 p-10 ml-64 min-h-screen flex flex-col">
         <header class="mb-8">
@@ -115,78 +161,79 @@ if (file_exists(__DIR__ . '../app/api.php')) {
                     <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 </div>
             </div>
-                <div class="stats-grid mt-8">
-                    <div class="card">
-                        <p class="card-title">Total de Receitas</p>
-                        <p class="card-value text-teal">R$ <?= $data['resumo']['receitas'] ?></p>
-                    </div>
-                    <div class="card">
-                        <p class="card-title">Total de Despesas</p>
-                        <p class="card-value text-red">R$ <?= $data['resumo']['despesas'] ?></p>
-                    </div>
-                    <div class="card">
-                        <p class="card-title">Saldo do Período</p>
-                        <p class="card-value text-dark">R$ <?= $data['resumo']['saldo'] ?></p>
-                    </div>
-                    <div class="card">
-                        <p class="card-title">Transações no Período</p>
-                        <p class="card-value"><?= count((array)$data['transacoes']) ?></p>
-                    </div>
-                </div>
-            </header>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1">
-                <div id="containerTransacoes" class="divide-y divide-gray-50">
-                    <?php 
-                    $transacoes_lista = array_reverse((array)$data['transacoes'], true);
-                    foreach ($transacoes_lista as $id => $tr): 
-                        $titulo_transacao = $tr['nome'] ?? $tr['titulo'] ?? 'Sem título';
-                        $categoria_transacao = $tr['cat'] ?? 'Geral';
-                        $data_transacao = $tr['data'] ?? date('d/m/Y');
-                        $valor_transacao = isset($tr['valor']) ? (float)$tr['valor'] : 0;
-                        $tipo_transacao = $tr['tipo'] ?? 'saida';
-                        $isEntrada = ($tipo_transacao === 'entrada' || $tipo_transacao === 'e');
-                    ?>
-                    <div class="item-transacao flex justify-between items-center p-6 hover:bg-gray-50 transition group" 
-                           data-titulo="<?= strtolower($titulo_transacao) ?>" 
-                           data-categoria="<?= strtolower($categoria_transacao) ?>">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                <i class="fas <?= $isEntrada ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-red-400' ?>"></i>
-                            </div>
-                            <div>
-                                <p class="font-bold text-slate-800"><?= $titulo_transacao ?></p>
-                                <p class="text-xs text-slate-400 uppercase font-semibold"><?= $categoria_transacao ?> • <?= $data_transacao ?></p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="font-bold text-lg <?= $isEntrada ? 'text-[#2dd4bf]' : 'text-red-400' ?>">
-                                <?= ($isEntrada ? '+' : '-') . ' R$ ' . number_format($valor_transacao, 2, ',', '.') ?>
-                            </div>
-                            <!-- Botão Editar -->
-                            <button type="button" onclick="toggleModal('modalTransacao')" class="text-slate-400 hover:text-slate-600 p-2 transition">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <!-- Botão Excluir -->
-                            <button type="button" data-delete-url="../DashboardGerente/excluir_transacao.php?id=<?= $id ?>&redirect=../TransaçoesGerente.php/index.php" class="btnExcluirTransacao text-red-500 hover:text-red-700 rounded-full p-2 transition" title="Excluir transação">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total de Receitas</p>
+                    <p class="text-2xl font-black text-teal-500">R$ <?= $data['resumo']['receitas'] ?></p>
                 </div>
-                <div id="msgVazio" class="hidden p-20 text-center text-slate-400">
-                    <i class="fas fa-search fa-3x mb-4 block opacity-20"></i>
-                    Nenhum resultado encontrado.
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total de Despesas</p>
+                    <p class="text-2xl font-black text-rose-500">R$ <?= $data['resumo']['despesas'] ?></p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo do Período</p>
+                    <p class="text-2xl font-black text-slate-800">R$ <?= $data['resumo']['saldo'] ?></p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Transações no Período</p>
+                    <p class="text-2xl font-black text-slate-800"><?= count((array)$data['transacoes']) ?></p>
                 </div>
             </div>
+        </header>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1">
+            <div id="containerTransacoes" class="divide-y divide-gray-50">
+                <?php 
+                $transacoes_lista = array_reverse((array)$data['transacoes'], true);
+                foreach ($transacoes_lista as $id => $tr): 
+                    $titulo_transacao = $tr['nome'] ?? ($tr['titulo'] ?? 'Sem título');
+                    $categoria_transacao = $tr['cat'] ?? 'Geral';
+                    $data_transacao = $tr['data'] ?? date('d/m/Y');
+                    $valor_transacao = isset($tr['valor']) ? (float)$tr['valor'] : 0;
+                    $tipo_transacao = $tr['tipo'] ?? 'saida';
+                    $isEntrada = ($tipo_transacao === 'entrada' || $tipo_transacao === 'e');
+                ?>
+                <div class="item-transacao flex justify-between items-center p-6 hover:bg-gray-50 transition group" 
+                       data-titulo="<?= strtolower($titulo_transacao) ?>" 
+                       data-categoria="<?= strtolower($categoria_transacao) ?>">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <i class="fas <?= $isEntrada ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-red-400' ?>"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800"><?= htmlspecialchars($titulo_transacao) ?></p>
+                            <p class="text-xs text-slate-400 uppercase font-semibold"><?= htmlspecialchars($categoria_transacao) ?> • <?= htmlspecialchars($data_transacao) ?></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="font-bold text-lg <?= $isEntrada ? 'text-[#2dd4bf]' : 'text-red-400' ?>">
+                            <?= ($isEntrada ? '+' : '-') . ' R$ ' . number_format($valor_transacao, 2, ',', '.') ?>
+                        </div>
+                        <!-- Botão Editar -->
+                        <button type="button" onclick="toggleModal('modalTransacao')" class="text-slate-400 hover:text-slate-600 p-2 transition">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <!-- Botão Excluir -->
+                        <button type="button" data-delete-url="../DashboardGerente/excluir_transacao.php?id=<?= $id ?>&redirect=../TransaçoesGerente.php/index.php" class="btnExcluirTransacao text-red-500 hover:text-red-700 rounded-full p-2 transition" title="Excluir transação">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <div id="msgVazio" class="hidden p-20 text-center text-slate-400">
+                <i class="fas fa-search fa-3x mb-4 block opacity-20"></i>
+                Nenhum resultado encontrado.
+            </div>
+        </div>
     </main>
 
     <!-- MODAL NOVA TRANSAÇÃO -->
     <div id="modalTransacao" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
          <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
             <h3 class="text-xl font-bold mb-4 text-slate-800 border-b pb-4">Nova Transação</h3>
-            <form action="../DashboardGerente/salvar_transacao.php" method="POST" class="space-y-4">
+            <form action="../app/salvarTransacao.php" method="POST" class="space-y-4">
                 <input type="hidden" name="origem" value="transacoes">
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Título</label>
@@ -238,7 +285,7 @@ if (file_exists(__DIR__ . '../app/api.php')) {
             <p class="text-slate-500 mb-6">A exclusão não pode ser desfeita. Esta transação será removida permanentemente.</p>
             <div class="flex gap-4">
                 <button type="button" onclick="toggleModal('modalExcluir')" class="flex-1 py-3 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">Não</button>
-                <a href="#" id="confirmDeleteLink" class="flex-1 py-3 bg-[#2dd4bf] text-white font-bold rounded-2xl hover:bg-teal-600 shadow-lg transition-all text-center">Sim</a>
+                <a href="#" id="confirmDeleteLink" class="flex-1 py-3 bg-[#2dd4bf] text-white font-bold rounded-2xl hover:bg-teal-600 shadow-lg transition-all text-center flex items-center justify-center">Sim</a>
             </div>
         </div>
     </div>
@@ -349,11 +396,12 @@ if (file_exists(__DIR__ . '../app/api.php')) {
     }
 
     function toggleRelatorioModal() {
-            const modal = document.getElementById('modalRelatorio');
+        const modal = document.getElementById('modalRelatorio');
+        if (modal) {
             modal.classList.toggle('hidden');
             modal.classList.toggle('flex');
+        }
     }
-
 
     document.querySelectorAll('.btnExcluirTransacao').forEach(button => {
         button.addEventListener('click', function() {

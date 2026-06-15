@@ -1,21 +1,39 @@
 <?php
-include(__DIR__ . '/config.php');
+// Define variáveis padrão vazias para evitar erros caso a inclusão falhe
+$cards = [];
+$transacoes = [];
 
-$cards = isset($cards) ? $cards : [];
-$transacoes = isset($transacoes) ? $transacoes : [];
+// Tentativa inteligente de encontrar o arquivo de configuração e dados
+$config_path = __DIR__ . '/config.php';
+$config_parent_path = dirname(__DIR__) . '/config.php';
+
+if (file_exists($config_path)) {
+    include($config_path);
+} elseif (file_exists($config_parent_path)) {
+    include($config_parent_path);
+} else {
+    // Caso o config.php não exista em nenhum lugar, tenta carregar dados.php ou api.php como fallback
+    $fallback_data = __DIR__ . '/data.php';
+    if (file_exists($fallback_data)) {
+        include($fallback_data);
+    }
+}
+
+// Garante que as variáveis sejam arrays para não quebrar os loops foreach abaixo
+$cards = isset($cards) && is_array($cards) ? $cards : [];
+$transacoes = isset($transacoes) && is_array($transacoes) ? $transacoes : [];
 
 // --- LÓGICA DE CÁLCULO DE SALDO REAL ---
 $total_receitas = 0;
 $total_despesas = 0;
 
-if (is_array($transacoes)) {
-    foreach ($transacoes as $tr) {
-        $valor = (float)$tr['valor'];
-        if ($tr['tipo'] == 'e') {
-            $total_receitas += $valor;
-        } elseif ($tr['tipo'] == 's') {
-            $total_despesas += $valor;
-        }
+foreach ($transacoes as $tr) {
+    $valor = (float)($tr['valor'] ?? 0);
+    $tipo = $tr['tipo'] ?? '';
+    if ($tipo == 'e' || $tipo == 'entrada') {
+        $total_receitas += $valor;
+    } elseif ($tipo == 's' || $tipo == 'saida' || $tipo == 'despesa') {
+        $total_despesas += $valor;
     }
 }
 
@@ -65,7 +83,7 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                 </div>
             </div>
 
-            <!-- Navegação principal com fonte e tamanho sincronizados com o Dashboard de Usuário -->
+            <!-- Navegação principal -->
             <nav class="flex-1 space-y-2">
                 <!-- Dashboard -->
                 <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition">
@@ -92,14 +110,14 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                     <i class="fas fa-history w-5"></i>
                     <span class="font-medium">Histórico</span>
                 </a>
-                <!-- Configurações (Ativo) -->
+                <!-- Configurações -->
                 <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
                     <i class="fas fa-cog w-5"></i>
                     <span class="font-medium">Configurações</span>
                 </a>
 
-                <!-- Botão de Download na Sidebar (Atualizado com mesmo visual, hover e ícone do fluxo usuário) -->
-                <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
+                <!-- Botão de Download na Sidebar -->
+                <button onclick="toggleRelatorioModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
                     <i class="fas fa-file-pdf w-5"></i>
                     <span class="font-medium">Baixar Relatório</span>
                 </button>
@@ -121,6 +139,7 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
             </div>
         </aside>
 
+        <!-- CONTEÚDO PRINCIPAL -->
         <main class="flex-1 p-8 ml-64 w-full">
             <div class="mb-8">
                 <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Visão Geral Financeira</h1>
@@ -173,8 +192,8 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                             <img src="<?php echo $icone_atual; ?>" alt="Ícone <?php echo htmlspecialchars($titulo, ENT_QUOTES); ?>" class="w-10 h-10 object-contain" />
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?php echo $titulo; ?></div>
-                            <div class="text-2xl font-black text-slate-800">R$ <?php echo $info['valor']; ?></div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?php echo htmlspecialchars($titulo); ?></div>
+                            <div class="text-2xl font-black text-slate-800">R$ <?php echo htmlspecialchars($info['valor'] ?? '0,00'); ?></div>
                         </div>
                     </div>
                 <?php 
@@ -194,48 +213,54 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                 </div>
             </div>
 
+            <!-- Tabela Transações Recentes -->
             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Transações Recentes</h3>
                     <a href="../TransaçoesGerente.php/index.php" class="text-xs font-bold text-teal-600 hover:underline uppercase">Ver Extrato Completo</a>
                 </div>
                 <div class="divide-y divide-slate-50 px-6">
-                  <?php foreach($transacoes as $id => $tr): 
-                      $data_exibicao = trim($tr['data'] ?? '');
-                      if ($data_exibicao !== '') {
-                          $data_obj = DateTime::createFromFormat('d/m/Y', $data_exibicao);
-                          if (!$data_obj) {
-                              $data_obj = DateTime::createFromFormat('Y-m-d', $data_exibicao);
-                          }
-                          if (!$data_obj) {
-                              $data_obj = date_create($data_exibicao);
-                          }
-                          if (!$data_obj) {
-                              $data_obj = new DateTime();
-                          }
-                      } else {
-                          $data_obj = new DateTime();
-                      }
-                  ?>
-                    <div class="flex items-center justify-between p-4 border-b last:border-0 hover:bg-gray-50 transition-colors">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center <?php echo $tr['tipo'] == 'e' ? 'bg-teal-50' : 'bg-rose-50'; ?>">
-                                <i class="fas <?php echo $tr['tipo'] == 'e' ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-rose-500'; ?> text-xs"></i>
+                    <?php if (empty($transacoes)): ?>
+                        <div class="p-8 text-center text-slate-400 italic">
+                            Nenhuma transação registrada até o momento.
+                        </div>
+                    <?php endif; ?>
+                    <?php foreach($transacoes as $id => $tr): 
+                        $data_exibicao = trim($tr['data'] ?? '');
+                        if ($data_exibicao !== '') {
+                            $data_obj = DateTime::createFromFormat('d/m/Y', $data_exibicao);
+                            if (!$data_obj) {
+                                $data_obj = DateTime::createFromFormat('Y-m-d', $data_exibicao);
+                            }
+                            if (!$data_obj) {
+                                $data_obj = date_create($data_exibicao);
+                            }
+                            if (!$data_obj) {
+                                $data_obj = new DateTime();
+                            }
+                        } else {
+                            $data_obj = new DateTime();
+                        }
+                    ?>
+                        <div class="flex items-center justify-between p-4 border-b last:border-0 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center <?php echo ($tr['tipo'] ?? '') == 'e' ? 'bg-teal-50' : 'bg-rose-50'; ?>">
+                                    <i class="fas <?php echo ($tr['tipo'] ?? '') == 'e' ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-rose-500'; ?> text-xs"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="font-bold text-[#1e293b] leading-tight"><?php echo htmlspecialchars($tr['descricao'] ?? ($tr['titulo'] ?? ($tr['nome'] ?? 'Sem descrição'))); ?></p>
+                                    <p class="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">
+                                        <?php echo htmlspecialchars($tr['cat'] ?? 'Geral'); ?> • <?php echo $data_obj->format('d/m/Y'); ?>
+                                    </p>
+                                </div>
                             </div>
-                            <div class="ml-4">
-                                <p class="font-bold text-[#1e293b] leading-tight"><?php echo $tr['descricao'] ?? ($tr['titulo'] ?? 'Sem descrição'); ?></p>
-                                <p class="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">
-                                    <?php echo $tr['cat']; ?> • <?php echo $data_obj->format('d/m/Y'); ?>
-                                </p>
+                            <div class="flex items-center">
+                                <span class="font-bold text-sm <?php echo ($tr['tipo'] ?? '') == 'e' ? 'text-teal-500' : 'text-rose-500'; ?>">
+                                    <?php echo (($tr['tipo'] ?? '') == 'e' ? '+ ' : '- ') . 'R$ ' . number_format($tr['valor'] ?? 0, 2, ',', '.'); ?>
+                                </span>
                             </div>
                         </div>
-                        <div class="flex items-center">
-                            <span class="font-bold text-sm <?php echo $tr['tipo'] == 'e' ? 'text-teal-500' : 'text-rose-500'; ?>">
-                                <?php echo ($tr['tipo'] == 'e' ? '+ ' : '- ') . 'R$ ' . number_format($tr['valor'], 2, ',', '.'); ?>
-                            </span>
-                        </div>
-                    </div>
-                  <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </main>
@@ -324,8 +349,8 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
     </div>
 
     <script>
-    function toggleModal(id) {
-        const modal = document.getElementById(id);
+    function toggleRelatorioModal() {
+        const modal = document.getElementById('modalRelatorio');
         if (modal) {
             modal.classList.toggle('hidden');
             modal.classList.toggle('flex');
@@ -335,143 +360,117 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
     // Fecha modais ao clicar fora
     window.onclick = function(event) {
         const mRel = document.getElementById('modalRelatorio');
-        if (event.target == mRel) toggleModal('modalRelatorio');
+        if (event.target == mRel) {
+            toggleRelatorioModal();
+        }
     }
     </script>
 
     <script>
     const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    function toggleModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-        }
-    }
-
- window.onload = function() {
-    const ctxLinha = document.getElementById('graficoLinha')?.getContext('2d');
-    if(ctxLinha) {
-        new Chart(ctxLinha, {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode($labels_meses ?? []); ?>,
-                datasets: [{
-                    label: 'Receitas',
-                    data: <?php echo json_encode($dados_receitas ?? []); ?>,
-                    borderColor: '#2dd4bf',
-                    backgroundColor: 'rgba(45, 212, 191, 0.1)',
-                    fill: true, tension: 0.4
-                }, {
-                    label: 'Despesas',
-                    data: <?php echo json_encode($dados_despesas ?? []); ?>,
-                    borderColor: '#f43f5e',
-                    backgroundColor: 'rgba(244, 63, 94, 0.05)',
-                    fill: true, tension: 0.4
-                }, {
-                    label: 'Resultado (R - D)',
-                    data: <?php echo json_encode($dados_lucro ?? []); ?>,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: false, borderDash: [5, 5], tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) label += ': ';
-                                if (context.parsed.y !== null) label += currencyFormatter.format(context.parsed.y);
-                                return label;
+    window.onload = function() {
+        const ctxLinha = document.getElementById('graficoLinha')?.getContext('2d');
+        if(ctxLinha) {
+            new Chart(ctxLinha, {
+                type: 'line',
+                data: {
+                    labels: <?php echo json_encode($labels_meses ?? []); ?>,
+                    datasets: [{
+                        label: 'Receitas',
+                        data: <?php echo json_encode($dados_receitas ?? []); ?>,
+                        borderColor: '#2dd4bf',
+                        backgroundColor: 'rgba(45, 212, 191, 0.1)',
+                        fill: true, tension: 0.4
+                    }, {
+                        label: 'Despesas',
+                        data: <?php echo json_encode($dados_despesas ?? []); ?>,
+                        borderColor: '#f43f5e',
+                        backgroundColor: 'rgba(244, 63, 94, 0.05)',
+                        fill: true, tension: 0.4
+                    }, {
+                        label: 'Resultado (R - D)',
+                        data: <?php echo json_encode($dados_lucro ?? []); ?>,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: false, borderDash: [5, 5], tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) label += currencyFormatter.format(context.parsed.y);
+                                    return label;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    const ctxPizza = document.getElementById('graficoPizza')?.getContext('2d');
-    if(ctxPizza) {
-        // Puxando os dados reais vindos do seu PHP
-        let labelsPuros = <?php echo json_encode($categorias_labels ?? []); ?>;
-        let dadosPuros = <?php echo json_encode($categorias_valores ?? []); ?>;
+        const ctxPizza = document.getElementById('graficoPizza')?.getContext('2d');
+        if(ctxPizza) {
+            let labelsPuros = <?php echo json_encode($categorias_labels ?? []); ?>;
+            let dadosPuros = <?php echo json_encode($categorias_valores ?? []); ?>;
 
-        // Fallback: Se vieram vazios, tenta buscar da tag script #financeData 
-        if ((!labelsPuros || labelsPuros.length === 0) || (!dadosPuros || dadosPuros.length === 0)) {
-            const jsonDataEl = document.getElementById('financeData');
-            if (jsonDataEl) {
-                try {
-                    const dataExtraida = JSON.parse(jsonDataEl.textContent);
-                    if (dataExtraida.categorias) {
-                        labelsPuros = Object.keys(dataExtraida.categorias);
-                        dadosPuros = Object.values(dataExtraida.categorias);
+            if ((!labelsPuros || labelsPuros.length === 0) || (!dadosPuros || dadosPuros.length === 0)) {
+                const jsonDataEl = document.getElementById('financeData');
+                if (jsonDataEl) {
+                    try {
+                        const dataExtraida = JSON.parse(jsonDataEl.textContent);
+                        if (dataExtraida.categorias) {
+                            labelsPuros = Object.keys(dataExtraida.categorias);
+                            dadosPuros = Object.values(dataExtraida.categorias);
+                        }
+                    } catch (e) {
+                        console.error("Erro ao ler dados do JSON alternativo:", e);
                     }
-                } catch (e) {
-                    console.error("Erro ao ler dados do JSON alternativo:", e);
                 }
             }
-        }
 
-        // Print técnico para você acompanhar no F12 do navegador
-        console.log("Labels para a Pizza:", labelsPuros);
-        console.log("Valores para a Pizza:", dadosPuros);
+            if (!labelsPuros || labelsPuros.length === 0) {
+                labelsPuros = ["Sem dados cadastrados"];
+                dadosPuros = [0];
+            }
 
-        // Se mesmo com o fallback não houver nada, evita que o Chart.js quebre
-        if (!labelsPuros || labelsPuros.length === 0) {
-            labelsPuros = ["Sem dados cadastrados"];
-            dadosPuros = [0];
-        }
-
-       new Chart(ctxPizza, {
-            type: 'doughnut',
-            data: {
-                labels: labelsPuros,
-                datasets: [{
-                    // Mantém o cálculo das fatias normal
-                    data: dadosPuros.map(v => Math.abs(Number(v || 0))),
-                    
-                    // CORREÇÃO: Voltamos com a paleta de cores variadas para cada fatia ficar distinta!
-                    backgroundColor: ['#3b82f6', '#2dd4bf', '#8b5cf6', '#f43f5e', '#58cd91', '#f59e0b'],
-                    borderWidth: 2,
-                    borderColor: '#ffffff' // Uma linha fina branca separando as fatias fica excelente
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const index = context.dataIndex;
-                                // O valor real mantém o sinal de - (menos) se for despesa
-                                const valorReal = Number(dadosPuros[index] || 0);
-                                const label = context.label || '';
-                                
-                                // Mostra o valor real com o sinal de positivo/negativo correto no hover
-                                return `${label}: ${currencyFormatter.format(valorReal)}`;
+            new Chart(ctxPizza, {
+                type: 'doughnut',
+                data: {
+                    labels: labelsPuros,
+                    datasets: [{
+                        data: dadosPuros.map(v => Math.abs(Number(v || 0))),
+                        backgroundColor: ['#3b82f6', '#2dd4bf', '#8b5cf6', '#f43f5e', '#58cd91', '#f59e0b'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const valorReal = Number(dadosPuros[index] || 0);
+                                    const label = context.label || '';
+                                    return `${label}: ${currencyFormatter.format(valorReal)}`;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-    }
-};
-
-function toggleRelatorioModal() {
-            const modal = document.getElementById('modalRelatorio');
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-}
-    
+            });
+        }
+    };
     </script>
 </body>
 </html>

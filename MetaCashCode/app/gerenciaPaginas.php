@@ -5,80 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetaCash - Gerenciamento de Páginas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CONFIGURAÇÃO DO TAILWIND -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        meta: {
+                            menu: 'var(--meta-menu)',
+                            btn1: 'var(--meta-btn1)',
+                            destaque: 'var(--meta-destaque)',
+                            btn2: 'var(--meta-btn2)',
+                            clara: 'var(--meta-clara)',
+                            fundo: 'var(--meta-fundo)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ESTILOS E VARIÁVEIS DE PADRÃO (SOLUÇÃO DO BUG BRANCO) -->
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
-        .sidebar { background-color: #0F172A; }
+        /* Definindo as cores originais diretamente no CSS. 
+           Mesmo que o JS falhe ou demore, o sistema abre perfeito com as cores padrão. */
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; }
     </style>
+
+    <!-- VERIFICAÇÃO SEGURA DE TEMA PERSONALIZADO SALVO -->
+    <script>
+        try {
+            const temaSalvo = localStorage.getItem('metaCashTheme');
+            if (temaSalvo) {
+                const cores = JSON.parse(temaSalvo);
+                const raiz = document.documentElement;
+                if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
+                if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
+                if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
+                if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
+                if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
+                if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
+            }
+        } catch (erro) {
+            console.error("Erro ao ler localStorage, mantendo padrão original:", erro);
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="flex min-h-screen">
+<body class="flex min-h-screen bg-meta-fundo transition-colors duration-200">
 
     <!-- SIDEBAR FIXA -->
-        <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col fixed h-screen shrink-0 z-40">
-            <div class="flex items-center gap-3 mb-10 px-2 pt-2">
-                <!-- LOGO COM PROTEÇÃO CONTRA LOOP DE ERRO -->
-                <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=MetaCash&background=2dd4bf&color=0f172a';}">
-                <div class="flex flex-col">
-                    <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
-                    <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
+    <aside class="w-64 bg-meta-menu text-white p-4 flex flex-col fixed h-screen shrink-0 z-40 transition-colors duration-200">
+        <div class="flex items-center gap-3 mb-10 px-2 pt-2">
+            <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=MetaCash&background=2dd4bf&color=0f172a';}">
+            <div class="flex flex-col">
+                <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
+                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
+            </div>
+        </div>
+
+        <nav class="flex-1 space-y-2">
+            <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
+                <i class="fas fa-th-large w-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+            <a href="../app/transacoesGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
+                <i class="fas fa-exchange-alt w-5"></i>
+                <span class="font-medium">Transações</span>
+            </a>
+            <a href="../app/gerenciaEquipe.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
+                <i class="fas fa-users w-5"></i>
+                <span class="font-medium">Equipe</span>
+            </a>
+            <a href="../app/gerenciaPaginas.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-meta-destaque text-white shadow-lg transition-colors duration-200">
+                <i class="fas fa-file-alt w-5"></i>
+                <span class="font-medium">Gerenciar Páginas</span>
+            </a>
+            <a href="../app/historico.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
+                <i class="fas fa-history w-5"></i>
+                <span class="font-medium">Histórico</span>
+            </a>
+            <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
+                <i class="fas fa-cog w-5"></i>
+                <span class="font-medium">Configurações</span>
+            </a>
+
+            <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition border border-transparent hover:border-white/5 text-left">
+                <i class="fas fa-file-pdf w-5"></i>
+                <span class="font-medium">Baixar Relatório</span>
+            </button>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-white/10 space-y-4 pb-2">
+            <a href="../app/PerfilGerente.php" class="bg-white/5 p-3 rounded-2xl flex items-center gap-3 border border-white/10 hover:bg-white/10 transition block group">
+                <div class="w-10 h-10 bg-meta-destaque rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">U</div>
+                <div class="flex flex-col overflow-hidden">
+                    <span class="text-sm font-bold truncate">Usuário</span>
+                    <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
                 </div>
-            </div>
-
-            <!-- Navegação principal com fonte e tamanho sincronizados com o Dashboard de Usuário -->
-            <nav class="flex-1 space-y-2">
-                <!-- Dashboard -->
-                <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-th-large w-5"></i>
-                    <span class="font-medium">Dashboard</span>
-                </a>
-                <!-- Transações -->
-                <a href="../app/transacoesGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-exchange-alt w-5"></i>
-                    <span class="font-medium">Transações</span>
-                </a>
-                <!-- Equipe -->
-                <a href="../app/gerenciaEquipe.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-users w-5"></i>
-                    <span class="font-medium">Equipe</span>
-                </a>
-                <!-- Gerenciar Páginas -->
-                <a href="../app/gerenciaPaginas.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition">
-                    <i class="fas fa-file-alt w-5"></i>
-                    <span class="font-medium">Gerenciar Páginas</span>
-                </a>
-                <!-- Histórico -->
-                <a href="../app/historico.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-history w-5"></i>
-                    <span class="font-medium">Histórico</span>
-                </a>
-                <!-- Configurações -->
-                <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-cog w-5"></i>
-                    <span class="font-medium">Configurações</span>
-                </a>
-
-                <!-- Botão de Download na Sidebar (Atualizado com mesmo visual, hover e ícone do fluxo usuário) -->
-                <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
-                    <i class="fas fa-file-pdf w-5"></i>
-                    <span class="font-medium">Baixar Relatório</span>
-                </button>
-            </nav>
-
-            <!-- Profile Footer -->
-            <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2">
-                <a href="../app/PerfilGerente.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group">
-                    <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">U</div>
-                    <div class="flex flex-col overflow-hidden">
-                        <span class="text-sm font-bold truncate">Usuário</span>
-                        <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
-                    </div>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
-                    <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
-                    <span class="font-medium">Sair</span>
-                </a>
-            </div>
-        </aside>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
+                <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
+                <span class="font-medium">Sair</span>
+            </a>
+        </div>
+    </aside>
 
     <!-- Conteúdo Principal -->
     <main class="flex-1 ml-64 p-8">
@@ -90,7 +133,7 @@
         <!-- Seção Como Funciona -->
         <section class="bg-white border border-gray-200 rounded-2xl p-6 mb-6 shadow-sm">
             <div class="flex items-start gap-3">
-                <i class="fas fa-info-circle text-teal-600 mt-1"></i>
+                <i class="fas fa-info-circle text-meta-destaque mt-1 text-lg"></i>
                 <div>
                     <h4 class="font-bold text-slate-800 mb-2">Como Funciona</h4>
                     <p class="text-sm text-slate-600 mb-1">• Use os botões de <strong>ativar/desativar</strong> para controlar quais páginas aparecem no menu</p>
@@ -105,53 +148,121 @@
             <div class="space-y-4">
                 <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-slate-50">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-teal-100 flex items-center justify-center rounded-lg text-teal-600"><i class="fas fa-home"></i></div>
+                        <div class="w-12 h-12 bg-meta-clara/10 flex items-center justify-center rounded-lg text-meta-clara"><i class="fas fa-home"></i></div>
                         <div><p class="font-bold text-slate-800">Home</p><p class="text-xs text-slate-400">Página inicial da empresa com logo e apresentação</p></div>
                     </div>
-                    <a href="../app/edicaoHome.php" class="inline-flex items-center justify-center px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600"><i class="fas fa-pen mr-2"></i> Editar</a>
+                    <a href="../app/edicaoHome.php" class="inline-flex items-center justify-center px-4 py-2 bg-meta-destaque text-white rounded-lg text-sm font-semibold hover:opacity-90 transition"><i class="fas fa-pen mr-2"></i> Editar</a>
                 </div>
                 <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-slate-50">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-teal-100 flex items-center justify-center rounded-lg text-teal-600"><i class="fas fa-th-large"></i></div>
+                        <div class="w-12 h-12 bg-meta-clara/10 flex items-center justify-center rounded-lg text-meta-clara"><i class="fas fa-th-large"></i></div>
                         <div><p class="font-bold text-slate-800">Dashboard</p><p class="text-xs text-slate-400">Visão geral dos dados financeiros e métricas principais</p></div>
                     </div>
-                    <a href="../app/edicaoDashboard.php" class="inline-flex items-center justify-center px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600"><i class="fas fa-pen mr-2"></i> Editar</a>
+                    <a href="../app/edicaoDashboard.php" class="inline-flex items-center justify-center px-4 py-2 bg-meta-destaque text-white rounded-lg text-sm font-semibold hover:opacity-90 transition"><i class="fas fa-pen mr-2"></i> Editar</a>
                 </div>
                 <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-slate-50">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-teal-100 flex items-center justify-center rounded-lg text-teal-600"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="w-12 h-12 bg-meta-clara/10 flex items-center justify-center rounded-lg text-meta-clara"><i class="fas fa-file-invoice-dollar"></i></div>
                         <div><p class="font-bold text-slate-800">Transações</p><p class="text-xs text-slate-400">Registro e gerenciamento de receitas e despesas</p></div>
                     </div>
-                    <a href="../app/edicaoTransacoes.php" class="inline-flex items-center justify-center px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600"><i class="fas fa-pen mr-2"></i> Editar</a>
+                    <a href="../app/edicaoTransacoes.php" class="inline-flex items-center justify-center px-4 py-2 bg-meta-destaque text-white rounded-lg text-sm font-semibold hover:opacity-90 transition"><i class="fas fa-pen mr-2"></i> Editar</a>
                 </div>
             </div>
         </section>
 
         <!-- Paleta de Cores -->
         <section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <h3 class="font-bold text-lg mb-6"><i class="fas fa-palette mr-2 text-teal-600"></i> Paleta de Cores</h3>
+            <h3 class="font-bold text-lg mb-6"><i class="fas fa-palette mr-2 text-meta-destaque"></i> Paleta de Cores</h3>
+            
+            <!-- Temas Prontos Clicáveis -->
             <div class="grid grid-cols-4 gap-4 mb-8">
-                <div class="border rounded-xl p-4 text-center"><div class="flex justify-center gap-1 mb-2"><div class="w-3 h-3 rounded-full bg-slate-900"></div><div class="w-3 h-3 rounded-full bg-teal-500"></div></div><p class="text-xs font-bold">MetaCash Original</p></div>
-                <div class="border rounded-xl p-4 text-center"><div class="flex justify-center gap-1 mb-2"><div class="w-3 h-3 rounded-full bg-slate-900"></div><div class="w-3 h-3 rounded-full bg-cyan-600"></div></div><p class="text-xs font-bold">Oceano Profundo</p></div>
-                <div class="border rounded-xl p-4 text-center"><div class="flex justify-center gap-1 mb-2"><div class="w-3 h-3 rounded-full bg-emerald-900"></div><div class="w-3 h-3 rounded-full bg-emerald-500"></div></div><p class="text-xs font-bold">Floresta Moderna</p></div>
-                <div class="border rounded-xl p-4 text-center"><div class="flex justify-center gap-1 mb-2"><div class="w-3 h-3 rounded-full bg-red-900"></div><div class="w-3 h-3 rounded-full bg-amber-500"></div></div><p class="text-xs font-bold">Sunset Corporativo</p></div>
+                <div onclick="aplicarPreset('#0F2440', '#204C73', '#24A6B6', '#35C59A', '#5DA4C0', '#FDFEFB')" class="border rounded-xl p-4 text-center cursor-pointer hover:border-slate-400 transition bg-slate-50">
+                    <div class="flex justify-center gap-1 mb-2">
+                        <div class="w-3 h-3 rounded-full bg-[#0F2440]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#24A6B6]"></div>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700">MetaCash Original</p>
+                </div>
+                <div onclick="aplicarPreset('#0F172A', '#1E40AF', '#0891B2', '#06B6D4', '#67E8F9', '#F8FAFC')" class="border rounded-xl p-4 text-center cursor-pointer hover:border-slate-400 transition bg-slate-50">
+                    <div class="flex justify-center gap-1 mb-2">
+                        <div class="w-3 h-3 rounded-full bg-[#0F172A]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#0891B2]"></div>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700">Oceano Profundo</p>
+                </div>
+                <div onclick="aplicarPreset('#064E3B', '#047857', '#10B981', '#34D399', '#A7F3D0', '#F0FDF4')" class="border rounded-xl p-4 text-center cursor-pointer hover:border-slate-400 transition bg-slate-50">
+                    <div class="flex justify-center gap-1 mb-2">
+                        <div class="w-3 h-3 rounded-full bg-[#064E3B]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#10B981]"></div>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700">Floresta Moderna</p>
+                </div>
+                <div onclick="aplicarPreset('#450A0A', '#991B1B', '#F59E0B', '#FBBF24', '#FDE68A', '#FFF7ED')" class="border rounded-xl p-4 text-center cursor-pointer hover:border-slate-400 transition bg-slate-50">
+                    <div class="flex justify-center gap-1 mb-2">
+                        <div class="w-3 h-3 rounded-full bg-[#450A0A]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700">Sunset Corporativo</p>
+                </div>
             </div>
 
+            <!-- Formulário com Inputs -->
             <div class="grid grid-cols-2 gap-6 mb-4">
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Cor do menu</label><input type="text" value="#0F2440" class="w-full border rounded-lg p-3 mt-1"></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Cor de botão 1</label><input type="text" value="#204C73" class="w-full border rounded-lg p-3 mt-1"></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Cor de Destaque</label><input type="text" value="#24A6B6" class="w-full border rounded-lg p-3 mt-1"></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Cor de botão 2</label><input type="text" value="#35C59A" class="w-full border rounded-lg p-3 mt-1"></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Cor Clara</label><input type="text" value="#5DA4C0" class="w-full border rounded-lg p-3 mt-1"></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Cor de Fundo</label><input type="text" value="#FDFEFB" class="w-full border rounded-lg p-3 mt-1"></div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Cor do menu</label>
+                    <div class="flex items-center mt-1 border rounded-lg overflow-hidden bg-white">
+                        <input type="color" id="pickerMenu" class="w-12 h-12 border-r cursor-pointer bg-transparent">
+                        <input type="text" id="txtMenu" class="w-full p-3 font-mono text-sm uppercase focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Cor de botão 1</label>
+                    <div class="flex items-center mt-1 border rounded-lg overflow-hidden bg-white">
+                        <input type="color" id="pickerBtn1" class="w-12 h-12 border-r cursor-pointer bg-transparent">
+                        <input type="text" id="txtBtn1" class="w-full p-3 font-mono text-sm uppercase focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Cor de Destaque</label>
+                    <div class="flex items-center mt-1 border rounded-lg overflow-hidden bg-white">
+                        <input type="color" id="pickerDestaque" class="w-12 h-12 border-r cursor-pointer bg-transparent">
+                        <input type="text" id="txtDestaque" class="w-full p-3 font-mono text-sm uppercase focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Cor de botão 2</label>
+                    <div class="flex items-center mt-1 border rounded-lg overflow-hidden bg-white">
+                        <input type="color" id="pickerBtn2" class="w-12 h-12 border-r cursor-pointer bg-transparent">
+                        <input type="text" id="txtBtn2" class="w-full p-3 font-mono text-sm uppercase focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Cor Clara</label>
+                    <div class="flex items-center mt-1 border rounded-lg overflow-hidden bg-white">
+                        <input type="color" id="pickerClara" class="w-12 h-12 border-r cursor-pointer bg-transparent">
+                        <input type="text" id="txtClara" class="w-full p-3 font-mono text-sm uppercase focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Cor de Fundo</label>
+                    <div class="flex items-center mt-1 border rounded-lg overflow-hidden bg-white">
+                        <input type="color" id="pickerFundo" class="w-12 h-12 border-r cursor-pointer bg-transparent">
+                        <input type="text" id="txtFundo" class="w-full p-3 font-mono text-sm uppercase focus:outline-none">
+                    </div>
+                </div>
             </div>
-            <div class="bg-slate-50 border p-3 rounded-lg text-xs text-slate-500 italic">Dica: Clique no círculo colorico para abrir o seletor visual ou digite o código hexademical diretamente (ex: #0F2440).</div>
+            
+            <div class="bg-slate-50 border p-3 rounded-lg text-xs text-slate-500 italic">Dica: Clique no quadrado colorido para abrir o seletor visual ou digite o código hexadecimal diretamente (ex: #0F2440).</div>
+            
             <div class="text-right mt-6">
-                <button class="bg-teal-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-teal-600"><i class="fas fa-sync mr-2"></i> Atualizar</button>
+                <button id="btnSalvarCores" class="bg-meta-destaque text-white px-8 py-3 rounded-lg font-bold hover:opacity-90 shadow-md transition-all">
+                    <i class="fas fa-sync mr-2"></i> Salvar Alterações
+                </button>
             </div>
         </section>
     </main>
-<!-- MODAL RELATÓRIO (Idêntico ao modal de transações) -->
+
+    <!-- MODAL RELATÓRIO -->
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
             <div class="flex justify-between items-center mb-8">
@@ -231,26 +342,128 @@
         </div>
     </div>
 
+    <!-- SCRIPT DE INTERATIVIDADE -->
     <script>
-    function toggleModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
+        const campos = {
+            menu: { picker: document.getElementById('pickerMenu'), txt: document.getElementById('txtMenu') },
+            btn1: { picker: document.getElementById('pickerBtn1'), txt: document.getElementById('txtBtn1') },
+            destaque: { picker: document.getElementById('pickerDestaque'), txt: document.getElementById('txtDestaque') },
+            btn2: { picker: document.getElementById('pickerBtn2'), txt: document.getElementById('txtBtn2') },
+            clara: { picker: document.getElementById('pickerClara'), txt: document.getElementById('txtClara') },
+            fundo: { picker: document.getElementById('pickerFundo'), txt: document.getElementById('txtFundo') }
+        };
+
+        const temaPadrao = {
+            menu: '#0F2440',
+            btn1: '#204C73',
+            destaque: '#24A6B6',
+            btn2: '#35C59A',
+            clara: '#5DA4C0',
+            fundo: '#FDFEFB'
+        };
+
+        // Carrega os dados salvos para sincronizar as caixas de texto e pickers
+        let temaAtual = temaPadrao;
+        try {
+            const salvo = localStorage.getItem('metaCashTheme');
+            if (salvo) {
+                temaAtual = JSON.parse(salvo);
+            }
+        } catch(e) {
+            temaAtual = temaPadrao;
         }
-    }
 
-    function toggleRelatorioModal() {
-            const modal = document.getElementById('modalRelatorio');
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-    }
+        function inicializarInputs(cores) {
+            Object.keys(campos).forEach(chave => {
+                if(campos[chave] && cores[chave]) {
+                    campos[chave].picker.value = cores[chave];
+                    campos[chave].txt.value = cores[chave].toUpperCase();
+                }
+            });
+        }
+        inicializarInputs(temaAtual);
 
-    // Fecha modais ao clicar fora
-    window.onclick = function(event) {
-        const mRel = document.getElementById('modalRelatorio');
-        if (event.target == mRel) toggleModal('modalRelatorio');
-    }
+        function aplicarTema(cores) {
+            const raiz = document.documentElement;
+            raiz.style.setProperty('--meta-menu', cores.menu);
+            raiz.style.setProperty('--meta-btn1', cores.btn1);
+            raiz.style.setProperty('--meta-destaque', cores.destaque);
+            raiz.style.setProperty('--meta-btn2', cores.btn2);
+            raiz.style.setProperty('--meta-clara', cores.clara);
+            raiz.style.setProperty('--meta-fundo', cores.fundo);
+        }
+
+        function sincronizarTemaLive() {
+            const coresAtuais = {
+                menu: campos.menu.picker.value,
+                btn1: campos.btn1.picker.value,
+                destaque: campos.destaque.picker.value,
+                btn2: campos.btn2.picker.value,
+                clara: campos.clara.picker.value,
+                fundo: campos.fundo.picker.value
+            };
+            aplicarTema(coresAtuais);
+        }
+
+        Object.keys(campos).forEach(chave => {
+            const par = campos[chave];
+            
+            par.picker.addEventListener('input', () => {
+                par.txt.value = par.picker.value.toUpperCase();
+                sincronizarTemaLive();
+            });
+
+            par.txt.maxLength = 7;
+            par.txt.addEventListener('input', () => {
+                let valor = par.txt.value;
+                if(!valor.startsWith('#') && valor.length > 0) valor = '#' + valor;
+                if(/^#[0-9A-F]{6}$/i.test(valor)) {
+                    par.picker.value = valor;
+                    sincronizarTemaLive();
+                }
+            });
+        });
+
+        function aplicarPreset(m, b1, d, b2, c, f) {
+            const pacoteCores = { menu: m, btn1: b1, destaque: d, btn2: b2, clara: c, fundo: f };
+            inicializarInputs(pacoteCores);
+            aplicarTema(pacoteCores);
+        }
+
+        document.getElementById('btnSalvarCores').addEventListener('click', () => {
+            const coresParaGravar = {
+                menu: campos.menu.picker.value,
+                btn1: campos.btn1.picker.value,
+                destaque: campos.destaque.picker.value,
+                btn2: campos.btn2.picker.value,
+                clara: campos.clara.picker.value,
+                fundo: campos.fundo.picker.value
+            };
+            localStorage.setItem('metaCashTheme', JSON.stringify(coresParaGravar));
+            
+            const btn = document.getElementById('btnSalvarCores');
+            const conteudoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Configurações Salvas!';
+            btn.classList.add('bg-green-600');
+            
+            setTimeout(() => {
+                btn.innerHTML = conteudoOriginal;
+                btn.classList.remove('bg-green-600');
+            }, 2500);
+        });
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.toggle('hidden');
+                modal.classList.toggle('flex');
+            }
+        }
+
+        window.onclick = function(event) {
+            const mRel = document.getElementById('modalRelatorio');
+            if (event.target == mRel) toggleModal('modalRelatorio');
+        }
     </script>
 </body>
 </html>

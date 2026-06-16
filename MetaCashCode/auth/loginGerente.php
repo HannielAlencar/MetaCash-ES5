@@ -1,121 +1,73 @@
-<?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-require_once __DIR__ . '/../config.php';
-
-$erro = null;
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $senha = $_POST['senha'] ?? '';
-
-    if ($email === '' || $senha === '') {
-        $erro = 'Preencha e-mail e senha.';
-    } else {
-        try {
-            // Busca o usuário pelo e-mail
-            $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = :email LIMIT 1");
-            $stmt->execute([':email' => $email]);
-            $usuario = $stmt->fetch();
-
-            // Verifica se o usuário existe e se a senha está correta
-            if ($usuario && password_verify($senha, $usuario['senha'])) {
-                // Salva os dados na Sessao para usar em todas as outras telas
-                $_SESSION['id_usuario'] = $usuario['id_usuario'];
-                $_SESSION['id_empresa'] = $usuario['id_empresa'];
-                $_SESSION['nome_usuario'] = $usuario['nome_completo'];
-                $_SESSION['email_usuario'] = $usuario['email'];
-                $_SESSION['matricula'] = $usuario['matricula'];
-                $_SESSION['cpf_usuario'] = $usuario['cpf'];
-                $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
-
-                header("Location: /app/dashboardUsuario.php");
-                exit();
-            }
-
-            $erro = 'E-mail ou senha incorretos.';
-        } catch (PDOException $e) {
-            $erro = 'Erro no sistema: ' . $e->getMessage();
-        }
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaCash - Login</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/login.css">
-    
+    <title>MetaCash - Login de Gerente</title>
+    <link rel="stylesheet" href="../assets/css/loginGerente.css">
 </head>
 <body>
+    <div class="main-container">
+        <header class="header-section">
+            <img src="../assets/img/logo.png" alt="MetaCash Logo" class="logo">
+            <h1>MetaCash</h1>
+            <p>Gestão Financeira Empresarial</p>
+        </header>
 
-    <!-- Pop-up de Sucesso -->
-    <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-check text-2xl text-green-600"></i>
+        <main class="login-card">
+            <div class="card-header">
+                <h2>Login de Gerente</h2>
             </div>
-            <h3 class="text-lg font-bold text-slate-800">Login realizado com sucesso</h3>
-        </div>
-    </div>
 
-    <div class="header-logo">
-        <div class="icon">
-            <img src="../assets/img/logo.png" alt="Logo MetaCash">
-        </div> 
-        <h1>MetaCash</h1>
-        <p>Gestão Financeira Empresarial</p>
-    </div>
-
-    <div class="login-card">
-        <h2>Entrar</h2>
-
-        <?php if ($erro): ?>
-            <div class="error-msg" id="msgErro">
-                <?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?>
-            </div>
-        <?php endif; ?>
-        
-        <form id="loginForm" method="POST" action="login.php">
-            <div class="form-group">
-                <label>E-mail</label>
-                <div class="input-container">
-                    <i class="fa-regular fa-envelope left-icon"></i>
-                    <input type="email" name="email" id="email" placeholder="seu@email.com" required>
+            <form action="loginGerente.php" method="POST">
+                <div class="input-group">
+                    <label for="cpf">CPF</label>
+                    <input 
+                        type="text" 
+                        id="cpf" 
+                        name="cpf" 
+                        placeholder="000 000 000-00" 
+                        maxlength="11" 
+                        inputmode="numeric"
+                        pattern="\d{11}"
+                        title="O CPF deve conter exatamente 11 números."
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        required
+                    >
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label>Senha</label>
-                <div class="input-container">
-                    <i class="fa-solid fa-lock left-icon"></i>
-                    <input type="password" name="senha" id="password" placeholder="••••••••" required>
-                    <i class="fa-regular fa-eye right-icon toggle-password" data-target="password"></i>
+                <div class="input-group">
+                    <label for="senha">Senha</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="senha" name="senha" placeholder="********" required>
+                        <span class="toggle-password" onclick="toggleVisibility()">👁️</span>
+                    </div>
                 </div>
+
+                <div class="form-options">
+                    <label>
+                        <input type="checkbox" name="remember"> Manter conectado
+                    </label>
+                    <a href="#" class="forgot-link">Esqueceu a senha?</a>
+                </div>
+
+                <button type="submit" class="btn-submit">Entrar como Gerente</button>
+            </form>
+
+            <div class="info-box">
+                <p><strong>Acesso Gerencial:</strong> Esta área é exclusiva para gerentes e administradores. Se você é um colaborador, utilize o <a href="../auth/login.php">login padrão</a>.</p>
             </div>
 
-            <div class="options">
-                <label>
-                    <input type="checkbox" name="lembrar"> Lembrar-me
-                </label>
-                <a href="../auth/esqueceuSenha.php">Esqueceu senha?</a>
+            <div class="card-footer">
+                <p>Não tem uma conta? <a href="../auth/cadastro.php">Cadastre-se</a></p>
             </div>
+        </main>
 
-            <button type="submit" class="btn-entrar">Entrar</button>
-        </form>
-
-        <p class="footer-text">Não tem uma conta? <a href="../auth/cadastro.php">Cadastre-se</a></p>
+        <footer class="page-footer">
+            <p>© 2026 MetaCash. Todos os direitos reservados.</p>
+        </footer>
     </div>
 
-    <p class="copyright">© 2026 MetaCash. Todos os direitos reservados.</p>
-
-<script src="../assets/js/login.js"></script>
+    <script src="../assets/js/loginGerente.js"></script>
 </body>
 </html>

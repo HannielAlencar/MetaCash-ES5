@@ -23,55 +23,41 @@
     <p class="main-subtitle">Crie uma nova senha segura</p>
 
     <div class="card">
-        <form action="../auth/login.php" method="POST">
-            
+        <form action="processa-redefinicao.php" method="POST">
+
+            <input
+                type="hidden"
+                name="token"
+                value="<?php echo htmlspecialchars($_GET['token'] ?? ''); ?>"
+            >
+
             <div class="input-group">
                 <label class="input-label">Nova Senha</label>
                 <div class="input-wrapper">
-                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <input type="password" name="nova_senha" placeholder="Digite sua nova senha" required>
-                    <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <input
+                        type="password"
+                        name="nova_senha"
+                        required
+                    >
                 </div>
             </div>
 
             <div class="input-group">
                 <label class="input-label">Confirmar Nova Senha</label>
                 <div class="input-wrapper">
-                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <input type="password" name="confirmar_senha" placeholder="Confirme sua nova senha" required>
-                    <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <input
+                        type="password"
+                        name="confirmar_senha"
+                        required
+                    >
                 </div>
             </div>
 
-            <div class="requirements-box">
-                <p class="requirements-title">Sua senha deve conter:</p>
-                <ul>
-                    <li>Pelo menos 8 caracteres</li>
-                    <li>Uma letra maiúscula</li>
-                    <li>Um número</li>
-                    <li>Um caractere especial (recomendado)</li>
-                </ul>
-            </div>
-
             <button type="submit" class="btn-submit">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
                 Redefinir Senha
             </button>
         </form>
-
-        <a href="../auth/login.php" class="back-to-login-link">Voltar ao login</a>
-    </div>
-
-    <footer>
+    </div> <footer>
         <p>&copy; 2026 <strong>MetaCash</strong>. Todos os direitos reservados.</p>
     </footer>
 

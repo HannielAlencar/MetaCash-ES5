@@ -1,26 +1,20 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once __DIR__ . '/../config.php';
-
-$erro = $_GET['erro'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verifica se as senhas batem antes de fazer qualquer coisa
     if ($_POST['senha'] !== $_POST['confirmar_senha']) {
-        $erro = 'As senhas não coincidem!';
-    } else {
+        header("Location: cadastro.php?erro=As senhas não coincidem!");
+        exit();
+    }
 
     // Dados da Empresa
     $nome_empresa = $_POST['nome_empresa'];
-    // Remove formatação e mantém apenas números (ex: 00.000.000/0000-00 -> 00000000000000)
-    $cnpj = preg_replace('/\D/', '', $_POST['cnpj']);
+    $cnpj = $_POST['cnpj'];
 
     // Dados do Usuário Admin
     $matricula = $_POST['matricula'] ?? null; 
-    // Remove formatação do CPF (ex: 000.000.000-00 -> 00000000000)
-    $cpf = preg_replace('/\D/', '', $_POST['cpf']);
+    $cpf = $_POST['cpf'];
     $nome_utilizador = $_POST['nome_completo']; 
     $email = $_POST['email'];
     $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
@@ -48,34 +42,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':senha'      => $senha
         ]);
 
-        // Recupera o ID do usuário recém-criado
-        $id_usuario = $pdo->lastInsertId();
-
         $pdo->commit(); 
-
-        // Registra o usuário na sessão (logado)
-        $_SESSION['id_usuario'] = $id_usuario;
-        $_SESSION['id_empresa'] = $id_empresa;
-        $_SESSION['nome_usuario'] = $nome_utilizador;
-        $_SESSION['email_usuario'] = $email;
-        $_SESSION['matricula'] = $matricula;
-        $_SESSION['cpf_usuario'] = $cpf;
-        $_SESSION['nivel_permissao'] = 'Gerente';
-
-        header("Location: /app/dashboardUsuario.php");
+        header("Location: ../app/dashboardUsuario.php");
         exit();
 
     } catch (PDOException $e) {
         $pdo->rollBack(); 
         
-        // Tratamento de erro para CPF, CNPJ ou E-mail duplicado
-        if (in_array($e->getCode(), ['23000', '23505'])) {
-            $erro = 'Já existe um cadastro com esse CPF, CNPJ ou E-mail.';
+        // Tratamento de erro para CPF ou CNPJ duplicado
+        if ($e->getCode() == 23000) {
+            die("Erro: Já existe um cadastro com esse CPF, CNPJ ou E-mail.");
         } else {
-            $erro = 'Erro no sistema: ' . $e->getMessage();
+            die("Erro no sistema: " . $e->getMessage());
         }
     }
-}
 }
 ?>
 
@@ -119,11 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="bg-white rounded-2xl shadow-2xl p-6">
             <h2 class="text-lg font-bold mb-4">Criar Conta</h2>
-            <?php if (!empty($erro)): ?>
-                <div class="error-msg" id="msgErro" style="margin-bottom:1rem; padding:0.75rem 1rem; border:1px solid #e53e3e; background:#fff5f5; color:#c53030; border-radius:.75rem;">
-                    <?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?>
-                </div>
-            <?php endif; ?>
             
             <form id="signupForm" action="cadastro.php" method="POST" class="space-y-2.5">
                 <div class="grid grid-cols-2 gap-3">
@@ -162,17 +137,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Senha <span class="text-red-500">*</span></label>
-                        <div class="input-with-icon">
-                            <input type="password" id="senha" name="senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
-                            <i class="fa-regular fa-eye right-icon toggle-password" data-target="senha" style="position:absolute; right:12px; cursor:pointer; color:#94a3b8;"></i>
-                        </div>
+                        <input type="password" id="senha" name="senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Confirmar Senha <span class="text-red-500">*</span></label>
-                        <div class="input-with-icon">
-                            <input type="password" id="confirmaSenha" name="confirmar_senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
-                            <i class="fa-regular fa-eye right-icon toggle-password" data-target="confirmaSenha" style="position:absolute; right:12px; cursor:pointer; color:#94a3b8;"></i>
-                        </div>
+                        <input type="password" id="confirmaSenha" name="confirmar_senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
                 </div>
 

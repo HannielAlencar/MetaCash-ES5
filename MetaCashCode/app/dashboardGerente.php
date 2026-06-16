@@ -72,8 +72,13 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
 <body class="bg-gray-50">
     <div class="flex min-h-screen">
         
+        <!-- SIDEBAR IMPORTADA PELO PHP -->
         <?php require_once '../includes/sidebarGerente.php'; ?>
 
+        <!-- CONTEÚDO PRINCIPAL (Tag restabelecida com a margem esquerda e responsividade adequadas) -->
+        <main class="flex-1 p-8 ml-64 w-full">
+
+            <!-- Grid de Cards de Resumo -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <?php 
                 $icones_cards = [
@@ -101,6 +106,7 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                 ?>
             </div>
 
+            <!-- Gráficos de Desempenho -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-slate-400"></i> Desempenho Mensal (Saldo)</h3>
@@ -165,6 +171,7 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
         </main>
     </div>
 
+    <!-- JSON DATA PARA GRÁFICOS -->
     <script id="financeData" type="application/json">
     {
         "labels": <?php echo json_encode($labels_meses ?? []); ?>,
@@ -247,6 +254,7 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
         </div>
     </div>
 
+    <!-- SCRIPTS INTERATIVOS -->
     <script>
     function toggleRelatorioModal() {
         const modal = document.getElementById('modalRelatorio');

@@ -30,20 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['cpf_usuario'] = $usuario['cpf'];
                 $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
 
-
-                // Direcionamento dinâmico baseado no papel
-                $nivel = $usuario['nivel_permissao'];
-                
-                if ($nivel === 'Admin') {
-                    // Direciona para o fluxo de Admin
-                    header("Location: ../app/empresasADMIN.php"); 
-                } elseif ($nivel === 'Gerente') {
-                    // Direciona para o fluxo do Gerente
-                    header("Location: ../app/dashboardGerente.php");
-                } else {
-                    // Padrão (Membro)
-                    header("Location: ../app/dashboardUsuario.php");
-                }
+                header("Location: ../app/dashboardUsuario.php");
                 exit();
             }
 
@@ -110,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="input-container">
                     <i class="fa-solid fa-lock left-icon"></i>
                     <input type="password" name="senha" id="password" placeholder="••••••••" required>
-                    <i class="fa-regular fa-eye right-icon toggle-password" data-target="password"></i>
                 </div>
             </div>
 

@@ -5,10 +5,6 @@ body {
     margin: 0;
 }
 
-.sidebar { 
-    background-color: #1e293b; 
-}
-
 .active-nav { 
     background-color: #14b8a6; 
     color: white; 

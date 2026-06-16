@@ -1,0 +1,192 @@
+/* =========================================
+   RESETS E CONFIGURAÇÕES GLOBAIS
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif; /* Recomendo importar do Google Fonts */
+}
+
+/* Garante que o body e o html ocupem toda a altura (Padrão Dashboard) */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    background-color: #f8fafc;
+    min-height: 100vh;
+    color: #1e293b;
+}
+
+/* =========================================
+   PERSONALIZAÇÕES DE SCROLLBAR (Padrão Dashboard)
+   ========================================= */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* =========================================
+   NAVEGAÇÃO E SIDEBAR
+   ========================================= */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 3rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.8rem 1rem;
+    color: #94a3b8;
+    text-decoration: none;
+    border-radius: 8px;
+    /* Transição suave do Dashboard */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.nav-link.active {
+    background-color: #14b8a6; /* Teal 500 */
+    color: white;
+}
+
+/* Estilo utilitário (Padrão Dashboard) */
+.peer-checked\:bg-custom-dark:checked + div {
+    background-color: #1e293b !important;
+    color: white !important;
+}
+
+/* =========================================
+   CONTEÚDO PRINCIPAL (TRANSAÇÕES)
+   ========================================= */
+.main-content {
+    margin-left: 260px;
+    padding: 3rem;
+    width: 100%;
+}
+
+/* =========================================
+   CARDS DE ESTATÍSTICAS
+   ========================================= */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-title {
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.card-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+}
+
+/* Cores Utilitárias */
+.text-teal { color: #10b981; }
+.text-red { color: #ef4444; }
+.text-dark { color: #1e293b; }
+
+/* =========================================
+   BARRA DE BUSCA E FILTROS
+   ========================================= */
+.search-bar-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    flex-grow: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+/* =========================================
+   LISTA DE TRANSAÇÕES
+   ========================================= */
+.transactions-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icon-box {
+    width: 40px;
+    height: 40px;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+}
+
+/* =========================================
+   AJUSTES PARA IMPRESSÃO (Padrão Dashboard)
+   ========================================= */
+@media print {
+    aside, button {
+        display: none !important;
+    }
+    main, .main-content {
+        padding: 0;
+        margin-left: 0; /* Remove a margem da sidebar na impressão */
+    }
+}

@@ -29,15 +29,6 @@ body {
     min-height: 100vh;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 240px;
-    background-color: var(--bg-dark);
-    color: var(--text-white);
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
-}
 
 .logo {
     padding: 0 20px 30px;
@@ -50,33 +41,7 @@ body {
 .logo strong { display: block; font-size: 1.1rem; }
 .logo span { font-size: 0.75rem; color: var(--text-muted); }
 
-/* Sidebar styles in this page are handled by Tailwind classes, so generic nav rules should not override them. */
-/*
-nav { flex: 1; }
 
-nav a {
-    display: flex;
-    align-items: center;
-    padding: 12px 20px;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: 0.3s;
-    border-left: 4px solid transparent;
-}
-
-nav a i { margin-right: 12px; width: 20px; text-align: center; }
-nav a:hover, nav a.active {
-    background-color: rgba(34, 166, 179, 0.1);
-    color: var(--text-white);
-    border-left-color: var(--sidebar-active);
-}
-*/
-
-.sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
 
 .btn-report {
     width: 100%;

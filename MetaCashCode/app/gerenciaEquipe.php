@@ -1,15 +1,5 @@
 <?php
-$equipe = [
-    ['nome' => 'Ana Paula Silva', 'email' => 'ana.silva@empresa.co', 'cargo' => 'Gerente', 'sigla' => 'AP'],
-    ['nome' => 'Carlos Santos', 'email' => 'carlos.santos@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'CS'],
-    ['nome' => 'Mariana Costa', 'email' => 'mariana.costa@empresa.cc', 'cargo' => 'Membro', 'sigla' => 'MC'],
-    ['nome' => 'Roberto Alves', 'email' => 'roberto.alves@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'RA'],
-    ['nome' => 'Juliana Ferreira', 'email' => 'juliana.ferreira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'JF'],
-    ['nome' => 'Pedro Oliveira', 'email' => 'pedro.oliveira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'PO'],
-    ['nome' => 'Juandir Alves', 'email' => 'juandir.alves@empresa.com', 'cargo' => 'Gerente', 'sigla' => 'JA'],
-    ['nome' => 'Claudia Ferreira', 'email' => 'claudia.ferreia@empresa.co', 'cargo' => 'Membro', 'sigla' => 'CF'],
-    ['nome' => 'Fernando Dolores', 'email' => 'fernando.dolores@empresa.com', 'cargo' => 'Membro', 'sigla' => 'FD'],
-];
+$equipe = [];
 ?>
 
 <!DOCTYPE html>

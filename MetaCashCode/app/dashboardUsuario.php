@@ -168,7 +168,7 @@ if (empty($categorias_agrupadas)) {
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/dashboardUsuario.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
 </head>
 <body class="bg-gray-50">
 
@@ -212,7 +212,7 @@ if (empty($categorias_agrupadas)) {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <?php 
-                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBonecos.png'];
+                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBoneco.png'];
                 $i_card = 0;
                 foreach($cards as $titulo => $info): 
                     $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : 'image_69ab13.png';
@@ -285,6 +285,6 @@ if (empty($categorias_agrupadas)) {
             'catValores' => $categorias_valores
         ]) ?>
     </script>
-    <script src="../assets/js/dashboardUsuario.js"></script>
+    <script src="../assets/js/dashboar.js"></script>
 </body>
 </html>

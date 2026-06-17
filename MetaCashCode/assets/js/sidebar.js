@@ -17,3 +17,19 @@ navButtons.forEach(btn => {
         }
     });
 });
+
+function toggleModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+    }
+
+    // Fecha o modal ao clicar fora dele
+    window.addEventListener('click', function(event) {
+        const modalRelatorio = document.getElementById('modalRelatorio');
+        if (event.target === modalRelatorio) {
+            toggleModal('modalRelatorio');
+        }
+    });

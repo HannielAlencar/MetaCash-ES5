@@ -4,6 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../config.php';
 
+$paginaAtual = isset($paginaAtual) ? $paginaAtual : '';
+
 $current_page = basename($_SERVER['PHP_SELF']);
 $id_usuario = $_SESSION['id_usuario'] ?? null;
 $nome_usuario = $_SESSION['nome_usuario'] ?? 'Gerente';
@@ -37,22 +39,22 @@ $base_nav_class = 'flex items-center gap-3 px-4 py-3 rounded-xl transition ';
 $active_class = 'bg-[#2dd4bf] text-white shadow-lg';
 $inactive_class = 'text-gray-400 hover:bg-slate-800 hover:text-white';
 
-// Definição das classes ativas dinâmicas
+// Definição das classes ativas dinâmicas de acordo com a página atual
 $dashboard_classes   = $base_nav_class . ($current_page === 'dashboardGerente.php' ? $active_class : $inactive_class);
 $transacoes_classes  = $base_nav_class . ($current_page === 'transacoesGerente.php' ? $active_class : $inactive_class);
 $equipe_classes      = $base_nav_class . ($current_page === 'gerenciaEquipe.php' ? $active_class : $inactive_class);
-$paginas_classes     = $base_nav_class . ($current_page === 'gerenciaPaginas.php' ? $active_class : $inactive_class);
+$pagina_classes      = $base_nav_class . ($current_page === 'gerenciaPagina.php' ? $active_class : $inactive_class);
 $historico_classes   = $base_nav_class . ($current_page === 'historico.php' ? $active_class : $inactive_class);
 $configuracao_classes = $base_nav_class . ($current_page === 'configuracao.php' ? $active_class : $inactive_class);
 $relatorio_classes   = $base_nav_class . ($current_page === 'relatorio.php' ? $active_class : $inactive_class);
 ?>
-
+<link rel="stylesheet" href="../assets/css/sidebar.css">
 <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col fixed h-screen shrink-0 z-40">
     <div class="flex items-center gap-3 mb-10 px-2 pt-2">
         <img src="../assets/img/logoCyano.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover">
         <div class="flex flex-col">
             <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
-            <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
+            <span class="text-[10px] text-[#2dd4bf] uppercase tracking-wider font-semibold">Painel Gerente</span>
         </div>
     </div>
 
@@ -69,8 +71,8 @@ $relatorio_classes   = $base_nav_class . ($current_page === 'relatorio.php' ? $a
             <i class="fas fa-users w-5 text-center"></i><span class="font-medium">Equipe</span>
         </a>
 
-        <a href="../app/gerenciaPaginas.php" class="<?= $paginas_classes ?>">
-            <i class="fas fa-globe w-5 text-center"></i><span class="font-medium">Gerenciar Páginas</span>
+        <a href="../app/gerenciaPaginas.php" class="<?= $pagina_classes ?>">
+            <i class="fas fa-file-alt w-5"></i><span class="font-medium">Gerenciar Páginas</span>
         </a>
         
         <a href="../app/historico.php" class="<?= $historico_classes ?>">
@@ -81,9 +83,10 @@ $relatorio_classes   = $base_nav_class . ($current_page === 'relatorio.php' ? $a
             <i class="fas fa-cog w-5 text-center"></i><span class="font-medium">Configuração</span>
         </a>
         
-        <a href="../app/relatorio.php" class="<?= $relatorio_classes ?>">
-            <i class="fas fa-chart-bar w-5 text-center"></i><span class="font-medium">Relatório</span>
-        </a>
+        <button onclick="toggleModal('modalRelatorio')" 
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
+            <i class="fas fa-file-pdf"></i><span class="font-medium">Baixar Relatório</span>
+        </button>
     </nav>
 
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4">
@@ -156,10 +159,11 @@ $relatorio_classes   = $base_nav_class . ($current_page === 'relatorio.php' ? $a
                 </div>
             </form>
         </div>
-    </div>
+    </div> 
+
 
     <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2">
-        <a href="../app/perfil.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group">
+        <a href="../app/PerfilGerente.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border <?= $current_page === 'PerfilGerente.php' ? 'border-[#2dd4bf]' : 'border-slate-700/50' ?> hover:bg-[#1e3a5f]/60 transition block group">
             <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">
                 <?= htmlspecialchars($iniciais, ENT_QUOTES, 'UTF-8') ?>
             </div>
@@ -172,9 +176,11 @@ $relatorio_classes   = $base_nav_class . ($current_page === 'relatorio.php' ? $a
 
     <div class="border-t border-slate-700 pt-4">
         <form method="POST" action="../auth/logout.php">
-            <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition text-left">
-                <i class="fas fa-sign-out-alt"></i><span class="font-medium">Sair</span>
+            <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-slate-800 hover:text-red-300 transition text-left">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i><span class="font-medium">Sair</span>
             </button>
         </form>
     </div>
 </aside>
+
+<script src="../assets/js/sidebar.js"></script>

@@ -1,0 +1,15 @@
+
+        /* Definindo as cores originais diretamente no CSS. 
+           Mesmo que o JS falhe ou demore, o sistema abre perfeito com as cores padrão. */
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; }
+   

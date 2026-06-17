@@ -1,6 +1,11 @@
 /* Importação de fonte (opcional, mas recomendada para o visual moderno) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
 
+
+        
+body { font-family: 'Inter', sans-serif; }
+.active-nav { background-color: #2dd4bf; color: white; }
+
 :root {
     --bg-dark: #0f1a2e;
     --bg-main: #f8fafc;

@@ -4,6 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../config.php';
 
+$paginaAtual = isset($paginaAtual) ? $paginaAtual : '';
+
 $current_page = basename($_SERVER['PHP_SELF']);
 $id_usuario = $_SESSION['id_usuario'] ?? null;
 $nome_usuario = $_SESSION['nome_usuario'] ?? 'Usuario';
@@ -153,3 +155,5 @@ $transacoes_classes .= $current_page === 'transacoes.php'
         </form>
     </div>
 </aside>
+
+<script src="../assets/js/sidebar.js"></script>

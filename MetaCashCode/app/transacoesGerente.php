@@ -56,6 +56,7 @@ $dados_financeiros = [
     'despesas_mes' => $despesa,
     'saldo_total'  => $saldoPeriodo
 ];
+$paginaAtual = 'transacoesGerente.php';
 ?>
 
 <!DOCTYPE html>
@@ -66,7 +67,7 @@ $dados_financeiros = [
     <title>MetaCash - Transações</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/transacoes.css">
+    <link rel="stylesheet" href="../assets/css/transacoes.css"> 
     
 </head>
 <body class="bg-gray-50">

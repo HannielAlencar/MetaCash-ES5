@@ -1,0 +1,77 @@
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .modal-backdrop { backdrop-filter: blur(6px); }
+        
+        /* Definição de styles para os componentes de Configuração */
+        .card {
+            background-color: white;
+            border-radius: 1.5rem; /* 24px */
+            border: 1px solid #e2e8f0; /* slate-200 */
+            padding: 2rem; /* 32px */
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+        }
+        .input-field {
+            width: 100%;
+            border-radius: 0.75rem; /* 12px */
+            border: 1px solid #cbd5e1; /* slate-300 */
+            padding: 0.75rem 1rem;
+            margin-top: 0.5rem;
+            outline: none;
+            font-size: 0.875rem;
+            color: #334155;
+            transition: all 0.2s;
+            background-color: #f8fafc;
+        }
+        .input-field:focus {
+            border-color: #2dd4bf;
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.1);
+        }
+        .btn-update {
+            background-color: #0f172a;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-update:hover {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+        }
+        .btn-update:active {
+            transform: translateY(0);
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Ajuste do select para manter a seta customizada limpa */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+    

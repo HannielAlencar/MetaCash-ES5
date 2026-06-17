@@ -1,3 +1,15 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../config.php'; 
+
+if (!isset($_SESSION['id_usuario'])) {
+    header("Location: ../auth/login.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -8,37 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
-
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col sticky top-0 h-screen shrink-0">
-        <!-- LOGO ATUALIZADA -->
-        <div class="flex items-center gap-3 mb-10 px-2">
-            <div class="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
-                <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-full h-full object-contain" onerror="this.src='https://via.placeholder.com/40?text=MC'">
-            </div>
-            <div class="flex flex-col">
-                <span class="font-bold text-xl leading-tight">MetaCash</span>
-                <span class="text-[10px] text-gray-400">Gestão Empresarial</span>
-            </div>
-        </div>
-
-        <!-- RODAPÉ DA SIDEBAR -->
-        <div class="mt-auto pt-6 border-t border-slate-800 space-y-4">
-            <a href="perfil.php" class="bg-[#1e3a5f]/60 p-3 rounded-2xl flex items-center gap-3 border border-[#2dd4bf]/50 transition hover:bg-[#1e3a5f]/80 block">
-                <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0">
-                    U
-                </div>
-                <div class="flex flex-col overflow-hidden">
-                    <span class="text-sm font-bold truncate">Usuário</span>
-                    <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
-                </div>
-            </a>
-            <a href="../logout.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
-                <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400"></i>
-                <span class="font-medium">Sair</span>
-            </a>
-        </div>
-    </aside>
+    <?php require_once '../includes/sidebarGerente.php'; ?>
 
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 p-10 w-full">
@@ -207,13 +189,3 @@
 
 </body>
 </html>
-
-<script>
-
-function toggleRelatorioModal() {
-            const modal = document.getElementById('modalRelatorio');
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
- }
-
-</script>

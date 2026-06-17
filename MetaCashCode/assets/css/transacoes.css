@@ -1,17 +1,9 @@
-/* =========================================
-   RESETS E CONFIGURAÇÕES GLOBAIS
-   ========================================= */
+/* Configurações Globais */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Inter', sans-serif; /* Recomendo importar do Google Fonts */
-}
-
-/* Garante que o body e o html ocupem toda a altura (Padrão Dashboard) */
-html, body {
-    height: 100%;
-    margin: 0;
 }
 
 body {
@@ -21,29 +13,18 @@ body {
     color: #1e293b;
 }
 
-/* =========================================
-   PERSONALIZAÇÕES DE SCROLLBAR (Padrão Dashboard)
-   ========================================= */
-::-webkit-scrollbar {
-    width: 6px;
+/* Sidebar (Menu Lateral) */
+.sidebar {
+    width: 260px;
+    background-color: #0f172a;
+    color: white;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
 }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* =========================================
-   NAVEGAÇÃO E SIDEBAR
-   ========================================= */
 .logo-container {
     display: flex;
     align-items: center;
@@ -59,8 +40,7 @@ body {
     color: #94a3b8;
     text-decoration: none;
     border-radius: 8px;
-    /* Transição suave do Dashboard */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: 0.3s;
 }
 
 .nav-link:hover {
@@ -73,24 +53,14 @@ body {
     color: white;
 }
 
-/* Estilo utilitário (Padrão Dashboard) */
-.peer-checked\:bg-custom-dark:checked + div {
-    background-color: #1e293b !important;
-    color: white !important;
-}
-
-/* =========================================
-   CONTEÚDO PRINCIPAL (TRANSAÇÕES)
-   ========================================= */
+/* Conteúdo Principal */
 .main-content {
     margin-left: 260px;
     padding: 3rem;
     width: 100%;
 }
 
-/* =========================================
-   CARDS DE ESTATÍSTICAS
-   ========================================= */
+/* Cards de Estatísticas */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -123,25 +93,7 @@ body {
 .text-red { color: #ef4444; }
 .text-dark { color: #1e293b; }
 
-/* =========================================
-   BARRA DE BUSCA E FILTROS
-   ========================================= */
-.search-bar-container {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.search-input {
-    flex-grow: 1;
-    padding: 0.75rem 1rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-}
-
-/* =========================================
-   LISTA DE TRANSAÇÕES
-   ========================================= */
+/* Container de Transações */
 .transactions-container {
     background: white;
     border-radius: 12px;
@@ -178,15 +130,66 @@ body {
     color: #64748b;
 }
 
-/* =========================================
-   AJUSTES PARA IMPRESSÃO (Padrão Dashboard)
-   ========================================= */
-@media print {
-    aside, button {
-        display: none !important;
-    }
-    main, .main-content {
-        padding: 0;
-        margin-left: 0; /* Remove a margem da sidebar na impressão */
-    }
+/* Barra de Busca e Filtros */
+.search-bar-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    flex-grow: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+/* Customizações de Input */
+.search-input {
+    background-color: #f8fafc;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    background-color: #fff;
+    border-color: #2dd4bf;
+    box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.1);
+}
+
+.filter-select {
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+}
+
+/* Transição para os itens da lista */
+.item-transacao {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Esconder o modal com classe controlada pelo JS */
+.modal-active {
+    display: flex !important;
+}
+
+        /* CSS para remover o spinner do input number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    appearance: textfield;
+}
+        
+        /* Animação do Popup */
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+.fade-in-out {
+    animation: fadeInOut 3s ease-in-out forwards;
 }

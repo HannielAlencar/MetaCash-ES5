@@ -1,103 +1,257 @@
 <?php
-// Define variáveis padrão vazias para evitar erros caso a inclusão falhe
-$cards = [];
-$transacoes = [];
+// 1. Segurança e Sessão
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../config.php'; 
 
-// Tentativa inteligente de encontrar o arquivo de configuração e dados
-$config_path = __DIR__ . '/config.php';
-$config_parent_path = dirname(__DIR__) . '/config.php';
-
-if (file_exists($config_path)) {
-    include($config_path);
-} elseif (file_exists($config_parent_path)) {
-    include($config_parent_path);
-} else {
-    // Caso o config.php não exista em nenhum lugar, tenta carregar dados.php ou api.php como fallback
-    $fallback_data = __DIR__ . '/data.php';
-    if (file_exists($fallback_data)) {
-        include($fallback_data);
-    }
+if (!isset($_SESSION['id_usuario'])) {
+    header("Location: ../auth/login.php");
+    exit();
 }
 
-// Garante que as variáveis sejam arrays para não quebrar os loops foreach abaixo
-$cards = isset($cards) && is_array($cards) ? $cards : [];
-$transacoes = isset($transacoes) && is_array($transacoes) ? $transacoes : [];
+$id_empresa = $_SESSION['id_empresa'];
 
-// --- LÓGICA DE CÁLCULO DE SALDO REAL ---
 $total_receitas = 0;
 $total_despesas = 0;
+$saldo = 0;
+$transacoes_recentes = [];
 
-foreach ($transacoes as $tr) {
-    $valor = (float)($tr['valor'] ?? 0);
-    $tipo = $tr['tipo'] ?? '';
-    if ($tipo == 'e' || $tipo == 'entrada') {
-        $total_receitas += $valor;
-    } elseif ($tipo == 's' || $tipo == 'saida' || $tipo == 'despesa') {
-        $total_despesas += $valor;
+try {
+    // 2. Calcula os Totais da Empresa
+    $sql_totais = "SELECT 
+        SUM(CASE WHEN tipo_transacao = 'Receita' THEN valor_transacao ELSE 0 END) as receitas,
+        SUM(CASE WHEN tipo_transacao = 'Despesa' THEN valor_transacao ELSE 0 END) as despesas
+        FROM transacoes WHERE id_empresa = :empresa";
+        
+    $stmt_totais = $pdo->prepare($sql_totais);
+    $stmt_totais->execute([':empresa' => $id_empresa]);
+    $resultado_totais = $stmt_totais->fetch();
+
+    if ($resultado_totais) {
+        $total_receitas = (float)$resultado_totais['receitas'];
+        $total_despesas = (float)$resultado_totais['despesas'];
+        $saldo = $total_receitas - $total_despesas;
+    }
+
+    // 3. Puxa as últimas 5 transações
+    $sql_recentes = "SELECT 
+                t.descricao_transacao AS titulo, 
+                t.valor_transacao AS valor, 
+                t.tipo_transacao AS tipo, 
+                c.nome_categoria AS cat,
+                TO_CHAR(t.data_transacao, 'DD/MM/YYYY') || ' ' || TO_CHAR(t.data_registro, 'HH24:MI') AS data
+            FROM transacoes t
+            LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
+            WHERE t.id_empresa = :empresa
+            ORDER BY t.data_registro DESC, t.id_transacao DESC
+            LIMIT 5"; 
+            
+    $stmt_recentes = $pdo->prepare($sql_recentes);
+    $stmt_recentes->execute([':empresa' => $id_empresa]);
+    $transacoes_recentes = $stmt_recentes->fetchAll();
+
+} catch (PDOException $e) {
+    error_log("Erro no Dashboard: " . $e->getMessage());
+}
+
+if (!function_exists('formatarMoeda')) {
+    function formatarMoeda($valor) {
+        return number_format($valor, 2, ',', '.');
     }
 }
 
-$saldo_real_lucro = $total_receitas - $total_despesas;
+// 4. PREPARANDO AS VARIÁVEIS QUE O SEU HTML EXIGE:
+$saldo_real_lucro = $saldo;
 
-$labels_meses = isset($labels_meses) ? $labels_meses : ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar'];
-$dados_receitas = isset($dados_receitas) ? $dados_receitas : [0,0,0,0,0,0,0];
-$dados_despesas = isset($dados_despesas) ? $dados_despesas : [0,0,0,0,0,0,0];
+$cards = [
+    'Saldo Atual' => ['valor' => formatarMoeda($saldo), 'porcentagem' => '', 'cor' => 'text-slate-500'],
+    'Total de Receitas' => ['valor' => formatarMoeda($total_receitas), 'porcentagem' => '+', 'cor' => 'text-teal-500'],
+    'Total de Despesas' => ['valor' => formatarMoeda($total_despesas), 'porcentagem' => '-', 'cor' => 'text-rose-500'],
+    'Lucro do Período' => ['valor' => formatarMoeda($saldo), 'porcentagem' => '', 'cor' => 'text-blue-500']
+];
 
+$meses_nomes = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+$historico = [];
+$labels_meses = [];
+$dados_receitas = [];
+$dados_despesas = [];
 $dados_lucro = [];
-foreach ($dados_receitas as $index => $receita) {
-    $despesa = isset($dados_despesas[$index]) ? $dados_despesas[$index] : 0;
-    $dados_lucro[] = $receita - $despesa;
+
+// Inicializa os últimos 6 meses com zero
+for ($i = 5; $i >= 0; $i--) {
+    $mes_num = (int)date('n', strtotime("-$i months"));
+    $ano_num = date('Y', strtotime("-$i months"));
+    $chave = "$ano_num-" . str_pad($mes_num, 2, '0', STR_PAD_LEFT); 
+    
+    $historico[$chave] = [
+        'label' => $meses_nomes[$mes_num],
+        'receitas' => 0,
+        'despesas' => 0
+    ];
 }
 
-$categorias_labels = isset($categorias_labels) ? $categorias_labels : [];
-$categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
+try {
+    // 5.2. Busca no banco os dados agrupados por mês
+    $sql_linha = "SELECT 
+        TO_CHAR(data_registro, 'YYYY-MM') as mes_ano,
+        SUM(CASE WHEN tipo_transacao = 'Receita' THEN valor_transacao ELSE 0 END) as receitas,
+        SUM(CASE WHEN tipo_transacao = 'Despesa' THEN valor_transacao ELSE 0 END) as despesas
+        FROM transacoes 
+        WHERE id_empresa = :empresa 
+        AND data_registro >= CURRENT_DATE - INTERVAL '6 months'
+        GROUP BY mes_ano";
+        
+    $stmt_linha = $pdo->prepare($sql_linha);
+    $stmt_linha->execute([':empresa' => $id_empresa]);
+    $resultados_linha = $stmt_linha->fetchAll();
+
+    foreach ($resultados_linha as $row) {
+        $chave = $row['mes_ano'];
+        if (isset($historico[$chave])) {
+            $historico[$chave]['receitas'] = (float)$row['receitas'];
+            $historico[$chave]['despesas'] = (float)$row['despesas'];
+        }
+    }
+} catch (PDOException $e) {
+    error_log("Erro no gráfico de linha: " . $e->getMessage());
+}
+
+foreach ($historico as $dados) {
+    $labels_meses[] = $dados['label'];
+    $dados_receitas[] = $dados['receitas'];
+    $dados_despesas[] = $dados['despesas'];
+    $dados_lucro[] = $dados['receitas'] - $dados['despesas'];
+}
+
+$categorias_agrupadas = [];
+
+try {
+    $sql_pizza = "SELECT c.nome_categoria, 
+                  SUM(CASE WHEN t.tipo_transacao = 'Receita' THEN t.valor_transacao ELSE -t.valor_transacao END) as total 
+                  FROM transacoes t 
+                  LEFT JOIN categoria c ON t.id_categoria = c.id_categoria 
+                  WHERE t.id_empresa = :empresa 
+                  GROUP BY c.nome_categoria";
+                  
+    $stmt_pizza = $pdo->prepare($sql_pizza);
+    $stmt_pizza->execute([':empresa' => $id_empresa]);
+    $resultado_pizza = $stmt_pizza->fetchAll();
+
+    foreach ($resultado_pizza as $row) {
+        $nome = $row['nome_categoria'] ?? 'Geral';
+        $categorias_agrupadas[$nome] = (float)$row['total'];
+    }
+} catch (PDOException $e) {
+    error_log("Erro no gráfico de pizza: " . $e->getMessage());
+}
+
+if (empty($categorias_agrupadas)) {
+    $categorias_labels = ['Sem movimentação'];
+    $categorias_valores = [0];
+} else {
+    $categorias_labels = array_keys($categorias_agrupadas);
+    $categorias_valores = array_values($categorias_agrupadas);
+}
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <title>MetaCash - Gestão</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaCash - Dashboard</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        meta: {
+                            menu: 'var(--meta-menu)',
+                            btn1: 'var(--meta-btn1)',
+                            destaque: 'var(--meta-destaque)',
+                            btn2: 'var(--meta-btn2)',
+                            clara: 'var(--meta-clara)',
+                            fundo: 'var(--meta-fundo)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap');
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .peer-checked\:bg-custom-dark:checked + div {
-            background-color: #1e293b !important;
-            color: white !important;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/dashboardGerente.css">
 </head>
+<body class="bg-meta-fundo transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden">
 
-<body class="bg-gray-50">
-    <div class="flex min-h-screen">
-        
-        <!-- SIDEBAR IMPORTADA PELO PHP -->
-        <?php require_once '../includes/sidebarGerente.php'; ?>
+    <?php include_once '../includes/sidebarGerente.php'; ?>
 
-        <!-- CONTEÚDO PRINCIPAL (Tag restabelecida com a margem esquerda e responsividade adequadas) -->
-        <main class="flex-1 p-8 ml-64 w-full">
+    <main class="flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border">
+        <div class="max-w-full w-full mx-auto">
+            <div class="mb-8">
+                <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Visão Geral Financeira</h1>
+                <p class="text-lg text-[#334155] mt-2">Acompanhe o desempenho financeiro da sua empresa</p>
+            </div>
 
-            <!-- Grid de Cards de Resumo -->
+            <section class="bg-[#0f1c30] rounded-3xl p-8 text-white mb-8 shadow-2xl relative overflow-hidden w-full">
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-wallet text-slate-400"></i>
+                        <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Saldo total</span>
+                    </div>
+                    <div class="text-5xl font-bold mb-8 tracking-tighter <?= $saldo_real_lucro >= 0 ? 'text-white' : 'text-rose-400'; ?>">
+                        R$ <?= number_format($saldo_real_lucro, 2, ',', '.'); ?>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white/5 border border-white/10 p-5 rounded-2xl flex items-center gap-4">
+                            <div class="w-10 h-10 bg-teal-500/20 text-teal-400 rounded-full flex items-center justify-center"><i class="fas fa-arrow-up text-sm"></i></div>
+                            <div>
+                                <div class="text-xs text-slate-400 font-bold uppercase">Receitas Totais</div>
+                                <div class="text-xl font-bold">R$ <?= number_format($total_receitas, 2, ',', '.'); ?></div>
+                            </div>
+                        </div>
+                        <div class="bg-white/5 border border-white/10 p-5 rounded-2xl flex items-center gap-4">
+                            <div class="w-10 h-10 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center"><i class="fas fa-arrow-down text-sm"></i></div>
+                            <div>
+                                <div class="text-xs text-slate-400 font-bold uppercase">Despesas Totais</div>
+                                <div class="text-xl font-bold">R$ <?= number_format($total_despesas, 2, ',', '.'); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <?php 
-                $icones_cards = [
-                    '/MetaCashCode/Usuario/Dashboard/img/sifrao icone.png',
-                    '/MetaCashCode/Usuario/Dashboard/img/seta icone.png',
-                    '/MetaCashCode/Usuario/Dashboard/img/cartao icone.png',
-                    '/MetaCashCode/Usuario/Dashboard/img/bonecos icone.png'
-                ];
+                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBonecos.png'];
                 $i_card = 0;
                 foreach($cards as $titulo => $info): 
-                    $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : '/MetaCashCode/Usuario/Dashboard/img/sifrao icone.png';
+                    $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : '../assets/img/iconeSifrao.png';
                 ?>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-[#2dd4bf] transition group">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-[#2dd4bf] transition group shadow-sm">
                         <div class="flex justify-between items-start mb-4">
-                            <img src="<?php echo $icone_atual; ?>" alt="Ícone <?php echo htmlspecialchars($titulo, ENT_QUOTES); ?>" class="w-10 h-10 object-contain" />
+                            <img src="<?= $icone_atual; ?>" alt="Ícone Métrica" class="w-10 h-10 object-contain">
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?php echo htmlspecialchars($titulo); ?></div>
-                            <div class="text-2xl font-black text-slate-800">R$ <?php echo htmlspecialchars($info['valor'] ?? '0,00'); ?></div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?= $titulo; ?></div>
+                            <div class="text-2xl font-black text-slate-800">R$ <?= $info['valor']; ?></div>
                         </div>
                     </div>
                 <?php 
@@ -106,278 +260,72 @@ $categorias_valores = isset($categorias_valores) ? $categorias_valores : [];
                 ?>
             </div>
 
-            <!-- Gráficos de Desempenho -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-slate-400"></i> Desempenho Mensal (Saldo)</h3>
-                    <div class="relative h-[300px] w-full"><canvas id="graficoLinha"></canvas></div>
+                    <div class="relative h-[300px] w-full"><canvas id="chartLinha"></canvas></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fas fa-chart-pie text-slate-400"></i> Distribuição por Categorias</h3>
-                    <div class="relative h-[300px] w-full"><canvas id="graficoPizza"></canvas></div>
+                    <div class="relative h-[300px] w-full"><canvas id="chartPizza"></canvas></div>
                 </div>
             </div>
 
-            <!-- Tabela Transações Recentes -->
-            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm mb-10">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Transações Recentes</h3>
-                    <a href="../TransaçoesGerente.php/index.php" class="text-xs font-bold text-teal-600 hover:underline uppercase">Ver Extrato Completo</a>
+                    <a href="../app/transacoesGerente.php" class="text-xs font-bold text-teal-600 hover:underline uppercase">Ver todas</a>
                 </div>
-                <div class="divide-y divide-slate-50 px-6">
-                    <?php if (empty($transacoes)): ?>
-                        <div class="p-8 text-center text-slate-400 italic">
-                            Nenhuma transação registrada até o momento.
-                        </div>
-                    <?php endif; ?>
-                    <?php foreach($transacoes as $id => $tr): 
-                        $data_exibicao = trim($tr['data'] ?? '');
-                        if ($data_exibicao !== '') {
-                            $data_obj = DateTime::createFromFormat('d/m/Y', $data_exibicao);
-                            if (!$data_obj) {
-                                $data_obj = DateTime::createFromFormat('Y-m-d', $data_exibicao);
-                            }
-                            if (!$data_obj) {
-                                $data_obj = date_create($data_exibicao);
-                            }
-                            if (!$data_obj) {
-                                $data_obj = new DateTime();
-                            }
-                        } else {
-                            $data_obj = new DateTime();
-                        }
-                    ?>
-                        <div class="flex items-center justify-between p-4 border-b last:border-0 hover:bg-gray-50 transition-colors">
-                            <div class="flex items-center">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center <?php echo ($tr['tipo'] ?? '') == 'e' ? 'bg-teal-50' : 'bg-rose-50'; ?>">
-                                    <i class="fas <?php echo ($tr['tipo'] ?? '') == 'e' ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-rose-500'; ?> text-xs"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="font-bold text-[#1e293b] leading-tight"><?php echo htmlspecialchars($tr['descricao'] ?? ($tr['titulo'] ?? ($tr['nome'] ?? 'Sem descrição'))); ?></p>
-                                    <p class="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">
-                                        <?php echo htmlspecialchars($tr['cat'] ?? 'Geral'); ?> • <?php echo $data_obj->format('d/m/Y'); ?>
-                                    </p>
-                                </div>
+                <div class="divide-y divide-slate-100 px-6">
+                  <?php foreach ($transacoes_recentes as $tr): 
+                      $data_exibicao = (!empty($tr['data'])) ? $tr['data'] : date('d/m/Y H:i');
+                  ?>
+                    <div class="flex items-center justify-between py-4 hover:bg-slate-50/50 transition-colors px-2 rounded-xl my-1">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center <?= $tr['tipo'] === 'Receita' ? 'bg-teal-50' : 'bg-rose-50'; ?>">
+                                <i class="fas <?= $tr['tipo'] === 'Receita' ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-rose-500'; ?> text-xs"></i>
                             </div>
-                            <div class="flex items-center">
-                                <span class="font-bold text-sm <?php echo ($tr['tipo'] ?? '') == 'e' ? 'text-teal-500' : 'text-rose-500'; ?>">
-                                    <?php echo (($tr['tipo'] ?? '') == 'e' ? '+ ' : '- ') . 'R$ ' . number_format($tr['valor'] ?? 0, 2, ',', '.'); ?>
-                                </span>
+                            <div class="ml-4">
+                                <p class="font-bold text-[#1e293b] leading-tight"><?= htmlspecialchars($tr['titulo'] ?? 'Sem descrição', ENT_QUOTES, 'UTF-8'); ?></p>
+                                <p class="text-[10px] text-gray-500 uppercase font-semibold tracking-wider mt-0.5">
+                                    <?= htmlspecialchars($tr['cat'] ?? 'Geral', ENT_QUOTES, 'UTF-8'); ?> • <?= $data_exibicao; ?>
+                                </p>
                             </div>
                         </div>
-                    <?php endforeach; ?>
+                        <div class="flex items-center">
+                            <span class="font-bold text-sm <?= $tr['tipo'] === 'Receita' ? 'text-teal-500' : 'text-rose-500'; ?>">
+                                <?= ($tr['tipo'] === 'Receita' ? '+ ' : '- ') . 'R$ ' . number_format($tr['valor'], 2, ',', '.'); ?>
+                            </span>
+                        </div>
+                    </div>
+                  <?php endforeach; ?>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- JSON DATA PARA GRÁFICOS -->
-    <script id="financeData" type="application/json">
-    {
-        "labels": <?php echo json_encode($labels_meses ?? []); ?>,
-        "receitas": <?php echo json_encode($dados_receitas ?? []); ?>,
-        "despesas": <?php echo json_encode($dados_despesas ?? []); ?>,
-        "categorias": <?php echo json_encode($categorias ?? []); ?>
-    }
-    </script>
-
-    <!-- MODAL BAIXAR RELATÓRIO -->
-    <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 class="text-xl font-bold text-slate-800">Baixar Relatório</h3>
-                <button onclick="toggleRelatorioModal()" class="text-slate-400 hover:text-slate-600 transition">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Tipo de Transação</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="tipo" value="e" class="hidden peer">
-                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Receita</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="tipo" value="s" class="hidden peer">
-                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Despesa</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="tipo" value="todos" checked class="hidden peer">
-                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Ambos</div>
-                        </label>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Período</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='block'">
-                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Mensal</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="periodo" value="anual" class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='none'">
-                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-slate-800 peer-checked:text-white transition">Anual</div>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="campoMesRelatorio">
-                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Mês</label>
-                    <select name="mes" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500 transition">
-                        <option value="01">Janeiro</option><option value="02">Fevereiro</option>
-                        <option value="03">Março</option><option value="04">Abril</option>
-                        <option value="05" selected>Maio</option><option value="06">Junho</option>
-                        <option value="07">Julho</option><option value="08">Agosto</option>
-                        <option value="09">Setembro</option><option value="10">Outubro</option>
-                        <option value="11">Novembro</option><option value="12">Dezembro</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Ano</label>
-                    <select name="ano" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-teal-500 transition">
-                        <option value="2026" selected>2026</option>
-                        <option value="2025">2025</option>
-                    </select>
-                </div>
-
-                <div class="flex gap-3 pt-4 border-t">
-                    <button type="button" onclick="toggleRelatorioModal()" class="flex-1 py-3 border border-slate-300 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition">Cancelar</button>
-                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-slate-800 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">
-                        <i class="fas fa-download mr-2"></i> Baixar PDF
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- SCRIPTS INTERATIVOS -->
     <script>
-    function toggleRelatorioModal() {
-        const modal = document.getElementById('modalRelatorio');
-        if (modal) {
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-        }
-    }
-
-    // Fecha modais ao clicar fora
-    window.onclick = function(event) {
-        const mRel = document.getElementById('modalRelatorio');
-        if (event.target == mRel) {
-            toggleRelatorioModal();
-        }
-    }
+        // Transforma os dados em escopo global de segurança. Se o seu dashboardUsuario.js 
+        // usar variáveis normais, ele vai ler aqui perfeitamente sem gerar erros.
+        window.labels_meses = <?= json_encode($labels_meses) ?>;
+        window.dados_receitas = <?= json_encode($dados_receitas) ?>;
+        window.dados_despesas = <?= json_encode($dados_despesas) ?>;
+        window.dados_lucro = <?= json_encode($dados_lucro) ?>;
+        window.categorias_labels = <?= json_encode($categorias_labels) ?>;
+        window.categorias_valores = <?= json_encode($categorias_valores) ?>;
     </script>
 
-    <script>
-    const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-
-    window.onload = function() {
-        const ctxLinha = document.getElementById('graficoLinha')?.getContext('2d');
-        if(ctxLinha) {
-            new Chart(ctxLinha, {
-                type: 'line',
-                data: {
-                    labels: <?php echo json_encode($labels_meses ?? []); ?>,
-                    datasets: [{
-                        label: 'Receitas',
-                        data: <?php echo json_encode($dados_receitas ?? []); ?>,
-                        borderColor: '#2dd4bf',
-                        backgroundColor: 'rgba(45, 212, 191, 0.1)',
-                        fill: true, tension: 0.4
-                    }, {
-                        label: 'Despesas',
-                        data: <?php echo json_encode($dados_despesas ?? []); ?>,
-                        borderColor: '#f43f5e',
-                        backgroundColor: 'rgba(244, 63, 94, 0.05)',
-                        fill: true, tension: 0.4
-                    }, {
-                        label: 'Resultado (R - D)',
-                        data: <?php echo json_encode($dados_lucro ?? []); ?>,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: false, borderDash: [5, 5], tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) label += ': ';
-                                    if (context.parsed.y !== null) label += currencyFormatter.format(context.parsed.y);
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        const ctxPizza = document.getElementById('graficoPizza')?.getContext('2d');
-        if(ctxPizza) {
-            let labelsPuros = <?php echo json_encode($categorias_labels ?? []); ?>;
-            let dadosPuros = <?php echo json_encode($categorias_valores ?? []); ?>;
-
-            if ((!labelsPuros || labelsPuros.length === 0) || (!dadosPuros || dadosPuros.length === 0)) {
-                const jsonDataEl = document.getElementById('financeData');
-                if (jsonDataEl) {
-                    try {
-                        const dataExtraida = JSON.parse(jsonDataEl.textContent);
-                        if (dataExtraida.categorias) {
-                            labelsPuros = Object.keys(dataExtraida.categorias);
-                            dadosPuros = Object.values(dataExtraida.categorias);
-                        }
-                    } catch (e) {
-                        console.error("Erro ao ler dados do JSON alternativo:", e);
-                    }
-                }
-            }
-
-            if (!labelsPuros || labelsPuros.length === 0) {
-                labelsPuros = ["Sem dados cadastrados"];
-                dadosPuros = [0];
-            }
-
-            new Chart(ctxPizza, {
-                type: 'doughnut',
-                data: {
-                    labels: labelsPuros,
-                    datasets: [{
-                        data: dadosPuros.map(v => Math.abs(Number(v || 0))),
-                        backgroundColor: ['#3b82f6', '#2dd4bf', '#8b5cf6', '#f43f5e', '#58cd91', '#f59e0b'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '75%',
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const index = context.dataIndex;
-                                    const valorReal = Number(dadosPuros[index] || 0);
-                                    const label = context.label || '';
-                                    return `${label}: ${currencyFormatter.format(valorReal)}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    };
+    <script id="chart-data" type="application/json">
+        <?= json_encode([
+            'labels' => $labels_meses,
+            'receitas' => $dados_receitas,
+            'despesas' => $dados_despesas,
+            'lucro' => $dados_lucro,
+            'catLabels' => $categorias_labels,
+            'catValores' => $categorias_valores
+        ]) ?>
     </script>
+    
+    <script src="../assets/js/dashboardUsuario.js"></script>
 </body>
 </html>

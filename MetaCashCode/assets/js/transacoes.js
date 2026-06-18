@@ -26,7 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        msgVazio.classList.toggle('hidden', encontrados > 0);
+        if (msgVazio) {
+            msgVazio.classList.toggle('hidden', encontrados > 0);
+        }
     };
 
     // Listeners para os inputs
@@ -57,8 +59,70 @@ function toggleModal(modalId = 'modalTransacao') {
     modal.classList.toggle('flex');
 }
 
-function adicionarEConfirmar() {
-    document.getElementById('formTransacao').submit();
+async function adicionarEConfirmar(event) {
+    console.log('adicionarEConfirmar INICIADO');
+    if (event) {
+        event.preventDefault();
+    }
+    
+    const form = document.getElementById('formTransacao');
+    const formData = new FormData(form);
+    const popup = document.getElementById('popupSucesso');
+
+    try {
+        const actionUrl = form.getAttribute('action') || (window.location.pathname.toLowerCase().includes('transacoesgerente') ? '../app/salvarTransacaoGerente.php' : '../app/salvarTransacao.php');
+        console.log('Enviando para:', actionUrl);
+        
+        const response = await fetch(actionUrl, {
+            method: 'POST',
+            body: formData
+        });
+
+        const text = await response.text();
+        console.log('Resposta do servidor:', text);
+
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch (e) {
+            console.error('Erro ao fazer parse JSON:', text);
+            throw new Error('Resposta não é um JSON válido');
+        }
+
+        if (result.status === 'sucesso') {
+            console.log('Sucesso, mostrando popup');
+            // Mostra o popup de sucesso
+            if (popup) {
+                popup.classList.remove('hidden');
+                popup.style.display = 'block';
+            }
+            
+            // Limpa o formulário
+            form.reset();
+            
+            // Fecha o modal após 1 segundo
+            setTimeout(() => {
+                toggleModal('modalTransacao');
+            }, 1000);
+            
+            // Recarrega a página para mostrar os novos dados ignorando cache
+            setTimeout(() => {
+                window.location.href = window.location.pathname + '?t=' + new Date().getTime();
+            }, 1000);
+        } else {
+            console.error('Servidor retornou erro:', result);
+            alert('Erro: ' + (result.mensagem || 'Erro desconhecido'));
+        }
+    } catch (error) {
+        console.error('Erro completo:', error);
+        alert('Ocorreu um erro ao conectar com o servidor: ' + error.message);
+    }
+    
+    return false;
 }
 
 function toggleRelatorioModal() {

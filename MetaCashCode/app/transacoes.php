@@ -14,15 +14,17 @@ date_default_timezone_set('America/Sao_Paulo');
 try {
     // Busca as transações reais APENAS da sua empresa
     $sql = "SELECT 
+                t.id_transacao,
                 t.descricao_transacao AS titulo, 
                 t.valor_transacao AS valor, 
                 t.tipo_transacao AS tipo, 
                 c.nome_categoria AS cat,
-                TO_CHAR(t.data_transacao, 'DD/MM/YYYY') || ' ' || TO_CHAR(t.data_registro, 'HH24:MI') AS data
+                TO_CHAR(t.data_transacao, 'DD/MM/YYYY') AS data,
+                t.id_transacao AS id
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
             WHERE t.id_empresa = :empresa
-            ORDER BY t.data_registro DESC, t.id_transacao DESC";
+            ORDER BY t.data_transacao DESC, t.id_transacao DESC";
             
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':empresa' => $id_empresa]);
@@ -66,7 +68,7 @@ $dados_financeiros = [
     <title>MetaCash - Transações</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/transacoes.css"> 
+    <link rel="stylesheet" href="../assets/css/transacoesUsuario.css"> 
     
 </head>
 <body class="bg-gray-50">
@@ -159,7 +161,7 @@ $dados_financeiros = [
     <div id="modalTransacao" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
          <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
             <h3 class="text-xl font-bold mb-4 text-slate-800 border-b pb-4">Nova Transação</h3>
-            <form id="formTransacao" action="../app/salvarTransacao.php" method="POST" class="space-y-4">
+            <form id="formTransacao" method="POST" class="space-y-4" onsubmit="return adicionarEConfirmar(event)">
                 <input type="hidden" name="origem" value="transacoes">
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Descrição</label>
@@ -192,14 +194,14 @@ $dados_financeiros = [
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleModal()" class="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition">Cancelar</button>
-                    <button type="button" onclick="adicionarEConfirmar()" class="flex-1 py-3 bg-gradient-to-r from-slate-800 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Adicionar</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-slate-800 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Adicionar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- POPUP SUCESSO -->
-    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold">
+    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold" style="display: none;">
         Transação cadastrada com sucesso
     </div>
 

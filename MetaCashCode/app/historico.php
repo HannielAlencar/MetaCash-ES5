@@ -1,207 +1,146 @@
 <?php
-// LÓGICA DE DADOS DE FALLBACK (Mock data para garantir que a página nunca quebre)
-$mock_registros = [
-    [
-        'tag' => 'Criação',
-        'tag_color' => 'bg-teal-100 text-teal-800 border border-teal-200',
-        'cat' => 'Transação',
-        'desc' => 'Adicionada nova transação de receita: "Venda de Licença de Software Premium" no valor de R$ 4.500,00',
-        'data' => date('d/m/Y')
-    ],
-    [
-        'tag' => 'Edição',
-        'tag_color' => 'bg-amber-100 text-amber-800 border border-amber-200',
-        'cat' => 'Configuração',
-        'desc' => 'Alterado o saldo inicial da empresa de R$ 10.000,00 para R$ 15.000,00 nas configurações',
-        'data' => date('d/m/Y')
-    ],
-    [
-        'tag' => 'Exclusão',
-        'tag_color' => 'bg-rose-100 text-rose-800 border border-rose-200',
-        'cat' => 'Transação',
-        'desc' => 'Removida transação duplicada: "Assinatura Mensal Servidores" no valor de R$ 350,00',
-        'data' => date('d/m/Y', strtotime('-1 days'))
-    ],
-    [
-        'tag' => 'Criação',
-        'tag_color' => 'bg-teal-100 text-teal-800 border border-teal-200',
-        'cat' => 'Equipe',
-        'desc' => 'Novo usuário convidado para a equipe: "Ana Costa" com a função de Membro',
-        'data' => date('d/m/Y', strtotime('-2 days'))
-    ],
-    [
-        'tag' => 'Edição',
-        'tag_color' => 'bg-amber-100 text-amber-800 border border-amber-200',
-        'cat' => 'Equipe',
-        'desc' => 'Alterada a função do usuário "João Silva" de Membro para Gerente',
-        'data' => date('d/m/Y', strtotime('-3 days'))
-    ]
-];
+// 1. Inicia a sessão antes de qualquer envio de cabeçalho HTML
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Busca inteligente do arquivo shared_data.php
-$caminhos_shared = [
-    __DIR__ . '/../shared_data.php',
-    __DIR__ . '/shared_data.php',
-    dirname(__DIR__) . '/shared_data.php'
-];
+// 2. Importa a sua conexão configurada com o Neon DB
+require_once '../config.php'; 
 
-$carregou_shared = false;
-foreach ($caminhos_shared as $caminho) {
-    if (file_exists($caminho)) {
-        include($caminho);
-        $carregou_shared = true;
-        break;
+$id_usuario = $_SESSION['id_usuario'] ?? null;
+$registros = [];
+
+try {
+    // 3. Busca os dados reais diretamente da tabela do Neon DB
+    // Ordena por data_criacao DESC para que as ações mais recentes apareçam primeiro
+    $sql = "SELECT acao, categoria, descricao, data_criacao FROM historico WHERE usuario_id = ? ORDER BY data_criacao DESC";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id_usuario]);
+    $dados_banco = $stmt->fetchAll();
+
+    // Função interna para mapear dinamicamente as cores das tags do seu front-end
+    function obterCorTag($acao) {
+        switch (mb_strtolower(trim($acao), 'UTF-8')) {
+            case 'criação': 
+                return 'bg-teal-100 text-teal-800 border border-teal-200';
+            case 'edição': 
+                return 'bg-amber-100 text-amber-800 border border-amber-200';
+            case 'exclusão': 
+                return 'bg-rose-100 text-rose-800 border border-rose-200';
+            default: 
+                return 'bg-slate-100 text-slate-700 border border-slate-200';
+        }
     }
-}
 
-// Se o arquivo foi carregado, tenta usar a variável dele, senão usa o Mock de segurança
-if ($carregou_shared && isset($historico_registros) && is_array($historico_registros)) {
-    $registros = $historico_registros;
-} else {
-    $registros = $mock_registros;
-}
+    // 4. Converte os dados do banco para o formato exato que o seu HTML/JS espera
+    foreach ($dados_banco as $item) {
+        $registros[] = [
+            'tag'       => $item['acao'],
+            'tag_color' => obterCorTag($item['acao']),
+            'cat'       => $item['categoria'],
+            'desc'      => $item['descricao'],
+            // Formata a data do PostgreSQL (Y-m-d H:i:s) para o padrão brasileiro (d/m/Y)
+            'data'      => date('d/m/Y', strtotime($item['data_criacao'])),
+            'hora'      => date('H:i:s', strtotime($item['data_criacao']))
+        ];
+    }
 
-// Garante 100% de certeza que $registros é um array válido para evitar o TypeError no count()
-if (!is_array($registros)) {
+} catch (PDOException $e) {
+    // Fallback de segurança: se o banco falhar, mantém a página no ar com a lista vazia
     $registros = [];
+    error_log("Erro ao carregar o histórico: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaCash - Histórico</title>
+    <title>MetaCash - Histórico de Alterações</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    meta: {
-                        menu: 'var(--meta-menu)',
-                        btn1: 'var(--meta-btn1)',
-                        destaque: 'var(--meta-destaque)',
-                        btn2: 'var(--meta-btn2)',
-                        clara: 'var(--meta-clara)',
-                        fundo: 'var(--meta-fundo)',
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        meta: {
+                            menu: 'var(--meta-menu)',
+                            btn1: 'var(--meta-btn1)',
+                            destaque: 'var(--meta-destaque)',
+                            btn2: 'var(--meta-btn2)',
+                            clara: 'var(--meta-clara)',
+                            fundo: 'var(--meta-fundo)',
+                        }
                     }
                 }
             }
         }
-    }
     </script>
+    
+    <!-- ESTILOS E VARIÁVEIS DE PADRÃO (PREVINE BUG DE COMPORTAMENTO VISUAL) -->
+    <style>
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar a:hover { color: white; }
+    </style>
+
+    <!-- VERIFICAÇÃO INLINE SEGURA DO TEMA PREFERIDO -->
     <script>
-    const temaPadrao = { menu: '#0F2440', btn1: '#204C73', destaque: '#24A6B6', btn2: '#35C59A', clara: '#5DA4C0', fundo: '#FDFEFB' };
-    const temaSalvo = JSON.parse(localStorage.getItem('metaCashTheme')) || temaPadrao;
-    const raiz = document.documentElement;
-    raiz.style.setProperty('--meta-menu', temaSalvo.menu);
-    raiz.style.setProperty('--meta-btn1', temaSalvo.btn1);
-    raiz.style.setProperty('--meta-destaque', temaSalvo.destaque);
-    raiz.style.setProperty('--meta-btn2', temaSalvo.btn2);
-    raiz.style.setProperty('--meta-clara', temaSalvo.clara);
-    raiz.style.setProperty('--meta-fundo', temaSalvo.fundo);
+        try {
+            const temaSalvo = localStorage.getItem('metaCashTheme');
+            if (temaSalvo) {
+                const cores = JSON.parse(temaSalvo);
+                const raiz = document.documentElement;
+                if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
+                if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
+                if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
+                if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
+                if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
+                if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
+            }
+        } catch (erro) {
+            console.error("Erro ao sincronizar localStorage:", erro);
+        }
     </script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="historico.css/style.css">
-    <style>
-        .sidebar a:hover { color: white; }
-    </style>
 </head>
-<body class="bg-meta-fundo transition-colors duration-300">
+<body class="bg-meta-fundo transition-colors duration-200 min-h-screen">
     <div class="flex min-h-screen">
         
-        <!-- SIDEBAR FIXA -->
-        <aside class="w-64 bg-meta-menu text-white p-4 flex flex-col fixed h-screen shrink-0 z-40 transition-colors duration-300">
-            <div class="flex items-center gap-3 mb-10 px-2 pt-2">
-                <!-- LOGO COM PROTEÇÃO CONTRA LOOP DE ERRO -->
-                <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=MetaCash&background=2dd4bf&color=0f172a';}">
-                <div class="flex flex-col">
-                    <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
-                    <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
-                </div>
-            </div>
-
-            <!-- Navegação principal com variáveis injetadas -->
-            <nav class="flex-1 space-y-2">
-                <!-- Dashboard -->
-                <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
-                    <i class="fas fa-th-large w-5"></i>
-                    <span class="font-medium">Dashboard</span>
-                </a>
-                <!-- Transações -->
-                <a href="../app/TransacoesGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
-                    <i class="fas fa-exchange-alt w-5"></i>
-                    <span class="font-medium">Transações</span>
-                </a>
-                <!-- Equipe -->
-                <a href="../app/gerenciaEquipe.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
-                    <i class="fas fa-users w-5"></i>
-                    <span class="font-medium">Equipe</span>
-                </a>
-                <!-- Gerenciar Páginas -->
-                <a href="../app/gerenciaPaginas.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
-                    <i class="fas fa-file-alt w-5"></i>
-                    <span class="font-medium">Gerenciar Páginas</span>
-                </a>
-                <!-- Histórico (Ativo) -->
-                <a href="../app/historico.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-meta-destaque text-white shadow-lg transition duration-300">
-                    <i class="fas fa-history w-5"></i>
-                    <span class="font-medium">Histórico</span>
-                </a>
-                <!-- Configurações -->
-                <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition">
-                    <i class="fas fa-cog w-5"></i>
-                    <span class="font-medium">Configurações</span>
-                </a>
-
-                <!-- Botão de Download na Sidebar -->
-                <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition border border-transparent hover:border-white/5 text-left">
-                    <i class="fas fa-file-pdf w-5"></i>
-                    <span class="font-medium">Baixar Relatório</span>
-                </button>
-            </nav>
-
-            <!-- Profile Footer -->
-            <div class="mt-auto pt-6 border-t border-white/10 space-y-4 pb-2">
-                <a href="../app/PerfilGerente.php" class="bg-meta-btn1/40 p-3 rounded-2xl flex items-center gap-3 border border-white/5 hover:bg-meta-btn1/60 transition block group">
-                    <div class="w-10 h-10 bg-meta-destaque rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0 group-hover:scale-105 transition-transform duration-300">U</div>
-                    <div class="flex flex-col overflow-hidden">
-                        <span class="text-sm font-bold truncate">Usuário</span>
-                        <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
-                    </div>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
-                    <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
-                    <span class="font-medium">Sair</span>
-                </a>
-            </div>
-        </aside>
+        <!-- SIDEBAR IMPORTADA PELO PHP -->
+        <?php include_once '../includes/sidebarGerente.php'; ?>
 
         <!-- CONTEÚDO PRINCIPAL -->
         <main class="flex-1 p-10 ml-64">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-4xl font-extrabold text-meta-menu tracking-tight transition-colors duration-300">Histórico de Alterações</h1>
-                    <p class="text-sm text-slate-500 mt-2">Acompanhe todas as mudanças registradas no sistema.</p>
-                </div>
-            </div>
+            <header class="mb-8">
+                <h1 class="text-4xl font-extrabold text-meta-menu tracking-tight transition-colors duration-200">Histórico de Alterações</h1>
+                <p class="text-sm text-slate-500 mt-2">Acompanhe todas as mudanças registradas no ecossistema do sistema.</p>
+            </header>
 
             <!-- Filtros de Busca -->
             <section class="mb-6 p-6 bg-white rounded-3xl shadow-sm border border-gray-200">
                 <div class="grid grid-cols-12 gap-4 items-end">
                     <div class="col-span-7">
-                        <label class="text-xs font-bold text-slate-500 mb-1 block">Buscar</label>
+                        <label class="text-xs font-bold text-slate-500 mb-1 block">Buscar por palavra-chave</label>
                         <div class="relative">
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="inputBusca" placeholder="Descrição, tipo ou data..." class="w-full pl-12 pr-4 py-3 border rounded-2xl outline-none focus:ring-2 focus:ring-meta-destaque text-sm transition-all">
+                            <input type="text" id="inputBusca" placeholder="Descrição, categoria ou detalhes..." class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-meta-destaque text-sm transition-all">
                         </div>
                     </div>
                     <div class="col-span-3">
                         <label class="text-xs font-bold text-slate-500 mb-1 block">Tipo de Alteração</label>
-                        <select id="filtroTipo" class="w-full px-4 py-3 border rounded-2xl outline-none focus:ring-2 focus:ring-meta-destaque text-sm bg-white transition-all">
+                        <select id="filtroTipo" class="w-full px-4 py-3 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-meta-destaque text-sm bg-white transition-all cursor-pointer">
                             <option value="todos">Todos os tipos</option>
                             <option value="criação">Criação</option>
                             <option value="edição">Edição</option>
@@ -209,47 +148,59 @@ if (!is_array($registros)) {
                         </select>
                     </div>
                     <div class="col-span-2">
-                        <label class="text-xs font-bold text-slate-500 mb-1 block">Data de Alteração</label>
-                        <input type="text" id="filtroData" placeholder="dd/mm/aaaa" class="w-full px-4 py-3 border rounded-2xl outline-none focus:ring-2 focus:ring-meta-destaque text-sm bg-white transition-all">
+                        <label class="text-xs font-bold text-slate-500 mb-1 block">Filtrar por Data</label>
+                        <input type="text" id="filtroData" placeholder="dd/mm/aaaa" class="w-full px-4 py-3 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-meta-destaque text-sm bg-white transition-all">
                     </div>
                 </div>
             </section>
 
             <!-- Tabela de Registros -->
             <section class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="bg-meta-menu text-white px-6 py-4 flex justify-between items-center transition-colors duration-300">
+                <div class="bg-meta-menu text-white px-6 py-4 flex justify-between items-center transition-colors duration-200">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-history"></i>
+                        <i class="fas fa-history text-meta-destaque"></i>
                         <span class="font-bold uppercase text-sm tracking-wide">Registros de Alterações</span>
                     </div>
-                    <span class="text-xs text-slate-300" id="contadorRegistros"><?php echo count($registros); ?> registros</span>
+                    <span class="text-xs text-slate-300 font-medium" id="contadorRegistros"><?php echo count($registros); ?> registros</span>
                 </div>
-                <div class="divide-y" id="containerRegistros">
+                
+                <div class="divide-y divide-gray-100" id="containerRegistros">
                     <?php foreach ($registros as $index => $reg): ?>
-                        <div class="item-registro p-6 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start hover:bg-slate-50 transition"
-                             data-desc="<?= strtolower($reg['desc'] ?? '') ?>"
-                             data-tipo="<?= strtolower($reg['tag'] ?? '') ?>"
-                             data-data="<?= strtolower($reg['data'] ?? '') ?>">
-                            <div class="space-y-3">
+                        <div class="item-registro p-6 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center hover:bg-slate-50/80 transition"
+                             data-desc="<?= htmlspecialchars(strtolower($reg['desc'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                             data-tipo="<?= htmlspecialchars(strtolower($reg['tag'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                             data-data="<?= htmlspecialchars(strtolower($reg['data'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                            
+                            <div class="space-y-3 flex-1">
                                 <div class="flex flex-wrap gap-2 items-center">
-                                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase <?= $reg['tag_color'] ?? 'bg-slate-100 text-slate-700' ?>"><?= htmlspecialchars($reg['tag'] ?? 'Alteração') ?></span>
-                                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-slate-100 text-slate-700"><?= htmlspecialchars($reg['cat'] ?? 'Sistema') ?></span>
+                                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase <?= $reg['tag_color'] ?>">
+                                        <?= htmlspecialchars($reg['tag'] ?? 'Alteração', ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-slate-100 text-slate-600 border border-slate-200">
+                                        <?= htmlspecialchars($reg['cat'] ?? 'Sistema', ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
                                 </div>
-                                <p class="text-sm text-slate-700 font-semibold"><?= htmlspecialchars($reg['desc'] ?? '') ?></p>
-                                <div class="flex flex-wrap gap-4 text-xs text-slate-500">
-                                    <span class="flex items-center gap-2"><i class="far fa-user"></i> João Silva</span>
-                                    <span class="flex items-center gap-2"><i class="far fa-clock"></i><?= htmlspecialchars($reg['data'] ?? date('d/m/Y')) ?>, 18:14:13</span>
+                                <p class="text-sm text-slate-700 font-medium leading-relaxed">
+                                    <?= htmlspecialchars($reg['desc'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                                </p>
+                                <div class="flex flex-wrap gap-4 text-xs text-slate-400">
+                                    <span class="flex items-center gap-1.5"><i class="far fa-user"></i> Administrador</span>
+                                    <span class="flex items-center gap-1.5"><i class="far fa-clock"></i> <?= htmlspecialchars($reg['data'] ?? date('d/m/Y'), ENT_QUOTES, 'UTF-8') ?>, <?= htmlspecialchars($reg['hora'] ?? '00:00:00', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                             </div>
-                            <button onclick="removerRegistro(this)" class="self-start text-red-500 hover:text-red-700 rounded-full p-2 transition">
-                                <i class="fas fa-trash-alt"></i>
+                            
+                            <button onclick="removerRegistro(this)" class="text-slate-400 hover:text-red-500 rounded-full p-2.5 hover:bg-red-50 transition-all self-end lg:self-center" title="Remover visualmente">
+                                <i class="fas fa-trash-alt text-sm"></i>
                             </button>
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <div id="msgVazio" class="hidden p-20 text-center text-slate-400">
-                    <i class="fas fa-search fa-3x mb-4 block opacity-20"></i>
-                    Nenhum registro encontrado para a pesquisa.
+
+                <!-- Mensagem de lista vazia -->
+                <div id="msgVazio" class="<?= count($registros) === 0 ? '' : 'hidden' ?> p-20 text-center text-slate-400">
+                    <i class="fas fa-search fa-3x mb-4 block opacity-30 text-meta-clara"></i>
+                    <p class="font-medium text-slate-600">Nenhum registro encontrado para os filtros selecionados.</p>
+                    <p class="text-xs text-slate-400 mt-1">Verifique os termos digitados ou mude os seletores.</p>
                 </div>
             </section>
         </main>
@@ -337,78 +288,76 @@ if (!is_array($registros)) {
 
     <!-- LOGICAS DE COMPORTAMENTO EM JAVASCRIPT -->
     <script>
-    function toggleModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-        }
-    }
-
-    // Fecha modais ao clicar fora
-    window.onclick = function(event) {
-        const mRel = document.getElementById('modalRelatorio');
-        if (event.target == mRel) toggleModal('modalRelatorio');
-    }
-
-    // Filtros dinâmicos em tempo real
-    const inputBusca = document.getElementById('inputBusca');
-    const filtroTipo = document.getElementById('filtroTipo');
-    const filtroData = document.getElementById('filtroData');
-    const items = document.querySelectorAll('.item-registro');
-    const msgVazio = document.getElementById('msgVazio');
-    const contadorRegistros = document.getElementById('contadorRegistros');
-
-    function filtrarTabela() {
-        const buscaQuery = inputBusca.value.toLowerCase().trim();
-        const tipoQuery = filtroTipo.value.toLowerCase();
-        const dataQuery = filtroData.value.trim();
-
-        let visiveis = 0;
-
-        items.forEach(item => {
-            const desc = item.dataset.desc;
-            const tipo = item.dataset.tipo;
-            const data = item.dataset.data;
-
-            const matchesBusca = buscaQuery === '' || desc.includes(buscaQuery) || tipo.includes(buscaQuery) || data.includes(buscaQuery);
-            const matchesTipo = tipoQuery === 'todos' || tipo === tipoQuery;
-            const matchesData = dataQuery === '' || data.includes(dataQuery);
-
-            if (matchesBusca && matchesTipo && matchesData) {
-                item.classList.remove('hidden');
-                visiveis++;
-            } else {
-                item.classList.add('hidden');
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.toggle('hidden');
+                modal.classList.toggle('flex');
             }
-        });
-
-        if (visiveis === 0) {
-            msgVazio.classList.remove('hidden');
-        } else {
-            msgVazio.classList.add('hidden');
         }
 
-        contadorRegistros.innerText = visiveis + (visiveis === 1 ? ' registro' : ' registros');
-    }
-
-    inputBusca.addEventListener('input', filtrarTabela);
-    filtroTipo.addEventListener('change', filtrarTabela);
-    filtroData.addEventListener('input', filtrarTabela);
-
-    // Função de remover registro dinamicamente (Visual)
-    function removerRegistro(button) {
-        const row = button.closest('.item-registro');
-        if (confirm('Tem certeza de que deseja remover permanentemente este registro do histórico?')) {
-            row.style.transition = 'all 0.3s ease';
-            row.style.opacity = '0';
-            row.style.transform = 'translateY(15px)';
-            setTimeout(() => {
-                row.remove();
-                filtrarTabela();
-            }, 300);
+        window.onclick = function(event) {
+            const mRel = document.getElementById('modalRelatorio');
+            if (event.target == mRel) toggleModal('modalRelatorio');
         }
-    }
+
+        const inputBusca = document.getElementById('inputBusca');
+        const filtroTipo = document.getElementById('filtroTipo');
+        const filtroData = document.getElementById('filtroData');
+        const msgVazio = document.getElementById('msgVazio');
+        const contadorRegistros = document.getElementById('contadorRegistros');
+
+        function filtrarTabela() {
+            const buscaQuery = inputBusca.value.toLowerCase().trim();
+            const tipoQuery = filtroTipo.value.toLowerCase();
+            const dataQuery = filtroData.value.trim();
+            
+            const items = document.querySelectorAll('.item-registro');
+            let visiveis = 0;
+
+            items.forEach(item => {
+                const desc = item.dataset.desc || '';
+                const tipo = item.dataset.tipo || '';
+                const data = item.dataset.data || '';
+
+                const matchesBusca = buscaQuery === '' || desc.includes(buscaQuery) || tipo.includes(buscaQuery) || data.includes(buscaQuery);
+                const matchesTipo = tipoQuery === 'todos' || tipo === tipoQuery;
+                const matchesData = dataQuery === '' || data.includes(dataQuery);
+
+                if (matchesBusca && matchesTipo && matchesData) {
+                    item.classList.remove('hidden');
+                    visiveis++;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            if (visiveis === 0) {
+                msgVazio.classList.remove('hidden');
+            } else {
+                msgVazio.classList.add('hidden');
+            }
+
+            contadorRegistros.innerText = visiveis + (visiveis === 1 ? ' registro' : ' registros');
+        }
+
+        inputBusca.addEventListener('input', filtrarTabela);
+        filtroTipo.addEventListener('change', filtrarTabela);
+        filtroData.addEventListener('input', filtrarTabela);
+
+        function removerRegistro(button) {
+            const row = button.closest('.item-registro');
+            if (confirm('Tem certeza de que deseja remover permanentemente este registro do histórico visual?')) {
+                row.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(30px)';
+                
+                setTimeout(() => {
+                    row.remove();
+                    filtrarTabela();
+                }, 300);
+            }
+        }
     </script>
 </body>
 </html>

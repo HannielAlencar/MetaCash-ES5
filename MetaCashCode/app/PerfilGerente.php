@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -29,8 +30,8 @@
                     U
                 </div>
                 <div class="flex flex-col overflow-hidden">
-                    <span class="text-sm font-bold truncate">Usuário</span>
-                    <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
+                    <span class="text-sm font-bold truncate">Gerente</span>
+                    <span class="text-[10px] text-gray-400 truncate">contato@empresa.com</span>
                 </div>
             </a>
             <a href="../logout.php" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
@@ -66,14 +67,14 @@
                     <!-- Header do Perfil (Avatar) -->
                     <div class="flex items-center gap-4 mb-8">
                         <div class="w-20 h-20 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] text-3xl font-bold">
-                            U
+                            G
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-slate-800">Usuário</h3>
+                            <h3 class="text-xl font-bold text-slate-800">Gerente</h3>
                             <span class="inline-block bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-1">
                                 <i class="fas fa-shield-alt mr-1"></i> Gerente
                             </span>
-                            <p class="text-sm text-slate-400">usuario@exemplo.com</p>
+                            <p class="text-sm text-slate-400">contato@empresa.com</p>
                         </div>
                     </div>
 

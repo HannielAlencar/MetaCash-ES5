@@ -21,7 +21,6 @@
 
         <nav class="button-group">
             <a href="../auth/login.php" class="btn">Entrar</a>
-            <a href="../auth/loginGerente.php" class="btn">Entrar como gerente</a>
         </nav>
 
         <div class="status-badge">

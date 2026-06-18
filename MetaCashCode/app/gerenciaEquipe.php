@@ -3,37 +3,73 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Proteção com try-catch contra falhas de conexão ou variáveis de ambiente ausentes no config.php
+// Trava de segurança corrigida: impede acesso se não estiver logado OU se não possuir o nível exigido
+if (!isset($_SESSION['id_usuario']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
+    header("Location: dashboardUsuario.php");
+    exit();
+}
+
+// Recupera a empresa do usuário logado para listar apenas os membros da mesma organização
+$id_empresa_sessao = $_SESSION['id_empresa'] ?? null;
+$equipe = [];
+
 try {
     $config_path = __DIR__ . '/../config.php';
     if (file_exists($config_path)) {
         require_once $config_path;
+        
+        $usuarios_db = [];
+        
+        // Mantido apenas o PDO para conexão com o Neon (PostgreSQL)
+        if (isset($pdo) && $pdo instanceof PDO) {
+            if ($id_empresa_sessao) {
+                $sql = "SELECT id_usuario, nome_completo, email, nivel_permissao AS cargo FROM usuarios WHERE id_empresa = :id_empresa ORDER BY nome_completo ASC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute(['id_empresa' => $id_empresa_sessao]);
+            } else {
+                $sql = "SELECT id_usuario, nome_completo, email, nivel_permissao AS cargo FROM usuarios ORDER BY nome_completo ASC";
+                $stmt = $pdo->query($sql);
+            }
+            
+            if ($stmt) {
+                $usuarios_db = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }
+
+        // Se encontrar os registros reais no banco de dados, processa e monta a lista da equipe
+        if (!empty($usuarios_db)) {
+            foreach ($usuarios_db as $user) {
+                $partes_nome = explode(' ', trim($user['nome_completo']));
+                $primeiro = $partes_nome[0] ?? '';
+                $total_partes = count($partes_nome);
+                $ultimo = $total_partes > 1 ? $partes_nome[$total_partes - 1] : '';
+                
+                $sigla = strtoupper(substr($primeiro, 0, 1) . ($ultimo ? substr($ultimo, 0, 1) : ''));
+                
+                $equipe[] = [
+                    'id_usuario' => $user['id_usuario'],
+                    'nome' => $user['nome_completo'],
+                    'email' => $user['email'],
+                    'cargo' => $user['cargo'] ?? 'Membro',
+                    'sigla' => $sigla ?: 'U'
+                ];
+            }
+        }
     }
 } catch (Throwable $e) {
-    // Captura silenciosamente o erro de banco de dados para evitar quebras de tela
-    // O sistema usará os dados de fallback locais definidos abaixo
+    // Agora o erro não é mais 100% silencioso. Ele será salvo nos logs do seu container Docker para facilitar o debug.
+    error_log("Erro ao buscar equipe no Neon: " . $e->getMessage());
 }
 
-// Trava de segurança tratada para o ambiente local
-if (isset($_SESSION['id_usuario'])) {
-    if ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin') {
-        header("Location: dashboardUsuario.php");
-        exit();
-    }
-}
-
-// Se os dados não forem carregados do config.php ou vierem vazios, define a equipe mock de fallback
-if (!isset($equipe) || !is_array($equipe) || empty($equipe)) {
+// Dados de fallback locais definidos caso a conexão falhe ou a tabela esteja vazia
+if (empty($equipe)) {
     $equipe = [
-        ['nome' => 'Ana Paula Silva', 'email' => 'ana.silva@empresa.co', 'cargo' => 'Gerente', 'sigla' => 'AP'],
-        ['nome' => 'Carlos Santos', 'email' => 'carlos.santos@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'CS'],
-        ['nome' => 'Mariana Costa', 'email' => 'mariana.costa@empresa.cc', 'cargo' => 'Membro', 'sigla' => 'MC'],
-        ['nome' => 'Roberto Alves', 'email' => 'roberto.alves@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'RA'],
-        ['nome' => 'Juliana Ferreira', 'email' => 'juliana.ferreira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'JF'],
-        ['nome' => 'Pedro Oliveira', 'email' => 'pedro.oliveira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'PO'],
-        ['nome' => 'Juandir Alves', 'email' => 'juandir.alves@empresa.com', 'cargo' => 'Gerente', 'sigla' => 'JA'],
-        ['nome' => 'Claudia Ferreira', 'email' => 'claudia.ferreia@empresa.co', 'cargo' => 'Membro', 'sigla' => 'CF'],
-        ['nome' => 'Fernando Dolores', 'email' => 'fernando.dolores@empresa.com', 'cargo' => 'Membro', 'sigla' => 'FD'],
+        ['id_usuario' => 'f1', 'nome' => 'Ana Paula Silva', 'email' => 'ana.silva@empresa.co', 'cargo' => 'Gerente', 'sigla' => 'AP'],
+        ['id_usuario' => 'f2', 'nome' => 'Carlos Santos', 'email' => 'carlos.santos@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'CS'],
+        ['id_usuario' => 'f3', 'nome' => 'Mariana Costa', 'email' => 'mariana.costa@empresa.cc', 'cargo' => 'Membro', 'sigla' => 'MC'],
+        ['id_usuario' => 'f4', 'nome' => 'Roberto Alves', 'email' => 'roberto.alves@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'RA'],
+        ['id_usuario' => 'f5', 'nome' => 'Juliana Ferreira', 'email' => 'juliana.ferreira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'JF'],
+        ['id_usuario' => 'f6', 'nome' => 'Pedro Oliveira', 'email' => 'pedro.oliveira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'PO'],
     ];
 }
 ?>
@@ -43,99 +79,74 @@ if (!isset($equipe) || !is_array($equipe) || empty($equipe)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaCash - Equipe</title>
-    <link rel="stylesheet" href="../assets/css/gerenciaEquipe.css">
+    <title>Equipe - MetaCash</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    meta: {
+                        menu: 'var(--meta-menu)',
+                        btn1: 'var(--meta-btn1)',
+                        destaque: 'var(--meta-destaque)',
+                        btn2: 'var(--meta-btn2)',
+                        clara: 'var(--meta-clara)',
+                        fundo: 'var(--meta-fundo)',
+                    }
+                }
+            }
+        }
+    }
+    </script>
+
     <style>
-        /* Estilos de compatibilidade e fallback caso o CSS externo falhe */
-        body { font-family: 'Inter', sans-serif; }
-        .active-nav { background-color: #2dd4bf; color: white; }
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
     </style>
+
+    <script>
+        try {
+            const temaSalvo = localStorage.getItem('metaCashTheme');
+            if (temaSalvo) {
+                const cores = JSON.parse(temaSalvo);
+                const raiz = document.documentElement;
+                if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
+                if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
+                if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
+                if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
+                if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
+                if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
+            }
+        } catch (erro) {
+            console.error("Erro ao ler localStorage do tema:", erro);
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="flex min-h-screen">
         
-        <!-- SIDEBAR FIXA E SINCRONIZADA -->
-        <aside class="w-64 bg-[#0f172a] text-white p-4 flex flex-col fixed h-screen shrink-0 z-40">
-            <div class="flex items-center gap-3 mb-10 px-2 pt-2">
-                <!-- LOGO COM PROTEÇÃO CONTRA LOOP DE ERRO -->
-                <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=MetaCash&background=2dd4bf&color=0f172a';}">
-                <div class="flex flex-col">
-                    <span class="font-bold text-xl leading-tight text-white">MetaCash</span>
-                    <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Gestão Empresarial</span>
-                </div>
-            </div>
+        <?php include_once '../includes/sidebarGerente.php'; ?>
 
-            <!-- Navegação principal com abas sincronizadas -->
-            <nav class="flex-1 space-y-2 text-sm">
-                <!-- Dashboard -->
-                <a href="../app/dashboardGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-th-large w-5"></i>
-                    <span class="font-medium">Dashboard</span>
-                </a>
-                <!-- Transações -->
-                <a href="../app/TransacoesGerente.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-exchange-alt w-5"></i>
-                    <span class="font-medium">Transações</span>
-                </a>
-                <!-- Equipe (Ativo) -->
-                <a href="../app/gerenciaEquipe.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2dd4bf] text-white shadow-lg transition font-semibold">
-                    <i class="fas fa-users w-5"></i>
-                    <span class="font-medium">Equipe</span>
-                </a>
-                <!-- Gerenciar Páginas -->
-                <a href="../app/gerenciaPaginas.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-file-alt w-5"></i>
-                    <span class="font-medium">Gerenciar Páginas</span>
-                </a>
-                <!-- Histórico -->
-                <a href="../app/historico.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-history w-5"></i>
-                    <span class="font-medium">Histórico</span>
-                </a>
-                <!-- Configurações -->
-                <a href="../app/configuracao.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                    <i class="fas fa-cog w-5"></i>
-                    <span class="font-medium">Configurações</span>
-                </a>
-
-                <!-- Botão de Download na Sidebar -->
-                <button onclick="toggleModal('modalRelatorio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-slate-800 hover:text-white transition border border-transparent hover:border-slate-700 text-left">
-                    <i class="fas fa-file-pdf w-5"></i>
-                    <span class="font-medium">Baixar Relatório</span>
-                </button>
-            </nav>
-
-            <!-- Profile Footer -->
-            <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2 text-sm">
-                <a href="../app/PerfilGerente.php" class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group">
-                    <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">U</div>
-                    <div class="flex flex-col overflow-hidden">
-                        <span class="text-sm font-bold truncate">Usuário</span>
-                        <span class="text-[10px] text-gray-400 truncate">usuario@exemplo.com</span>
-                    </div>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition group">
-                    <i class="fas fa-sign-out-alt rotate-180 group-hover:text-red-400 transition-colors"></i>
-                    <span class="font-medium">Sair</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- CONTEÚDO PRINCIPAL -->
         <main class="flex-1 p-10 ml-64">
             <header class="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
                 <div>
                     <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Equipe</h1>
-                    <p class="text-lg text-[#334155] mt-2">Gerencie os membros e permissões da equipe</p>
+                    <p class="text-lg text-[#334155] mt-2">Gerencie os membros e permissões da equipe corporativa</p>
                 </div>
-                <button class="bg-[#2dd4bf] hover:bg-teal-500 text-[#0f172a] px-6 py-3 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 active:scale-95">
+                <button onclick="toggleModal('modalMembro')" class="bg-[#2dd4bf] hover:bg-teal-500 text-[#0f172a] px-6 py-3 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 active:scale-95">
                     <i class="fa-solid fa-plus"></i> Adicionar Membro
                 </button>
             </header>
 
-            <!-- Barra de Filtros -->
             <section class="flex flex-col md:flex-row gap-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm items-center mb-8">
                 <div class="relative flex-1 w-full">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -143,40 +154,53 @@ if (!isset($equipe) || !is_array($equipe) || empty($equipe)) {
                 </div>
                 <div class="relative w-full md:w-auto">
                     <select id="filtroCargo" class="w-full md:w-48 pl-10 pr-8 py-3 rounded-xl border-none bg-gray-50 appearance-none outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer text-sm">
-                        <option value="todos">Todos os Cargos</option>
-                        <option value="Gerente">Gerente</option>
-                        <option value="Membro">Membro</option>
+                        <option value="todos">Todos os Níveis</option>
+                        <option value="gerente">Gerentes</option>
+                        <option value="membro">Membros</option>
                     </select>
                     <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 </div>
             </section>
 
-            <!-- Grid de Membros -->
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gridMembros">
                 <?php foreach ($equipe as $membro): ?>
                     <div class="card-membro bg-white p-6 rounded-2xl border border-slate-200 hover:border-[#2dd4bf] hover:shadow-md transition duration-200 flex flex-col justify-between"
+                         data-id="<?= htmlspecialchars($membro['id_usuario']) ?>"
                          data-nome="<?= htmlspecialchars(strtolower($membro['nome'])) ?>"
-                         data-cargo="<?= htmlspecialchars(strtolower($membro['cargo'])) ?>">
+                         data-email="<?= htmlspecialchars(strtolower($membro['email'])) ?>"
+                         data-cargo="<?= htmlspecialchars(strtolower(in_array($membro['cargo'], ['Gerente', 'Admin']) ? 'gerente' : 'membro')) ?>">
+                        
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center font-bold text-lg border border-teal-100">
-                                    <?php echo $membro['sigla']; ?>
+                                    <?= htmlspecialchars($membro['sigla']); ?>
                                 </div>
                                 <div class="overflow-hidden">
-                                    <h3 class="font-bold text-slate-800 text-base truncate"><?php echo $membro['nome']; ?></h3>
-                                    <p class="text-xs text-slate-400 truncate"><?php echo $membro['email']; ?></p>
+                                    <h3 class="font-bold text-slate-800 text-base truncate"><?= htmlspecialchars($membro['nome']); ?></h3>
+                                    <p class="text-xs text-slate-400 truncate"><?= htmlspecialchars($membro['email']); ?></p>
                                 </div>
                             </div>
-                            <button class="text-slate-400 hover:text-slate-600 p-1.5 transition">
-                                <i class="fa-solid fa-ellipsis-vertical"></i>
-                            </button>
+                            
+                            <div class="relative">
+                                <button onclick="toggleDropdown(this, event)" class="text-slate-400 hover:text-slate-600 p-1.5 transition rounded-lg hover:bg-slate-50">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                                <div class="dropdown-menu hidden absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50">
+                                    <button onclick="editarMembro('<?= htmlspecialchars($membro['id_usuario'], ENT_QUOTES, 'UTF-8'); ?>', '<?= htmlspecialchars($membro['nome'], ENT_QUOTES, 'UTF-8'); ?>', '<?= htmlspecialchars($membro['cargo'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-bold transition flex items-center gap-2 border-b border-slate-100">
+                                        <i class="fa-solid fa-user-pen text-[11px] text-teal-600"></i> Editar Cargo
+                                    </button>
+                                    
+                                    <button onclick="removerMembro('<?= htmlspecialchars($membro['id_usuario'], ENT_QUOTES, 'UTF-8'); ?>', '<?= htmlspecialchars($membro['nome'], ENT_QUOTES, 'UTF-8'); ?>')" class="w-full text-left px-4 py-2.5 text-xs text-red-500 hover:bg-red-50 font-bold transition flex items-center gap-2">
+                                        <i class="fa-solid fa-trash-can text-[11px]"></i> Remover
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold <?php echo (strtolower($membro['cargo']) == 'gerente') ? 'bg-teal-100 text-teal-800' : 'bg-sky-100 text-sky-800'; ?>">
-                                <i class="fa-solid fa-user-gear text-[10px]"></i> <?php echo $membro['cargo']; ?>
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold <?= (in_array($membro['cargo'], ['Gerente', 'Admin'])) ? 'bg-teal-100 text-teal-800' : 'bg-sky-100 text-sky-800'; ?>">
+                                <i class="fa-solid <?= (in_array($membro['cargo'], ['Gerente', 'Admin'])) ? 'fa-user-gear' : 'fa-user'; ?> text-[10px]"></i> <?= htmlspecialchars($membro['cargo']); ?>
                             </span>
-                            <button class="text-xs text-red-500 hover:text-red-700 font-bold transition">Remover</button>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -184,12 +208,69 @@ if (!isset($equipe) || !is_array($equipe) || empty($equipe)) {
             
             <div id="msgVazio" class="hidden p-20 text-center text-slate-400">
                 <i class="fas fa-search fa-3x mb-4 block opacity-20"></i>
-                Nenhum membro da equipe encontrado.
+                Nenhum membro da equipe encontrado para os filtros selecionados.
             </div>
         </main>
     </div>
 
-    <!-- MODAL RELATÓRIO (Idêntico ao modal de transações) -->
+    <div id="modalMembro" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-extrabold text-slate-800">Novo Membro da Equipe</h3>
+                <button onclick="toggleModal('modalMembro')" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form action="../app/gerenciaEquipe.php" method="POST" class="space-y-5">
+                <input type="hidden" name="id_empresa" value="<?= htmlspecialchars($id_empresa_sessao ?? '') ?>">
+                
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Nome Completo</label>
+                    <input type="text" name="nome_completo" required placeholder="Ex: Guilherme Chedid" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Matrícula (Máx. 49 caracteres)</label>
+                        <input type="text" name="matricula" maxlength="49" placeholder="Ex: 2026XYZ01" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">CPF (Formatado)</label>
+                        <input type="text" name="cpf" required maxlength="14" oninput="mascaraCPF(this)" placeholder="000.000.000-00" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">E-mail Corporativo</label>
+                        <input type="email" name="email" required placeholder="Ex: nome@empresa.com" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Senha Provisória (Máx. 8 dig.)</label>
+                        <input type="password" name="senha" required maxlength="8" placeholder="No máximo 8 caracteres" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Nível de Permissão (Privilégio)</label>
+                    <div class="relative">
+                        <select name="nivel_permissao" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer text-sm">
+                            <option value="Membro">Membro (Usuário Padrão)</option>
+                            <option value="Gerente">Gerente (Gestão Completa corporativa)</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modalMembro')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all text-sm">Cancelar</button>
+                    <button type="submit" class="flex-1 py-4 bg-[#0d9488] text-white font-bold rounded-2xl shadow-lg hover:bg-[#0f766e] transition-all text-sm">Criar Conta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
             <div class="flex justify-between items-center mb-8">
@@ -269,10 +350,46 @@ if (!isset($equipe) || !is_array($equipe) || empty($equipe)) {
         </div>
     </div>
 
-    
-
-    <!-- LOGICAS DE FILTRO E COMPORTAMENTO -->
     <script>
+    function editarMembro(id, nome, cargoAtual) {
+        const eGerente = (cargoAtual === 'Gerente' || cargoAtual === 'Admin');
+        const novoCargo = eGerente ? 'Membro' : 'Gerente';
+        const mensagemAcao = eGerente 
+            ? `Deseja realmente REBAIXAR o usuário "${nome}" para o nível de Membro (Usuário Padrão)?`
+            : `Deseja realmente TORNAR o usuário "${nome}" um Gerente (Gestão Completa)?`;
+
+        if (confirm(mensagemAcao)) {
+            window.location.href = `atualizarCargo.php?id=${encodeURIComponent(id)}&novo_cargo=${encodeURIComponent(novoCargo)}`;
+        }
+    }
+
+    function removerMembro(id, nome) {
+        if (confirm(`Deseja realmente REMOVER o usuário "${nome}" da organização?`)) {
+            window.location.href = `removerMembro.php?id=${encodeURIComponent(id)}`;
+        }
+    }
+
+    function mascaraCPF(input) {
+        let v = input.value.replace(/\D/g, "");
+        v = v.replace(/^(\d{3})(\d)/, "$1.$2");
+        v = v.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
+        v = v.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})$/, "$1.$2.$3-$4");
+        input.value = v;
+    }
+
+    function toggleDropdown(button, event) {
+        event.stopPropagation();
+        const currentMenu = button.nextElementSibling;
+        
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            if (menu !== currentMenu) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        currentMenu.classList.toggle('hidden');
+    }
+
     function toggleModal(id) {
         const modal = document.getElementById(id);
         if (modal) {
@@ -281,13 +398,19 @@ if (!isset($equipe) || !is_array($equipe) || empty($equipe)) {
         }
     }
 
-    // Fecha modais ao clicar fora
     window.onclick = function(event) {
         const mRel = document.getElementById('modalRelatorio');
+        const mMemb = document.getElementById('modalMembro');
         if (event.target == mRel) toggleModal('modalRelatorio');
+        if (event.target == mMemb) toggleModal('modalMembro');
+
+        if (!event.target.closest('.dropdown-menu') && !event.target.closest('button[onclick^="toggleDropdown"]')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
     }
 
-    // Filtros em tempo real
     const inputBusca = document.getElementById('inputBusca');
     const filtroCargo = document.getElementById('filtroCargo');
     const cards = document.querySelectorAll('.card-membro');
@@ -300,10 +423,19 @@ if (!isset($equipe) || !is_array($equipe) || empty($equipe)) {
 
         cards.forEach(card => {
             const nome = card.dataset.nome;
+            const email = card.dataset.email;
             const cargoCard = card.dataset.cargo;
 
-            const matchesBusca = query === '' || nome.includes(query);
-            const matchesCargo = cargo === 'todos' || cargoCard === cargo;
+            const matchesBusca = query === '' || nome.includes(query) || email.includes(query);
+            
+            let matchesCargo = false;
+            if (cargo === 'todos') {
+                matchesCargo = true;
+            } else if (cargo === 'gerente') {
+                matchesCargo = (cargoCard === 'gerente');
+            } else if (cargo === 'membro') {
+                matchesCargo = (cargoCard === 'membro');
+            }
 
             if (matchesBusca && matchesCargo) {
                 card.classList.remove('hidden');

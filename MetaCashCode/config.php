@@ -4,7 +4,7 @@ $url = getenv('DATABASE_URL');
 
 // Se a URL não estiver definida, encerra a execução com erro.
 if ($url === false) {
-    die("Erro: A variável de ambiente DATABASE_URL não está definida. Verifique seu arquivo .env.");
+    die("Erro: A variável de ambiente DATABASE_URL não está definida.");
 }
 
 // Analisa a URL do banco de dados
@@ -18,7 +18,7 @@ $pass = $db_parts['pass'] ?? null;
 $dbname = isset($db_parts['path']) ? ltrim($db_parts['path'], '/') : null;
 
 if (!$host || !$user || !$pass || !$dbname) {
-    die("Erro: Nao foi possivel analisar a DATABASE_URL. Verifique o formato no arquivo .env.");
+    die("Erro: Nao foi possivel analisar a DATABASE_URL.");
 }
 
 // Monta a string de conexão (DSN) para o PostgreSQL
@@ -44,7 +44,23 @@ try {
     $pdo->exec("SET TIME ZONE 'America/Sao_Paulo'");
     date_default_timezone_set('America/Sao_Paulo');
 } catch (PDOException $e) {
-    // Em caso de erro na conexão, exibe a mensagem e encerra
-    die("Erro na conexão com o banco de dados: " . $e->getMessage());
+    // Em caso de erro, loga no servidor mas não gera saída visual desnecessária se não for fatal
+    error_log("Erro na conexão com o banco de dados: " . $e->getMessage());
+    die("Erro interno de conexão.");
 }
-?>
+
+/**
+ * Função de registro de histórico
+ */
+function registrarHistorico($pdo, $usuario_id, $acao, $categoria, $descricao) {
+    try {
+        $sql = "INSERT INTO historico (usuario_id, acao, categoria, descricao) VALUES (?, ?, ?, ?)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$usuario_id, $acao, $categoria, $descricao]);
+        return true;
+    } catch (PDOException $e) {
+        error_log("Erro ao gravar histórico: " . $e->getMessage());
+        return false;
+    }
+}
+// NÃO ADICIONE A TAG DE FECHAMENTO AQUI (evita erros de header)

@@ -1,54 +1,48 @@
-<?php
-// theme_loader.php
-?>
-<style id="theme-variables">
-    :root {
-        --color-primary: #2dd4bf;
-        --color-primary-hover: #14b8a6;
-        --color-sidebar: #0f172a;
-        --color-background: #f8fafc;
-        --color-card: #ffffff;
-        --color-text: #0f172a;
-        --color-success: #10b981;
-        --color-danger: #f43f5e;
-    }
-</style>
-
+<script src="https://cdn.tailwindcss.com"></script>
 <script>
-    // Aplica o tema salvo no localStorage imediatamente para evitar "flicker"
-    (function() {
-        try {
-            const theme = JSON.parse(localStorage.getItem('theme'));
-            if (theme) {
-                const root = document.documentElement;
-                if (theme.primary) root.style.setProperty('--color-primary', theme.primary);
-                if (theme.sidebar) root.style.setProperty('--color-sidebar', theme.sidebar);
-                if (theme.background) root.style.setProperty('--color-background', theme.background);
-                if (theme.card) root.style.setProperty('--color-card', theme.card);
-                if (theme.text) root.style.setProperty('--color-text', theme.text);
-            }
-        } catch (e) {
-            console.warn('Tema não definido, usando padrão.');
-        }
-    })();
-</script>
-
-<script>
-    // Configuração do Tailwind com as variáveis CSS
     tailwind.config = {
         theme: {
             extend: {
                 colors: {
-                    primary: 'var(--color-primary)',
-                    'primary-hover': 'var(--color-primary-hover)',
-                    sidebar: 'var(--color-sidebar)',
-                    background: 'var(--color-background)',
-                    card: 'var(--color-card)',
-                    text: 'var(--color-text)',
-                    success: 'var(--color-success)',
-                    danger: 'var(--color-danger)'
+                    meta: {
+                        menu: 'var(--meta-menu)',
+                        btn1: 'var(--meta-btn1)',
+                        destaque: 'var(--meta-destaque)',
+                        btn2: 'var(--meta-btn2)',
+                        clara: 'var(--meta-clara)',
+                        fundo: 'var(--meta-fundo)',
+                    }
                 }
             }
         }
+    }
+</script>
+
+<style>
+    :root {
+        --meta-menu: #0F2440;
+        --meta-btn1: #204C73;
+        --meta-destaque: #24A6B6;
+        --meta-btn2: #35C59A;
+        --meta-clara: #5DA4C0;
+        --meta-fundo: #FDFEFB;
+    }
+</style>
+
+<script>
+    try {
+        const temaSalvo = localStorage.getItem('metaCashTheme');
+        if (temaSalvo) {
+            const cores = JSON.parse(temaSalvo);
+            const raiz = document.documentElement;
+            if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
+            if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
+            if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
+            if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
+            if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
+            if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
+        }
+    } catch (erro) {
+        console.error("Erro ao ler localStorage do tema:", erro);
     }
 </script>

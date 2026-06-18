@@ -9,7 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_usuario = $_SESSION['id_usuario'] ?? null;
 
     if (!$id_empresa || !$id_usuario) {
-        header('Location: ../auth/login.php');
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'erro', 'mensagem' => 'Sessão inválida']);
         exit();
     }
 
@@ -28,7 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data_transacao = $data_obj->format('Y-m-d');
 
     if ($valor <= 0) {
-        header('Location: ../app/transacoes.php?erro=valor');
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'erro', 'mensagem' => 'Valor inválido']);
         exit();
     }
 
@@ -69,15 +71,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':descricao' => $titulo
         ]);
 
+        // REGISTRA NO HISTÓRICO (não quebra se falhar)
+        $hist_ok = false;
+        $hist_err = '';
+        try {
+            $hist_ok = registrarHistorico(
+                $pdo,
+                $id_usuario,
+                'Criação',
+                $tipo,
+                "Nova transação de {$tipo} criada: '{$titulo}' no valor de R$ " . number_format($valor, 2, ',', '.')
+            );
+        } catch (Exception $e) {
+            $hist_err = $e->getMessage();
+            error_log("Erro ao registrar histórico (não afeta salvamento): " . $e->getMessage());
+        }
+
+        // Try to get last insert ID
+        $id_inserido = -1;
+        try {
+            $id_inserido = $pdo->lastInsertId();
+        } catch (Exception $e) { }
+
         $pdo->commit();
 
-        header('Location: ../app/transacoesGerente.php?success=1');
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'sucesso', 'mensagem' => 'Transação salva com sucesso', 'debug' => ['id' => $id_inserido, 'emp' => $id_empresa, 'usr' => $id_usuario, 'hist_ok' => $hist_ok, 'hist_err' => $hist_err]]);
         exit();
     } catch (PDOException $e) {
         $pdo->rollBack();
         error_log('Erro ao salvar transacao: ' . $e->getMessage());
-        header('Location: ../app/transacoesGerente.php?erro=salvar');
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'erro', 'mensagem' => 'Erro ao salvar transação']);
         exit();
     }
 }
+header('Content-Type: application/json');
+echo json_encode(['status' => 'erro', 'mensagem' => 'Método não permitido']);
 ?>

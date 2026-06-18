@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['cpf_usuario'] = $usuario['cpf'];
                 $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
 
-                header("Location: ../app/dashboardUsuario.php");
+                header("Location: ../app/dashboardGerente.php");
                 exit();
             }
 

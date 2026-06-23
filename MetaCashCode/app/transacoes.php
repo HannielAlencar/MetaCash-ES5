@@ -11,8 +11,29 @@ $despesa = 0;
 
 date_default_timezone_set('America/Sao_Paulo');
 
+// Definições padrões (Fallback) caso não exista customização salva
+$config_titulo = "Transações";
+$config_subtitulo = "Gerencie suas finanças";
+$config_botao = "+ Adicionar Transação";
+$config_busca = "Buscar transações...";
+$config_vazio = "Nenhuma transação encontrada.";
+
 try {
-    // Busca as transações reais APENAS da sua empresa
+    // Busca as customizações do editor primeiro
+    $sql_conf = "SELECT chave_config, valor_config FROM configs_paginas WHERE id_empresa = :empresa";
+    $stmt_conf = $pdo->prepare($sql_conf);
+    $stmt_conf->execute([':empresa' => $id_empresa]);
+    $configs = $stmt_conf->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    if (!empty($configs)) {
+        if (!empty($configs['titulo_pagina'])) $config_titulo = $configs['titulo_pagina'];
+        if (!empty($configs['subtitulo_pagina'])) $config_subtitulo = $configs['subtitulo_pagina'];
+        if (!empty($configs['texto_botao'])) $config_botao = $configs['texto_botao'];
+        if (!empty($configs['placeholder_busca'])) $config_busca = $configs['placeholder_busca'];
+        if (!empty($configs['mensagem_vazio'])) $config_vazio = $configs['mensagem_vazio'];
+    }
+
+    // Busca as transações reais da empresa
     $sql = "SELECT 
                 t.id_transacao,
                 t.descricao_transacao AS titulo, 
@@ -30,7 +51,6 @@ try {
     $stmt->execute([':empresa' => $id_empresa]);
     $transacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Soma os totais
     foreach ($transacoes as $tr) {
         if ($tr['tipo'] === 'Receita') {
             $receita += (float)$tr['valor'];
@@ -53,26 +73,56 @@ if (!function_exists('formatarMoeda')) {
         return 'R$ ' . number_format($valor, 2, ',', '.');
     }
 }
-$dados_financeiros = [
-    'receitas_mes' => $receita,
-    'despesas_mes' => $despesa,
-    'saldo_total'  => $saldoPeriodo
-];
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaCash - Transações</title>
+    <title>MetaCash - <?= htmlspecialchars($config_titulo) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        (function() {
+            const temaSalvo = localStorage.getItem('metaCashTheme');
+            if (temaSalvo) {
+                try {
+                    const cores = JSON.parse(temaSalvo);
+                    const root = document.documentElement;
+                    for (const [key, value] of Object.entries(cores)) {
+                        root.style.setProperty(`--meta-${key}`, value);
+                    }
+                } catch(e) { console.error("Erro ao aplicar tema", e); }
+            }
+        })();
+
+        tailwind.config = { theme: { extend: { colors: { 
+            meta: { 
+                menu: 'var(--meta-menu)', 
+                btn1: 'var(--meta-btn1)', 
+                destaque: 'var(--meta-destaque)', 
+                btn2: 'var(--meta-btn2)', 
+                clara: 'var(--meta-clara)', 
+                fundo: 'var(--meta-fundo)' 
+            }
+        }}}};
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap');
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/transacoesUsuario.css"> 
-    
+    <link rel="stylesheet" href="../assets/css/dashboardGerente.css">
 </head>
 <body class="bg-gray-50">
-
     <div class="flex min-h-screen">
         <?php require_once '../includes/sidebar.php'; ?>
 
@@ -80,18 +130,18 @@ $dados_financeiros = [
             <header class="mb-8">
                 <div class="flex justify-between items-start">
                     <div>
-                        <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Transações</h1>
-                        <p class="text-lg text-[#334155] mt-2">Gerencie suas finanças</p>
+                        <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight"><?= htmlspecialchars($config_titulo) ?></h1>
+                        <p class="text-lg text-[#334155] mt-2"><?= htmlspecialchars($config_subtitulo) ?></p>
                     </div>
                     <button onclick="toggleModal()" class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition transform active:scale-95">
-                        + Adicionar Transação
+                        <?= htmlspecialchars($config_botao) ?>
                     </button>
                 </div>
 
                 <div class="mt-8 flex flex-col md:flex-row gap-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm items-center">
                     <div class="relative flex-1 w-full">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="inputBusca" placeholder="Buscar transações..." class="w-full pl-12 pr-4 py-3 rounded-xl border-none bg-gray-50 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <input type="text" id="inputBusca" placeholder="<?= htmlspecialchars($config_busca) ?>" class="w-full pl-12 pr-4 py-3 rounded-xl border-none bg-gray-50 outline-none focus:ring-2 focus:ring-teal-500 transition">
                     </div>
                     <div class="relative w-full md:w-auto">
                         <select id="filtroCategoria" class="w-full md:w-48 pl-10 pr-8 py-3 rounded-xl border-none bg-gray-50 appearance-none outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer">
@@ -129,8 +179,7 @@ $dados_financeiros = [
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div id="containerTransacoes" class="divide-y divide-gray-50">
                     <?php 
-                    $transacoes_lista = array_reverse((array)$transacoes, true);
-                    foreach ($transacoes_lista as $id => $tr): 
+                    foreach ($transacoes as $tr): 
                         $isEntrada = ($tr['tipo'] === 'Receita');
                     ?>
                     <div class="item-transacao flex justify-between items-center p-6 hover:bg-gray-50 transition group" 
@@ -141,8 +190,8 @@ $dados_financeiros = [
                                 <i class="fas <?= $isEntrada ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-red-400' ?>"></i>
                             </div>
                             <div>
-                                <p class="font-bold text-slate-800"><?= $tr['titulo'] ?></p>
-                                <p class="text-xs text-slate-400 uppercase font-semibold"><?= $tr['cat'] ?? 'Geral' ?> • <?= $tr['data'] ?></p>
+                                <p class="font-bold text-slate-800"><?= htmlspecialchars($tr['titulo']) ?></p>
+                                <p class="text-xs text-slate-400 uppercase font-semibold"><?= htmlspecialchars($tr['cat'] ?? 'Geral') ?> • <?= $tr['data'] ?></p>
                             </div>
                         </div>
                         <div class="flex items-center gap-6">
@@ -152,16 +201,19 @@ $dados_financeiros = [
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    
+                    <?php if (empty($transacoes)): ?>
+                        <div class="p-10 text-center text-gray-400"><?= htmlspecialchars($config_vazio) ?></div>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- MODAL NOVA TRANSAÇÃO -->
     <div id="modalTransacao" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
          <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
             <h3 class="text-xl font-bold mb-4 text-slate-800 border-b pb-4">Nova Transação</h3>
-            <form id="formTransacao" method="POST" class="space-y-4" onsubmit="return adicionarEConfirmar(event)">
+            <form id="formTransacao" method="POST" class="space-y-4" onsubmit="adicionarEConfirmar(event)">
                 <input type="hidden" name="origem" value="transacoes">
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Descrição</label>
@@ -184,8 +236,8 @@ $dados_financeiros = [
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Tipo</label>
                     <select name="tipo" class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
-                        <option value="e">Entrada (+)</option>
-                        <option value="s">Saída (-)</option>
+                        <option value="Receita">Entrada (+)</option>
+                        <option value="Despesa">Saída (-)</option>
                     </select>
                 </div>
                 <div>
@@ -200,12 +252,56 @@ $dados_financeiros = [
         </div>
     </div>
 
-    <!-- POPUP SUCESSO -->
-    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold" style="display: none;">
+    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold">
         Transação cadastrada com sucesso
     </div>
 
-
     <script src="../assets/js/transacoes.js"></script> 
+    <script>
+        function toggleModal() {
+            const modal = document.getElementById('modalTransacao');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+
+        const inputBusca = document.getElementById('inputBusca');
+        const filtroCategoria = document.getElementById('filtroCategoria');
+        const itensTransacao = document.querySelectorAll('.item-transacao');
+
+        function filtrar() {
+            const busca = inputBusca.value.toLowerCase();
+            const categoria = filtroCategoria.value;
+
+            itensTransacao.forEach(item => {
+                const tituloItem = item.getAttribute('data-titulo');
+                const catItem = item.getAttribute('data-categoria');
+
+                const bateBusca = tituloItem.includes(busca);
+                const bateCategoria = (categoria === 'todas' || catItem === categoria);
+
+                if (bateBusca && bateCategoria) {
+                    item.classList.remove('hidden');
+                    item.classList.add('flex');
+                } else {
+                    item.classList.remove('flex');
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        inputBusca.addEventListener('input', filtrar);
+        filtroCategoria.addEventListener('change', filtrar);
+
+        function adicionarEConfirmar(event) {
+            event.preventDefault(); 
+            toggleModal();
+            const popup = document.getElementById('popupSucesso');
+            popup.classList.remove('hidden');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                location.reload();
+            }, 1500);
+        }
+    </script>
 </body>
 </html>

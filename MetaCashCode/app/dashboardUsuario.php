@@ -61,14 +61,34 @@ if (!function_exists('formatarMoeda')) {
     }
 }
 
-// 4. PREPARANDO AS VARIÁVEIS QUE O SEU HTML EXIGE:
 $saldo_real_lucro = $saldo;
 
-$cards = [
-    'Saldo Atual' => ['valor' => formatarMoeda($saldo), 'porcentagem' => '', 'cor' => 'text-slate-500'],
-    'Total de Receitas' => ['valor' => formatarMoeda($total_receitas), 'porcentagem' => '+', 'cor' => 'text-teal-500'],
-    'Total de Despesas' => ['valor' => formatarMoeda($total_despesas), 'porcentagem' => '-', 'cor' => 'text-rose-500'],
-    'Lucro do Período' => ['valor' => formatarMoeda($saldo), 'porcentagem' => '', 'cor' => 'text-blue-500']
+// Reestruturação dos 4 pequenos cards com classes e ícones FontAwesome nativos e consistentes
+$cards_dados = [
+    [
+        'titulo' => 'Saldo Atual',
+        'valor' => formatarMoeda($saldo),
+        'classe_bg' => 'bg-meta-destaque/10',
+        'classe_icon' => 'fa-wallet text-meta-destaque'
+    ],
+    [
+        'titulo' => 'Total de Receitas',
+        'valor' => formatarMoeda($total_receitas),
+        'classe_bg' => 'bg-teal-500/10',
+        'classe_icon' => 'fa-arrow-trend-up text-teal-500'
+    ],
+    [
+        'titulo' => 'Total de Despesas',
+        'valor' => formatarMoeda($total_despesas),
+        'classe_bg' => 'bg-rose-500/10',
+        'classe_icon' => 'fa-arrow-trend-down text-rose-500'
+    ],
+    [
+        'titulo' => 'Lucro do Período',
+        'valor' => formatarMoeda($saldo),
+        'classe_bg' => 'bg-meta-btn1/20',
+        'classe_icon' => 'fa-chart-line text-meta-btn1'
+    ]
 ];
 
 $meses_nomes = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -78,7 +98,6 @@ $dados_receitas = [];
 $dados_despesas = [];
 $dados_lucro = [];
 
-// Inicializa os últimos 6 meses com zero (para o gráfico ter sempre uma linha desenhada, mesmo sem dados)
 for ($i = 5; $i >= 0; $i--) {
     $mes_num = (int)date('n', strtotime("-$i months"));
     $ano_num = date('Y', strtotime("-$i months"));
@@ -92,7 +111,6 @@ for ($i = 5; $i >= 0; $i--) {
 }
 
 try {
-    // 5.2. Busca no banco os dados agrupados por mês (Apenas dos últimos 6 meses)
     $sql_linha = "SELECT 
         TO_CHAR(data_registro, 'YYYY-MM') as mes_ano,
         SUM(CASE WHEN tipo_transacao = 'Receita' THEN valor_transacao ELSE 0 END) as receitas,
@@ -106,7 +124,6 @@ try {
     $stmt_linha->execute([':empresa' => $id_empresa]);
     $resultados_linha = $stmt_linha->fetchAll();
 
-    // Preenche os meses que tiveram movimentação com os valores reais
     foreach ($resultados_linha as $row) {
         $chave = $row['mes_ano'];
         if (isset($historico[$chave])) {
@@ -118,7 +135,6 @@ try {
     error_log("Erro no gráfico de linha: " . $e->getMessage());
 }
 
-// Separa os dados em arrays simples para o Chart.js ler
 foreach ($historico as $dados) {
     $labels_meses[] = $dados['label'];
     $dados_receitas[] = $dados['receitas'];
@@ -140,7 +156,6 @@ try {
     $stmt_pizza->execute([':empresa' => $id_empresa]);
     $resultado_pizza = $stmt_pizza->fetchAll();
 
-    // Organiza os dados somados
     foreach ($resultado_pizza as $row) {
         $nome = $row['nome_categoria'] ?? 'Geral';
         $categorias_agrupadas[$nome] = (float)$row['total'];
@@ -149,7 +164,6 @@ try {
     error_log("Erro no gráfico de pizza: " . $e->getMessage());
 }
 
-// Prepara as variáveis exatas que o JavaScript do Chart.js exige
 if (empty($categorias_agrupadas)) {
     $categorias_labels = ['Sem movimentação'];
     $categorias_valores = [0];
@@ -165,7 +179,65 @@ if (empty($categorias_agrupadas)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetaCash - Dashboard</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        // SCRIPT CORRIGIDO PARA VARIÁVEIS DO TEMA
+        (function() {
+            const root = document.documentElement;
+            
+            // Define o padrão correto como fallback obrigatório
+            root.style.setProperty('--meta-menu', '#0F2440');
+            root.style.setProperty('--meta-btn1', '#204C73');
+            root.style.setProperty('--meta-destaque', '#24A6B6');
+            root.style.setProperty('--meta-btn2', '#35C59A');
+            root.style.setProperty('--meta-clara', '#5DA4C0');
+            root.style.setProperty('--meta-fundo', '#FDFEFB');
+
+            // Se existir tema customizado no localStorage, aplica por cima
+            const temaSalvo = localStorage.getItem('metaCashTheme');
+            if (temaSalvo) {
+                try {
+                    const cores = JSON.parse(temaSalvo);
+                    for (const [key, value] of Object.entries(cores)) {
+                        root.style.setProperty(`--meta-${key}`, value);
+                    }
+                } catch(e) { console.error("Erro ao aplicar tema", e); }
+            }
+        })();
+
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    colors: { 
+                        meta: { 
+                            menu: 'var(--meta-menu)', 
+                            btn1: 'var(--meta-btn1)', 
+                            destaque: 'var(--meta-destaque)', 
+                            btn2: 'var(--meta-btn2)', 
+                            clara: 'var(--meta-clara)', 
+                            fundo: 'var(--meta-fundo)' 
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/dashboardUsuario.css">
@@ -177,11 +249,11 @@ if (empty($categorias_agrupadas)) {
 
         <main class="flex-1 p-8 ml-64 w-full">
             <div class="mb-8">
-                <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Visão Geral Financeira</h1>
+                <h1 class="text-4xl font-extrabold text-meta-menu tracking-tight">Visão Geral Financeira</h1>
                 <p class="text-lg text-[#334155] mt-2">Acompanhe o desempenho financeiro da sua empresa</p>
             </div>
 
-            <section class="bg-[#0f1c30] rounded-3xl p-8 text-white mb-8 shadow-2xl relative overflow-hidden">
+            <section class="bg-meta-menu rounded-3xl p-8 text-white mb-8 shadow-2xl relative overflow-hidden">
                 <div class="relative z-10">
                     <div class="flex items-center gap-2 mb-2">
                         <i class="fas fa-wallet text-slate-400"></i>
@@ -211,25 +283,17 @@ if (empty($categorias_agrupadas)) {
             </section>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <?php 
-                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBonecos.png'];
-                $i_card = 0;
-                foreach($cards as $titulo => $info): 
-                    $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : 'image_69ab13.png';
-                ?>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-[#2dd4bf] transition group">
-                        <div class="flex justify-between items-start mb-4">
-                            <img src="<?php echo $icone_atual; ?>" alt="Ícone Métrica" class="w-10 h-10 object-contain">
+                <?php foreach($cards_dados as $card): ?>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-meta-destaque transition group flex flex-col justify-between">
+                        <div class="w-10 h-10 <?= $card['classe_bg'] ?> rounded-xl flex items-center justify-center mb-4 text-lg">
+                            <i class="fas <?= $card['classe_icon'] ?>"></i>
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?php echo $titulo; ?></div>
-                            <div class="text-2xl font-black text-slate-800">R$ <?php echo $info['valor']; ?></div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1"><?= $card['titulo'] ?></div>
+                            <div class="text-2xl font-black text-slate-800">R$ <?= $card['valor'] ?></div>
                         </div>
                     </div>
-                <?php 
-                    $i_card++;
-                endforeach; 
-                ?>
+                <?php endforeach; ?>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -246,7 +310,7 @@ if (empty($categorias_agrupadas)) {
             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Transações Recentes</h3>
-                    <a href="../app/transacoes.php" class="text-xs font-bold text-teal-600 hover:underline uppercase">Ver todas</a>
+                    <a href="../app/transacoes.php" class="text-xs font-bold text-meta-destaque hover:underline uppercase">Ver todas</a>
                 </div>
                 <div class="divide-y divide-slate-50 px-6">
                   <?php foreach ($transacoes_recentes as $id => $tr): 

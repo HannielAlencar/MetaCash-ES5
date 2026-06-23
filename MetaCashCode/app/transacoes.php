@@ -67,9 +67,49 @@ $dados_financeiros = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetaCash - Transações</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // SCRIPT PARA CARREGAR AS CORES DINÂMICAS DA SIDEBAR
+        (function() {
+            const temaSalvo = localStorage.getItem('metaCashTheme');
+            if (temaSalvo) {
+                try {
+                    const cores = JSON.parse(temaSalvo);
+                    const root = document.documentElement;
+                    for (const [key, value] of Object.entries(cores)) {
+                        root.style.setProperty(`--meta-${key}`, value);
+                    }
+                } catch(e) { console.error("Erro ao aplicar tema", e); }
+            }
+        })();
+
+        tailwind.config = { theme: { extend: { colors: { 
+            meta: { 
+                menu: 'var(--meta-menu)', 
+                btn1: 'var(--meta-btn1)', 
+                destaque: 'var(--meta-destaque)', 
+                btn2: 'var(--meta-btn2)', 
+                clara: 'var(--meta-clara)', 
+                fundo: 'var(--meta-fundo)' 
+            }
+        }}}};
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root {
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/transacoesUsuario.css"> 
-    
+    <link rel="stylesheet" href="../assets/css/dashboardGerente.css">
 </head>
 <body class="bg-gray-50">
 
@@ -88,6 +128,7 @@ $dados_financeiros = [
                     </button>
                 </div>
 
+                <!-- FILTROS -->
                 <div class="mt-8 flex flex-col md:flex-row gap-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm items-center">
                     <div class="relative flex-1 w-full">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -106,6 +147,7 @@ $dados_financeiros = [
                     </div>
                 </div>
 
+                <!-- CARDS INFORMATIVOS -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                         <p class="text-xs font-bold text-slate-400 uppercase">Total de Receitas</p>
@@ -126,11 +168,12 @@ $dados_financeiros = [
                 </div>
             </header>
 
+            <!-- LISTA DE TRANSAÇÕES -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div id="containerTransacoes" class="divide-y divide-gray-50">
                     <?php 
-                    $transacoes_lista = array_reverse((array)$transacoes, true);
-                    foreach ($transacoes_lista as $id => $tr): 
+                    // Removido o array_reverse caso queira manter a ordem estrita do banco (ORDER BY DESC já traz as últimas primeiro)
+                    foreach ($transacoes as $tr): 
                         $isEntrada = ($tr['tipo'] === 'Receita');
                     ?>
                     <div class="item-transacao flex justify-between items-center p-6 hover:bg-gray-50 transition group" 
@@ -141,8 +184,8 @@ $dados_financeiros = [
                                 <i class="fas <?= $isEntrada ? 'fa-arrow-up text-teal-500' : 'fa-arrow-down text-red-400' ?>"></i>
                             </div>
                             <div>
-                                <p class="font-bold text-slate-800"><?= $tr['titulo'] ?></p>
-                                <p class="text-xs text-slate-400 uppercase font-semibold"><?= $tr['cat'] ?? 'Geral' ?> • <?= $tr['data'] ?></p>
+                                <p class="font-bold text-slate-800"><?= htmlspecialchars($tr['titulo']) ?></p>
+                                <p class="text-xs text-slate-400 uppercase font-semibold"><?= htmlspecialchars($tr['cat'] ?? 'Geral') ?> • <?= $tr['data'] ?></p>
                             </div>
                         </div>
                         <div class="flex items-center gap-6">
@@ -152,6 +195,10 @@ $dados_financeiros = [
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    
+                    <?php if (empty($transacoes)): ?>
+                        <div class="p-10 text-center text-gray-400">Nenhuma transação encontrada.</div>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>
@@ -161,7 +208,7 @@ $dados_financeiros = [
     <div id="modalTransacao" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
          <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
             <h3 class="text-xl font-bold mb-4 text-slate-800 border-b pb-4">Nova Transação</h3>
-            <form id="formTransacao" method="POST" class="space-y-4" onsubmit="return adicionarEConfirmar(event)">
+            <form id="formTransacao" method="POST" class="space-y-4" onsubmit="adicionarEConfirmar(event)">
                 <input type="hidden" name="origem" value="transacoes">
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Descrição</label>
@@ -184,8 +231,8 @@ $dados_financeiros = [
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Tipo</label>
                     <select name="tipo" class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
-                        <option value="e">Entrada (+)</option>
-                        <option value="s">Saída (-)</option>
+                        <option value="Receita">Entrada (+)</option>
+                        <option value="Despesa">Saída (-)</option>
                     </select>
                 </div>
                 <div>
@@ -201,11 +248,66 @@ $dados_financeiros = [
     </div>
 
     <!-- POPUP SUCESSO -->
-    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold" style="display: none;">
+    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold">
         Transação cadastrada com sucesso
     </div>
 
-
+    <!-- SCRIPTS JS -->
     <script src="../assets/js/transacoes.js"></script> 
+    <script>
+        // Função para Abrir/Fechar Modal
+        function toggleModal() {
+            const modal = document.getElementById('modalTransacao');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+
+        // Filtro e Busca em Tempo Real das Transações na Tela
+        const inputBusca = document.getElementById('inputBusca');
+        const filtroCategoria = document.getElementById('filtroCategoria');
+        const itensTransacao = document.querySelectorAll('.item-transacao');
+
+        function filtrar() {
+            const busca = inputBusca.value.toLowerCase();
+            const categoria = filtroCategoria.value;
+
+            itensTransacao.forEach(item => {
+                const tituloItem = item.getAttribute('data-titulo');
+                const catItem = item.getAttribute('data-categoria');
+
+                const bateBusca = tituloItem.includes(busca);
+                const bateCategoria = (categoria === 'todas' || catItem === categoria);
+
+                if (bateBusca && bateCategoria) {
+                    item.classList.remove('hidden');
+                    item.classList.add('flex');
+                } else {
+                    item.classList.remove('flex');
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        inputBusca.addEventListener('input', filtrar);
+        filtroCategoria.addEventListener('change', filtrar);
+
+        // Função de envio do formulário (Exemplo simulado, integre com seu transacoes.js)
+        function adicionarEConfirmar(event) {
+            // Se você faz o envio via AJAX dentro de 'transacoes.js', remova o event.preventDefault() daqui se necessário
+            event.preventDefault(); 
+            
+            // Lógica de envio AJAX vai aqui...
+            
+            // Exemplo de comportamento visual:
+            toggleModal();
+            const popup = document.getElementById('popupSucesso');
+            popup.classList.remove('hidden');
+            
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                location.reload(); // Recarrega para puxar do banco atualizado
+            }, 1500);
+        }
+    </script>
 </body>
 </html>

@@ -7,6 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: cadastro.php?erro=As senhas não coincidem!");
         exit();
     }
+    
 
     // Dados da Empresa
     $nome_empresa = $_POST['nome_empresa'];
@@ -29,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $id_empresa = $pdo->lastInsertId();
 
-        // 2. Inserir o Usuário Admin (AGORA COM MATRÍCULA E CPF)
+        // 2. Inserir o Usuário Admin
         $sql_usuario = "INSERT INTO usuarios (id_empresa, matricula, nome_completo, cpf, email, senha, nivel_permissao) 
                         VALUES (:id_empresa, :matricula, :nome, :cpf, :email, :senha, 'Gerente')";
         $stmt_usuario = $pdo->prepare($sql_usuario);
@@ -43,15 +44,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         $pdo->commit(); 
-        header("Location: ../app/dashboardUsuario.php");
-        exit();
+
+        // --- INÍCIO DA CORREÇÃO DE SESSÃO ---
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        session_unset();
+        session_destroy();
+        session_start();
+        
+        // Busca os dados do usuário recém-criado
+        $stmt_login = $pdo->prepare("SELECT * FROM usuarios WHERE email = :email");
+        $stmt_login->execute([':email' => $email]);
+        $usuario = $stmt_login->fetch(PDO::FETCH_ASSOC);
+
+        if ($usuario) {
+            // PADRONIZADO PARA usuario_id
+            $_SESSION['usuario_id'] = $usuario['id_usuario']; 
+            $_SESSION['nome'] = $usuario['nome_completo'];
+            $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
+            $_SESSION['id_empresa'] = $usuario['id_empresa'];
+
+            // Redirecionamento dinâmico baseado na permissão
+            if ($usuario['nivel_permissao'] === 'Gerente') {
+                header("Location: ../app/dashboardGerente.php");
+            } else {
+                header("Location: ../app/dashboardUsuario.php");
+            }
+            exit();
+        } else {
+            header("Location: ../auth/login.php");
+            exit();
+        }
+        // --- FIM DA CORREÇÃO DE SESSÃO ---
 
     } catch (PDOException $e) {
         $pdo->rollBack(); 
         
-        // Tratamento de erro para CPF ou CNPJ duplicado
-        if ($e->getCode() == 23000) {
-            die("Erro: Já existe um cadastro com esse CPF, CNPJ ou E-mail.");
+        // Tratamento de erro para violação de chave única (23505 no PostgreSQL)
+        if ($e->getCode() == '23505') {
+            $msg = "Erro: Dados já cadastrados.";
+            if (strpos($e->getMessage(), 'usuarios_email_key') !== false) {
+                $msg = "Este e-mail já está sendo utilizado.";
+            } elseif (strpos($e->getMessage(), 'usuarios_cpf_key') !== false) {
+                $msg = "Este CPF já possui uma conta.";
+            }
+            header("Location: cadastro.php?erro=" . urlencode($msg));
+            exit();
         } else {
             die("Erro no sistema: " . $e->getMessage());
         }
@@ -69,10 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/cadastro.css">
-
 </head>
 <body class="h-screen overflow-hidden relative text-slate-800 flex items-center justify-center">
-    <!-- Pop-up de Sucesso -->
     <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500">
         <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -82,9 +119,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <?php if (isset($_GET['erro'])): ?>
+        <div class="fixed top-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+            <?php echo htmlspecialchars($_GET['erro']); ?>
+        </div>
+    <?php endif; ?>
+
     <div class="noise-overlay"></div>
 
-    <a href="../app/homePB.php" class="fixed top-4 left-6 z-20 inline-flex items-center gap-2 text-white font-medium hover:text-slate-200 transition-colors">
+    <a href="../auth/login.php" class="fixed top-4 left-6 z-20 inline-flex items-center gap-2 text-white font-medium hover:text-slate-200 transition-colors">
         <i class="fas fa-arrow-left text-sm"></i> Voltar
     </a>
 

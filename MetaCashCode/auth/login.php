@@ -1,4 +1,5 @@
 <?php
+ob_start(); // Previne erros de redirecionamento causados por espaços em branco no config.php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -22,10 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Verifica se o usuário existe e se a senha está correta
             if ($usuario && password_verify($senha, $usuario['senha'])) {
                 // Salva os dados na Sessao para usar em todas as outras telas
+                $_SESSION['usuario_id'] = $usuario['id_usuario']; // CHAVE PADRONIZADA PARA O DASHBOARD LIBERAR O ACESSO
                 $_SESSION['id_usuario'] = $usuario['id_usuario'];
                 $_SESSION['id_empresa'] = $usuario['id_empresa'];
-                $_SESSION['nome_usuario'] = $usuario['nome_completo'];
-                $_SESSION['email_usuario'] = $usuario['email'];
+                $_SESSION['nome'] = $usuario['nome_completo'];
+                $_SESSION['email'] = $usuario['email'];
                 $_SESSION['matricula'] = $usuario['matricula'];
                 $_SESSION['cpf_usuario'] = $usuario['cpf'];
                 $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
@@ -56,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-    <!-- Pop-up de Sucesso -->
     <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500">
         <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">

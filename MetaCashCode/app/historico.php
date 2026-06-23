@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // 2. Importa a sua conexão configurada com o Neon DB
 require_once '../config.php'; 
 
-$id_usuario = $_SESSION['id_usuario'] ?? null;
+$id_usuario = $_SESSION['usuario_id'] ?? null;
 $registros = [];
 
 try {

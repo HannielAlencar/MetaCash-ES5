@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Trava de segurança corrigida: impede acesso se não estiver logado OU se não possuir o nível exigido
-if (!isset($_SESSION['id_usuario']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
+if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
     header("Location: dashboardUsuario.php");
     exit();
 }
@@ -271,6 +271,7 @@ if (empty($equipe)) {
         </div>
     </div>
 
+    <!-- MODAL RELATÓRIO -->
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
             <div class="flex justify-between items-center mb-8">
@@ -280,21 +281,21 @@ if (empty($equipe)) {
                 </button>
             </div>
             
-            <form action="../app/gerarPDF.php" method="GET" target="_blank" class="space-y-6">
+            <form action="/MetaCashCode/Usuario/Transacoes.php/gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
                 <div>
                     <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Tipo de Transação</label>
                     <div class="grid grid-cols-3 gap-3">
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="e" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Receita</div>
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Receita</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="s" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Despesa</div>
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Despesa</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="tipo" value="todos" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Ambos</div>
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Ambos</div>
                         </label>
                     </div>
                 </div>
@@ -304,18 +305,18 @@ if (empty($equipe)) {
                     <div class="grid grid-cols-2 gap-3">
                         <label class="cursor-pointer">
                             <input type="radio" name="periodo" value="mensal" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Mensal</div>
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Mensal</div>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="periodo" value="anual" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-[#1e293b] peer-checked:text-white transition-all">Anual</div>
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Anual</div>
                         </label>
                     </div>
                 </div>
 
                 <div>
                     <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Mês</label>
-                    <select name="mes" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
+                    <select name="mes" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
                         <option value="1">Janeiro</option>
                         <option value="2">Fevereiro</option>
                         <option value="3">Março</option>
@@ -333,7 +334,7 @@ if (empty($equipe)) {
 
                 <div>
                     <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Ano</label>
-                    <select name="ano" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer">
+                    <select name="ano" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
                         <option value="2026" selected>2026</option>
@@ -342,7 +343,7 @@ if (empty($equipe)) {
 
                 <div class="flex gap-4 pt-6 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">Cancelar</button>
-                    <button type="submit" class="flex-1 py-4 bg-[#0d9488] text-white font-bold rounded-2xl shadow-lg hover:bg-[#0f766e] transition-all flex items-center justify-center gap-2">
+                    <button type="submit" class="flex-1 py-4 bg-meta-destaque hover:opacity-90 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-download"></i> Baixar PDF
                     </button>
                 </div>

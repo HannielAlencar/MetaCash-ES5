@@ -62,7 +62,7 @@ const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
 const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
 
 senhaInput.addEventListener('input', () => {
-const val = senhaInput.value;
+    const val = senhaInput.value;
     updateReq('req-length', val.length >= 8);
     updateReq('req-upper', /[A-Z]/.test(val));
     updateReq('req-lower', /[a-z]/.test(val));
@@ -77,16 +77,16 @@ function updateReq(id, isValid) {
         el.classList.replace('text-slate-500', 'text-green-600');
         icon.classList.replace('fa-times', 'fa-check');
         icon.classList.replace('text-red-400', 'text-green-600');
-}   else {
+    } else {
         el.classList.replace('text-green-600', 'text-slate-500');
         icon.classList.replace('fa-check', 'fa-times');
         icon.classList.replace('text-green-600', 'text-red-400');
+    }
 }
-}
+
 form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // create/find client error container
     let clientErr = document.getElementById('signup-client-error');
     if (!clientErr) {
         clientErr = document.createElement('div');
@@ -125,15 +125,17 @@ form.addEventListener('submit', (e) => {
         return clientErr.scrollIntoView({behavior: 'smooth'});
     }
 
-    // Sistema de armazenamento local para login
     localStorage.setItem('userEmail', document.getElementById('email').value);
     localStorage.setItem('userPassword', s);
 
-    // Exibir Popup e submeter o formulário ao servidor (em vez de redirecionar para caminho estático)
+    // --- ADIÇÃO PARA CORRIGIR O ERRO ---
+    // Removemos os caracteres de formatação antes de submeter o formulário
+    cpfInput.value = cpfInput.value.replace(/\D/g, '');
+    cnpjInput.value = cnpjInput.value.replace(/\D/g, '');
+    // ------------------------------------
+
     successPopup.classList.remove('hidden');
     setTimeout(() => successPopup.classList.remove('opacity-0'), 10);
-    // Mostra o popup brevemente e então submete o formulário para que o servidor
-    // execute a criação da conta e faça o redirecionamento correto.
     setTimeout(() => {
         successPopup.classList.add('opacity-0');
         setTimeout(() => {

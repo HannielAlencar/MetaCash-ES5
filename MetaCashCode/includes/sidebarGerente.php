@@ -3,10 +3,45 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Importa a conexão com o banco para buscar as cores dinâmicas
+require_once __DIR__ . '/../config.php';
+
 $pagina_atual = strtolower(basename($_SERVER['PHP_SELF']));
-$nome_usuario = $_SESSION['nome_completo'] ?? 'Gerente';
+$nome_usuario = $_SESSION['nome'] ?? 'Gerente';
 $email_usuario = $_SESSION['email'] ?? 'gerente@empresa.com';
+$id_empresa = $_SESSION['id_empresa'] ?? null;
+
 $inicial_nome = strtoupper(substr(trim($nome_usuario), 0, 1));
+
+// 1. CORES PADRÃO (Caso a empresa não tenha personalizado nada ainda)
+$cor_menu     = '#0F2440';
+$cor_btn1     = '#204C73';
+$cor_destaque = '#24A6B6';
+$cor_btn2     = '#35C59A';
+$cor_clara    = '#5DA4C0';
+$cor_fundo    = '#FDFEFB';
+
+// 2. BUSCA AS CORES DO SEU BANCO DE DADOS
+if ($id_empresa && isset($pdo)) {
+    try {
+        // ATENÇÃO: Ajuste o nome da tabela 'temas' e das colunas abaixo 
+        // para corresponder exatamente a como você criou no seu banco de dados!
+        $stmt_cores = $pdo->prepare("SELECT cor_menu, cor_btn1, cor_destaque, cor_btn2, cor_clara, cor_fundo FROM temas WHERE id_empresa = :id_empresa LIMIT 1");
+        $stmt_cores->execute([':id_empresa' => $id_empresa]);
+        $tema = $stmt_cores->fetch();
+        
+        if ($tema) {
+            $cor_menu     = $tema['cor_menu'] ?? $cor_menu;
+            $cor_btn1     = $tema['cor_btn1'] ?? $cor_btn1;
+            $cor_destaque = $tema['cor_destaque'] ?? $cor_destaque;
+            $cor_btn2     = $tema['cor_btn2'] ?? $cor_btn2;
+            $cor_clara    = $tema['cor_clara'] ?? $cor_clara;
+            $cor_fundo    = $tema['cor_fundo'] ?? $cor_fundo;
+        }
+    } catch (PDOException $e) {
+        // Se a tabela não existir ou der erro, o sistema ignora e usa as cores padrão acima
+    }
+}
 ?>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -33,15 +68,15 @@ $inicial_nome = strtoupper(substr(trim($nome_usuario), 0, 1));
 
 <style>
     :root {
-        --meta-menu: #0F2440;
-        --meta-btn1: #204C73;
-        --meta-destaque: #24A6B6;
-        --meta-btn2: #35C59A;
-        --meta-clara: #5DA4C0;
-        --meta-fundo: #FDFEFB;
-        /* Variáveis de texto adicionadas */
-        --meta-text: #94a3b8;   /* Cor do texto inativo */
-        --meta-active: #ffffff; /* Cor do texto ativo */
+        /* Injeção dinâmica das cores vindas do banco de dados */
+        --meta-menu: <?= $cor_menu ?>;
+        --meta-btn1: <?= $cor_btn1 ?>;
+        --meta-destaque: <?= $cor_destaque ?>;
+        --meta-btn2: <?= $cor_btn2 ?>;
+        --meta-clara: <?= $cor_clara ?>;
+        --meta-fundo: <?= $cor_fundo ?>;
+        --meta-text: #94a3b8;   
+        --meta-active: #ffffff; 
     }
 </style>
 

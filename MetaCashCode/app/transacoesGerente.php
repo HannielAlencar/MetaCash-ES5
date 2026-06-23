@@ -1,15 +1,33 @@
 <?php
-require_once '../config.php'; 
-
+// LINHA 1: Inicia a sessão com segurança para evitar quebras se a sidebar depender de dados logados
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// 1. IMPORTA A CONEXÃO COM O BANCO DE DADOS
+require_once '../config.php'; 
+
+// Trava de segurança corrigida: impede acesso se não estiver logado OU se não possuir o nível exigido
+if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
+    header("Location: dashboardUsuario.php");
+    exit();
+}
+
+$id_usuario = $_SESSION['usuario_id'];
 $id_empresa = $_SESSION['id_empresa'] ?? 0;
-$id_usuario = $_SESSION['id_usuario'] ?? 0;
 $transacoes = [];
 $receita = 0;
 $despesa = 0;
+
+// Busca categorias personalizadas da empresa E as categorias padrão do sistema
+$categorias_banco = [];
+try {
+    $stmtCat = $pdo->prepare("SELECT nome_categoria FROM categoria WHERE id_empresa = ? OR id_empresa IS NULL OR id_empresa = 0 ORDER BY nome_categoria ASC");
+    $stmtCat->execute([$id_empresa]);
+    $categorias_banco = $stmtCat->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    // Falha silenciosa caso não consiga buscar categorias
+}
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -105,21 +123,21 @@ $dados_financeiros = [
         }
     </style>
     <script>
-        try {
-            const temaSalvo = localStorage.getItem('metaCashTheme');
-            if (temaSalvo) {
-                const cores = JSON.parse(temaSalvo);
-                const raiz = document.documentElement;
-                if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
-                if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
-                if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
-                if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
-                if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
-                if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
-            }
-        } catch (erro) {
-            console.error("Erro ao ler localStorage do tema:", erro);
+    try {
+        const temaSalvo = localStorage.getItem('metaCashTheme');
+        if (temaSalvo) {
+            const cores = JSON.parse(temaSalvo);
+            const raiz = document.documentElement;
+            if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
+            if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
+            if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
+            if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
+            if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
+            if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
         }
+    } catch (erro) {
+        console.error("Erro ao ler localStorage do tema:", erro);
+    }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/transacoesGerente.css"> 
@@ -149,11 +167,9 @@ $dados_financeiros = [
                     <div class="relative w-full md:w-auto">
                         <select id="filtroCategoria" class="w-full md:w-48 pl-10 pr-8 py-3 rounded-xl border-none bg-gray-50 appearance-none outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer">
                             <option value="todas">Todas Categorias</option>
-                            <option value="Vendas">Vendas</option>
-                            <option value="Administrativo">Administrativo</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Salários">Salários</option>
-                            <option value="Geral">Geral</option>
+                            <?php foreach ($categorias_banco as $cat): ?>
+                                <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     </div>
@@ -244,10 +260,11 @@ $dados_financeiros = [
                     <label class="text-xs font-bold text-slate-500 uppercase">Categoria</label>
                     <select name="cat" class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
                         <option value="Geral">Geral</option>
-                        <option value="Vendas">Vendas</option>
-                        <option value="Administrativo">Administrativo</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Salários">Salários</option>
+                        <?php foreach ($categorias_banco as $cat): ?>
+                            <?php if ($cat !== 'Geral'): ?>
+                                <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
@@ -271,17 +288,76 @@ $dados_financeiros = [
 
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-8">
                 <h3 class="text-2xl font-extrabold text-slate-800">Baixar Relatório</h3>
                 <button onclick="toggleModal('modalRelatorio')" class="text-slate-400 hover:text-slate-600 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             
-            <form action="../app/gerarPDF.php" method="GET" target="_blank" class="space-y-6">
+            <form action="/MetaCashCode/Usuario/Transacoes.php/gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Tipo de Transação</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="e" class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Receita</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="s" class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Despesa</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="todos" checked class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Ambos</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Período</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Mensal</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="anual" class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Anual</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Mês</label>
+                    <select name="mes" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5" selected>Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Ano</label>
+                    <select name="ano" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                    </select>
+                </div>
+
                 <div class="flex gap-4 pt-6 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">Cancelar</button>
-                    <button type="submit" class="flex-1 py-4 bg-[#0d9488] text-white font-bold rounded-2xl shadow-lg hover:bg-[#0f766e] transition-all flex items-center justify-center gap-2">
+                    <button type="submit" class="flex-1 py-4 bg-meta-destaque hover:opacity-90 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-download"></i> Baixar PDF
                     </button>
                 </div>

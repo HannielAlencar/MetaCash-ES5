@@ -25,7 +25,35 @@ if (!$email) {
 $token = bin2hex(random_bytes(32));
 $link = 'http://localhost/auth/redefinirSenha.php?token=' . $token;
 
-// [AQUI] Você fará a inserção do $token e do $email no seu banco de dados Postgres
+try {
+    // 1. Primeiro, precisamos descobrir o id_usuario com base no e-mail digitado
+    $stmt_user = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE email = :email LIMIT 1");
+    $stmt_user->execute([':email' => $email]);
+    $usuario_com_email = $stmt_user->fetch();
+
+    if ($usuario_com_email) {
+        $id_usuario = $usuario_com_email['id_usuario'];
+        // Define que o token expira em 1 hora
+        $data_expiracao = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+        // 2. Insere o registro na sua tabela correta: recuperacao_senha
+        $sql = "INSERT INTO recuperacao_senha (id_usuario, token_seguro, data_expiracao, utilizado) 
+                VALUES (:id_usuario, :token_seguro, :data_expiracao, false)";
+                
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            ':id_usuario'     => $id_usuario,
+            ':token_seguro'   => $token, 
+            ':data_expiracao' => $data_expiracao
+        ]);
+    } else {
+        header('Location: esqueceuSenha.php?erro=email_nao_encontrado');
+        exit();
+    }
+} catch (Exception $e) {
+    header('Location: esqueceuSenha.php?erro=erro_banco');
+    exit();
+}
 
 $mail = new PHPMailer(true);
 

@@ -162,27 +162,36 @@ if (empty($categorias_agrupadas)) {
     <title>MetaCash - Dashboard</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        meta: {
-                            menu: 'var(--meta-menu)',
-                            btn1: 'var(--meta-btn1)',
-                            destaque: 'var(--meta-destaque)',
-                            btn2: 'var(--meta-btn2)',
-                            clara: 'var(--meta-clara)',
-                            fundo: 'var(--meta-fundo)',
-                        }
+        // SCRIPT PARA CARREGAR AS CORES DINÂMICAS DA SIDEBAR
+        (function() {
+            const temaSalvo = localStorage.getItem('metaCashTheme');
+            if (temaSalvo) {
+                try {
+                    const cores = JSON.parse(temaSalvo);
+                    const root = document.documentElement;
+                    for (const [key, value] of Object.entries(cores)) {
+                        root.style.setProperty(`--meta-${key}`, value);
                     }
-                }
+                } catch(e) { console.error("Erro ao aplicar tema", e); }
             }
-        }
+        })();
+
+        tailwind.config = { theme: { extend: { colors: { 
+            meta: { 
+                menu: 'var(--meta-menu)', 
+                btn1: 'var(--meta-btn1)', 
+                destaque: 'var(--meta-destaque)', 
+                btn2: 'var(--meta-btn2)', 
+                clara: 'var(--meta-clara)', 
+                fundo: 'var(--meta-fundo)' 
+            }
+        }}}};
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         :root {
             --meta-menu: #0F2440;
             --meta-btn1: #204C73;
@@ -301,12 +310,10 @@ if (empty($categorias_agrupadas)) {
                   <?php endforeach; ?>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
     <script>
-        // Transforma os dados em escopo global de segurança. Se o seu dashboardUsuario.js 
-        // usar variáveis normais, ele vai ler aqui perfeitamente sem gerar erros.
         window.labels_meses = <?= json_encode($labels_meses) ?>;
         window.dados_receitas = <?= json_encode($dados_receitas) ?>;
         window.dados_despesas = <?= json_encode($dados_despesas) ?>;

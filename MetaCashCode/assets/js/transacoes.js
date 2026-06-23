@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const catItem = (item.getAttribute('data-categoria') || '').toLowerCase().trim();
 
             const bateTexto = titulo.includes(termo);
-            // Comparação case-insensitive e sem espaços extras para categorias
             const bateCategoria = (categoria === 'todas' || catItem === categoria);
 
             if (bateTexto && bateCategoria) {
@@ -32,18 +31,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Listeners para os inputs
-    inputBusca.addEventListener('keyup', filtrar);
-    filtroCategoria.addEventListener('change', filtrar);
+    if (inputBusca) inputBusca.addEventListener('keyup', filtrar);
+    if (filtroCategoria) filtroCategoria.addEventListener('change', filtrar);
+
+    // Tratamento de sucesso via URL
     const params = new URLSearchParams(window.location.search);
     const sucesso = params.get('success');
     const popup = document.getElementById('popupSucesso');
+    
     if (sucesso === '1' && popup) {
         popup.classList.remove('hidden');
-        popup.classList.add('fade-in-out');
+        popup.style.display = 'block';
 
         setTimeout(() => {
             popup.classList.add('hidden');
-            popup.classList.remove('fade-in-out');
+            popup.style.display = 'none';
             params.delete('success');
             const newUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
             window.history.replaceState({}, '', newUrl);
@@ -59,71 +61,53 @@ function toggleModal(modalId = 'modalTransacao') {
     modal.classList.toggle('flex');
 }
 
+// Função de Salvar e Recarregar
 async function adicionarEConfirmar(event) {
-    console.log('adicionarEConfirmar INICIADO');
-    if (event) {
-        event.preventDefault();
-    }
+    if (event) event.preventDefault();
     
     const form = document.getElementById('formTransacao');
     const formData = new FormData(form);
     const popup = document.getElementById('popupSucesso');
+    
+    // Pega a URL diretamente do atributo do formulário
+    const actionUrl = form.getAttribute('data-url');
 
     try {
-        const actionUrl = form.getAttribute('action') || (window.location.pathname.toLowerCase().includes('transacoesgerente') ? '../app/salvarTransacaoGerente.php' : '../app/salvarTransacao.php');
-        console.log('Enviando para:', actionUrl);
-        
         const response = await fetch(actionUrl, {
             method: 'POST',
             body: formData
         });
 
         const text = await response.text();
-        console.log('Resposta do servidor:', text);
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
+        
+        // Se retornar qualquer coisa que não comece com '{', é um erro de servidor/HTML
+        if (!text.trim().startsWith('{')) {
+            console.error('ERRO DETECTADO:', text);
+            alert('Erro: O servidor retornou uma página em vez de dados. Verifique o console (F12) para ver o erro.');
+            return false;
         }
 
-        let result;
-        try {
-            result = JSON.parse(text);
-        } catch (e) {
-            console.error('Erro ao fazer parse JSON:', text);
-            throw new Error('Resposta não é um JSON válido');
-        }
+        const result = JSON.parse(text);
 
         if (result.status === 'sucesso') {
-            console.log('Sucesso, mostrando popup');
-            // Mostra o popup de sucesso
+            toggleModal('modalTransacao');
             if (popup) {
-                popup.classList.remove('hidden');
                 popup.style.display = 'block';
+                popup.classList.remove('hidden');
             }
-            
-            // Limpa o formulário
             form.reset();
-            
-            // Fecha o modal após 1 segundo
-            setTimeout(() => {
-                toggleModal('modalTransacao');
-            }, 1000);
-            
-            // Recarrega a página para mostrar os novos dados ignorando cache
-            setTimeout(() => {
-                window.location.href = window.location.pathname + '?t=' + new Date().getTime();
-            }, 1000);
+            setTimeout(() => { window.location.reload(); }, 1000);
         } else {
-            console.error('Servidor retornou erro:', result);
-            alert('Erro: ' + (result.mensagem || 'Erro desconhecido'));
+            alert('Erro: ' + (result.mensagem || 'Erro desconhecido.'));
         }
     } catch (error) {
-        console.error('Erro completo:', error);
-        alert('Ocorreu um erro ao conectar com o servidor: ' + error.message);
+        console.error('Erro crítico:', error);
+        alert('Erro ao conectar com o servidor.');
     }
     
     return false;
 }
+    
 
 function toggleRelatorioModal() {
     toggleModal('modalRelatorio');
@@ -136,4 +120,3 @@ window.onclick = function(event) {
     if (event.target == mRel) toggleModal('modalRelatorio');
     if (event.target == mTra) toggleModal('modalTransacao');
 }
-

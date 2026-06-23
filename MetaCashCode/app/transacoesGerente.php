@@ -1,19 +1,12 @@
 <?php
+require_once '../config.php'; 
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once '../config.php'; 
-
-// --- DEBUG INJECTADO PARA DIAGNÓSTICO PROFUNDO ---
-$dbg_tr = $pdo->query("SELECT * FROM transacoes ORDER BY id_transacao DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
-$dbg_hi = $pdo->query("SELECT * FROM historico ORDER BY id DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
-echo "<script>";
-// echo "console.log('DEBUG TRANSACOES', " . json_encode($dbg_tr) . ");";
-// echo "console.log('DEBUG HISTORICO', " . json_encode($dbg_hi) . ");";
-echo "</script>";
-// -------------------------------------------------
 
 $id_empresa = $_SESSION['id_empresa'] ?? 0;
+$id_usuario = $_SESSION['id_usuario'] ?? 0;
 $transacoes = [];
 $receita = 0;
 $despesa = 0;
@@ -21,15 +14,14 @@ $despesa = 0;
 date_default_timezone_set('America/Sao_Paulo');
 
 try {
-    // Busca as transações reais APENAS da sua empresa
-    // ATUALIZAÇÃO: Adicionado t.id_transacao no select
+    // --- BUSCA NORMAL RESTAURADA E BLINDADA ---
     $sql = "SELECT 
                 t.id_transacao,
                 t.descricao_transacao AS titulo, 
                 t.valor_transacao AS valor, 
                 t.tipo_transacao AS tipo, 
                 c.nome_categoria AS cat,
-                TO_CHAR(t.data_transacao, 'DD/MM/YYYY') AS data,
+                t.data_transacao,
                 t.id_transacao AS id
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
@@ -39,6 +31,12 @@ try {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':empresa' => $id_empresa]);
     $transacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Formata a data direto no PHP
+    foreach ($transacoes as &$tr) {
+        $tr['data'] = date('d/m/Y', strtotime($tr['data_transacao']));
+    }
+    unset($tr);
 
     // Soma os totais
     foreach ($transacoes as $tr) {
@@ -230,8 +228,10 @@ $dados_financeiros = [
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
-            <form id="formTransacao" method="POST" class="space-y-4" onsubmit="return adicionarEConfirmar(event)">
-                <input type="hidden" name="origem" value="transacoesGerente">
+            <form id="formTransacao" action="../app/salvarTransacaoGerente.php" data-url="<?= '../app/salvarTransacaoGerente.php' ?>" method="POST" class="space-y-4" onsubmit="return adicionarEConfirmar(event)">
+                <input type="hidden" name="id_empresa_oculto" value="<?= $id_empresa ?>">
+                <input type="hidden" name="id_usuario_oculto" value="<?= $id_usuario ?>">
+                
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Descrição</label>
                     <input type="text" name="titulo" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">

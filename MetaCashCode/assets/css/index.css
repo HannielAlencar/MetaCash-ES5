@@ -1,0 +1,451 @@
+:root {
+            --color-bg-light: #f4f8fa;
+            --color-bg-white: #ffffff;
+            --color-navy-dark: #0f2537;
+            --color-navy-deep: #132a42;
+            --color-teal: #00ccb4;
+            --color-teal-dark: #0e8388;
+            --color-text-dark: #132a42;
+            --color-text-muted: #627d98;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--color-bg-white);
+            color: var(--color-text-dark);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container para empurrar o footer para o final */
+        .main-content {
+            flex: 1;
+        }
+
+        /* Header */
+        header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--color-bg-white);
+            width: 100%;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--color-navy-dark);
+            text-decoration: none;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-dark);
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-link:hover {
+            opacity: 0.7;
+        }
+
+        .btn-header-register {
+            background-color: var(--color-navy-dark);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-header-register:hover {
+            background-color: #1b3d5a;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background-color: var(--color-bg-light);
+            padding: 80px 20px 60px 20px;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(0, 204, 180, 0.1);
+            color: var(--color-teal-dark);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background-color: var(--color-teal);
+            border-radius: 50%;
+        }
+
+        .hero-section h1 {
+            font-size: 44px;
+            font-weight: 800;
+            color: var(--color-navy-dark);
+            line-height: 1.2;
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+        }
+
+        .gradient-text {
+            color: var(--color-teal);
+            background: linear-gradient(135deg, var(--color-teal), #00a391);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: var(--color-text-muted);
+            max-width: 620px;
+            margin: 0 auto 35px auto;
+            line-height: 1.6;
+        }
+
+        .btn-primary-cta {
+            background-color: var(--color-navy-dark);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(15, 37, 55, 0.25);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .btn-primary-cta:hover {
+            transform: translateY(-2px);
+            background-color: #1b3d5a;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Garante que os blocos comecem alinhados pelo topo */
+            gap: 80px;
+            margin-top: 60px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--color-navy-dark);
+            height: 60px;        /* Altura fixa unificada para que as caixas fiquem iguais */
+            display: flex;
+            align-items: center; /* Centraliza verticalmente o conteúdo (o '100%' e o '∞') */
+            justify-content: center;
+            margin: 0;
+        }
+
+        /* Customização cirúrgica para o símbolo do infinito */
+        .stat-item h3.infinity-stat {
+            font-size: 56px;       /* Tamanho ideal para equivaler visualmente ao '100%' */
+            color: #48e5ca;        /* Tom verde-água claro vibrante */
+            transform: translateY(-2px); /* Ajuste fino manual para equilibrar o centro óptico do símbolo */
+        }
+
+        .stat-item p {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            font-weight: 500;
+            margin-top: 8px;       /* Distância simétrica fixa para as duas labels */
+        }
+
+        /* Totalmente Customizável Section (Atualizado para Azul Degradê) */
+        .custom-section {
+            background: linear-gradient(135deg, #163654 0%, #0f2537 100%);
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .section-subtitle {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 600px;
+            margin: 0 auto 50px auto;
+        }
+
+        .cards-grid-two {
+            display: grid;
+            grid-template-columns: 1fr;
+            max-width: 800px;
+            margin: 0 auto;
+            gap: 24px;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .cards-grid-two {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .dark-card {
+            background-color: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: left;
+            transition: transform 0.2s;
+        }
+
+        .dark-card:hover {
+            transform: translateY(-4px);
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .card-icon-container {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 204, 180, 0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--color-teal);
+        }
+
+        .dark-card h4 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        .dark-card p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.6;
+        }
+
+        /* Funcionalidades Completas Section (Clara) */
+        .features-section {
+            background-color: var(--color-bg-white);
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .features-section .section-title {
+            color: var(--color-navy-dark);
+        }
+
+        .features-section .section-subtitle {
+            color: var(--color-text-muted);
+        }
+
+        .cards-grid-three {
+            display: grid;
+            grid-template-columns: 1fr;
+            max-width: 1100px;
+            margin: 0 auto 60px auto;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .cards-grid-three {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .light-card {
+            background-color: var(--color-bg-white);
+            border: 1px solid #e4ecf2;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: left;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .light-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .light-card .card-icon-container {
+            background-color: rgba(15, 37, 55, 0.05);
+            color: var(--color-navy-dark);
+        }
+
+        .light-card h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-navy-dark);
+            margin-bottom: 12px;
+        }
+
+        .light-card p {
+            font-size: 13px;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+
+        /* CTA Final Card com Gradiente */
+        .cta-container-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .cta-gradient-box {
+            background: linear-gradient(135deg, #0e4c5e 0%, var(--color-navy-dark) 100%);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 15px 40px rgba(15, 37, 55, 0.3);
+        }
+
+        .cta-gradient-box h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .cta-gradient-box p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 640px;
+            margin: 0 auto 35px auto;
+            line-height: 1.6;
+        }
+
+        .cta-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-cta-white {
+            background-color: white;
+            color: var(--color-navy-dark);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .btn-cta-white:hover {
+            transform: translateY(-2px);
+            background-color: #f4f8fa;
+        }
+
+        .btn-cta-outline {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .btn-cta-outline:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: white;
+        }
+
+        /* Auxiliares */
+        .hidden-form {
+            display: inline;
+        }
+
+        /* Barra de Rodapé com Largura Total */
+        footer {
+            background-color: var(--color-navy-dark);
+            width: 100%;
+            padding: 18px 20px;
+            text-align: center;
+            margin-top: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        footer p {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0;
+            letter-spacing: 0.3px;
+        }

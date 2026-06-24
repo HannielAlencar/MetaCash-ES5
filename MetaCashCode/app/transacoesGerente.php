@@ -1,5 +1,5 @@
 <?php
-// LINHA 1: Inicia a sessão com segurança para evitar quebras se a sidebar depender de dados logados
+// LINHA 1: Inicia a sessão com segurança
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // 1. IMPORTA A CONEXÃO COM O BANCO DE DADOS
 require_once '../config.php'; 
 
-// Trava de segurança corrigida: impede acesso se não estiver logado OU se não possuir o nível exigido
+// Trava de segurança
 if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
     header("Location: dashboardUsuario.php");
     exit();
@@ -19,20 +19,60 @@ $transacoes = [];
 $receita = 0;
 $despesa = 0;
 
-// Busca categorias personalizadas da empresa E as categorias padrão do sistema
+// Busca categorias personalizadas
 $categorias_banco = [];
 try {
     $stmtCat = $pdo->prepare("SELECT nome_categoria FROM categoria WHERE id_empresa = ? OR id_empresa IS NULL OR id_empresa = 0 ORDER BY nome_categoria ASC");
     $stmtCat->execute([$id_empresa]);
     $categorias_banco = $stmtCat->fetchAll(PDO::FETCH_COLUMN);
-} catch (PDOException $e) {
-    // Falha silenciosa caso não consiga buscar categorias
-}
+} catch (PDOException $e) {}
 
 date_default_timezone_set('America/Sao_Paulo');
 
+// =========================================================================
+// BUSCA E CONFIGURAÇÃO DE VARIÁVEIS DO BANCO
+// =========================================================================
+$configs_pagina = [];
 try {
-    // --- BUSCA NORMAL RESTAURADA E BLINDADA ---
+    $stmtConf = $pdo->prepare("SELECT chave_config, valor_config FROM configs_paginas WHERE id_empresa = :empresa");
+    $stmtConf->execute([':empresa' => $id_empresa]);
+    while ($row = $stmtConf->fetch(PDO::FETCH_ASSOC)) {
+        $configs_pagina[$row['chave_config']] = $row['valor_config'];
+    }
+} catch (PDOException $e) {
+    error_log("Erro ao buscar configurações: " . $e->getMessage());
+}
+
+// Valores padrão (Default) caso não existam no banco
+$padroes = [
+    'titulo_pagina' => 'Transações',
+    'subtitulo_pagina' => 'Gerencie suas finanças',
+    'texto_botao' => '+ Adicionar Transação',
+    'placeholder_busca' => 'Buscar transações...',
+    'tamanho_fonte' => 'medio',
+    'fonte_pagina' => 'Inter',
+    'vis_receitas' => '1',
+    'vis_despesas' => '1',
+    'vis_saldo' => '1',
+    'vis_lista' => '1'
+];
+
+// Mescla o que veio do banco com os padrões
+$cfg = array_merge($padroes, $configs_pagina);
+
+// Mapeamento de tamanho para classes Tailwind
+$tamanho_map = [
+    'pequeno' => 'text-sm',
+    'medio'   => 'text-base',
+    'grande'  => 'text-lg',
+    'extra'   => 'text-xl'
+];
+$classe_tamanho_fonte = $tamanho_map[$cfg['tamanho_fonte']] ?? 'text-base';
+$fonte_ativa = ($cfg['fonte_pagina'] === 'Roboto') ? 'Roboto' : 'Inter';
+
+// =========================================================================
+
+try {
     $sql = "SELECT 
                 t.id_transacao,
                 t.descricao_transacao AS titulo, 
@@ -50,13 +90,11 @@ try {
     $stmt->execute([':empresa' => $id_empresa]);
     $transacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Formata a data direto no PHP
     foreach ($transacoes as &$tr) {
         $tr['data'] = date('d/m/Y', strtotime($tr['data_transacao']));
     }
     unset($tr);
 
-    // Soma os totais
     foreach ($transacoes as $tr) {
         if ($tr['tipo'] === 'Receita') {
             $receita += (float)$tr['valor'];
@@ -66,7 +104,6 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Erro ao buscar transações: " . $e->getMessage());
-    echo "<script>console.error('Erro PDO na busca: " . addslashes($e->getMessage()) . "');</script>";
 }
 
 $saldoPeriodo = $receita - $despesa;
@@ -80,11 +117,6 @@ if (!function_exists('formatarMoeda')) {
         return 'R$ ' . number_format($valor, 2, ',', '.');
     }
 }
-$dados_financeiros = [
-    'receitas_mes' => $receita,
-    'despesas_mes' => $despesa,
-    'saldo_total'  => $saldoPeriodo
-];
 ?>
 
 <!DOCTYPE html>
@@ -98,6 +130,10 @@ $dados_financeiros = [
     tailwind.config = {
         theme: {
             extend: {
+                // Isso vai forçar o Tailwind a usar a sua fonte como padrão
+                fontFamily: {
+                    sans: ['<?= $fonte_ativa ?>', 'sans-serif'],
+                },
                 colors: {
                     meta: {
                         menu: 'var(--meta-menu)',
@@ -113,15 +149,27 @@ $dados_financeiros = [
     }
     </script>
     <style>
-        :root {
-            --meta-menu: #0F2440;
-            --meta-btn1: #204C73;
-            --meta-destaque: #24A6B6;
-            --meta-btn2: #35C59A;
-            --meta-clara: #5DA4C0;
-            --meta-fundo: #FDFEFB;
-        }
-    </style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+    
+    :root {
+        --meta-menu: #0F2440;
+        --meta-btn1: #204C73;
+        --meta-destaque: #24A6B6;
+        --meta-btn2: #35C59A;
+        --meta-clara: #5DA4C0;
+        --meta-fundo: #FDFEFB;
+        /* Definimos a variável da fonte aqui */
+        --meta-font: '<?= $fonte_ativa ?>', sans-serif;
+    }
+
+    /* Forçamos a aplicação da fonte em todos os elementos.
+       O !important aqui é necessário porque o Tailwind injeta 
+       estilos diretamente nos elementos (botões, inputs, etc).
+    */
+    body, h1, h2, h3, h4, h5, h6, button, input, select, textarea, p, span, div {
+        font-family: var(--meta-font) !important;
+    }
+</style>
     <script>
     try {
         const temaSalvo = localStorage.getItem('metaCashTheme');
@@ -142,27 +190,27 @@ $dados_financeiros = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/transacoesGerente.css"> 
 </head>
-<body class="bg-meta-fundo transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden w-full">
+<body class="bg-meta-fundo transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden w-full <?= $classe_tamanho_fonte ?>">
 
-    <?php include_once '../includes/sidebarGerente.php'; ?>
+   <?php include_once '../includes/sidebarGerente.php'; ?>
 
     <main class="flex-1 p-8 ml-64 min-h-screen border-box overflow-y-auto w-full">
         <div class="max-w-full w-full mx-auto">
             <header class="mb-8">
-                    <div class="flex justify-between items-start">
-                        <div>
-                        <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Transações</h1>
-                        <p class="text-lg text-[#334155] mt-2">Gerencie suas finanças</p>
+                  <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight"><?= htmlspecialchars($cfg['titulo_pagina']) ?></h1>
+                        <p class="text-lg text-[#334155] mt-2"><?= htmlspecialchars($cfg['subtitulo_pagina']) ?></p>
                     </div>
                     <button onclick="toggleModal('modalTransacao')" class="bg-gradient-to-r from-meta-menu to-meta-destaque text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition transform active:scale-95">
-                        + Adicionar Transação
+                        <?= htmlspecialchars($cfg['texto_botao']) ?>
                     </button>
-                </div>
+               </div>
 
                 <div class="mt-8 flex flex-col md:flex-row gap-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm items-center">
                     <div class="relative flex-1 w-full">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="inputBusca" placeholder="Buscar transações..." class="w-full pl-12 pr-4 py-3 rounded-xl border-none bg-gray-50 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                        <input type="text" id="inputBusca" placeholder="<?= htmlspecialchars($cfg['placeholder_busca']) ?>" class="w-full pl-12 pr-4 py-3 rounded-xl border-none bg-gray-50 outline-none focus:ring-2 focus:ring-teal-500 transition">
                     </div>
                     <div class="relative w-full md:w-auto">
                         <select id="filtroCategoria" class="w-full md:w-48 pl-10 pr-8 py-3 rounded-xl border-none bg-gray-50 appearance-none outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer">
@@ -176,18 +224,27 @@ $dados_financeiros = [
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                    <?php if ($cfg['vis_receitas'] == '1'): ?>
                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                         <p class="text-xs font-bold text-slate-400 uppercase">Total de Receitas</p>
                         <p class="text-2xl font-bold text-teal-500 mt-1"><?= formatarMoeda($receitas_mes) ?></p>
                     </div>
+                    <?php endif; ?>
+
+                    <?php if ($cfg['vis_despesas'] == '1'): ?>
                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                         <p class="text-xs font-bold text-slate-400 uppercase">Total de Despesas</p>
                         <p class="text-2xl font-bold text-red-400 mt-1"><?= formatarMoeda($despesas_mes) ?></p>
                     </div>
+                    <?php endif; ?>
+
+                    <?php if ($cfg['vis_saldo'] == '1'): ?>
                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                         <p class="text-xs font-bold text-slate-400 uppercase">Saldo do Período</p>
                         <p class="text-2xl font-bold text-slate-800 mt-1"><?= formatarMoeda($saldo_total) ?></p>
                     </div>
+                    <?php endif; ?>
+
                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                         <p class="text-xs font-bold text-slate-400 uppercase">Transações no Período</p>
                         <p class="text-2xl font-bold text-slate-800 mt-1"><?= $transacoes_count ?></p>
@@ -195,6 +252,7 @@ $dados_financeiros = [
                 </div>
             </header>
 
+            <?php if ($cfg['vis_lista'] == '1'): ?>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <?php 
                     if (empty($transacoes)) {
@@ -233,6 +291,7 @@ $dados_financeiros = [
                     <?php endforeach; ?>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </main>
 
@@ -384,6 +443,21 @@ $dados_financeiros = [
         if (event.target === mTrans) toggleModal('modalTransacao');
     }
     </script>
+
+    <script>
+    window.addEventListener('load', function() {
+        const novaFonte = '<?= $fonte_ativa ?>';
+        // Aplica a fonte em tudo, forçando a substituição
+        document.body.style.setProperty('font-family', novaFonte + ', sans-serif', 'important');
+        
+        // Aplica também em elementos específicos que o Tailwind costuma "sequestrar"
+        const elementos = document.querySelectorAll('h1, h2, h3, h4, button, input, select, textarea, p, span, div');
+        elementos.forEach(el => {
+            el.style.setProperty('font-family', novaFonte + ', sans-serif', 'important');
+        });
+    });
+    </script>
+
     <script src="../assets/js/transacoes.js"></script> 
 </body>
 </html>

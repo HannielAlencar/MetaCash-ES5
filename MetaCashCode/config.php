@@ -49,6 +49,42 @@ try {
     die("Erro interno de conexão.");
 }
 
+// ... após session_start e require_once config.php ...
+
+$id_empresa = $_SESSION['id_empresa'] ?? 0;
+
+// Valores padrão (para não dar erro caso não tenha nada no banco ainda)
+$cfg = [
+    'titulo_pagina' => 'Transações',
+    'subtitulo_pagina' => 'Gerencie todas as receitas e despesas da empresa',
+    'texto_botao' => 'Nova Transação',
+    'placeholder_busca' => 'Buscar transações...',
+    'mensagem_vazio' => 'Nenhuma transação encontrada',
+    'fonte_pagina' => 'Inter',
+    'tamanho_fonte' => 'medio',
+    'vis_receitas' => '1',
+    'vis_despesas' => '1',
+    'vis_saldo' => '1',
+    'vis_lista' => '1'
+];
+
+// Busca do banco
+$stmt = $pdo->prepare("SELECT chave_config, valor_config FROM configs_paginas WHERE id_empresa = :empresa");
+$stmt->execute([':empresa' => $id_empresa]);
+$configs_banco = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// Mescla o que veio do banco com os padrões
+$cfg = array_merge($cfg, $configs_banco);
+
+// Mapeamento de tamanho de fonte para Tailwind
+$tamanho_map = [
+    'pequeno' => 'text-sm',
+    'medio'   => 'text-base',
+    'grande'  => 'text-lg',
+    'extra'   => 'text-xl'
+];
+$classe_tamanho = $tamanho_map[$cfg['tamanho_fonte']] ?? 'text-base';
+
 /**
  * Função de registro de histórico
  */

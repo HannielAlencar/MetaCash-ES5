@@ -12,14 +12,58 @@ if (!isset($_SESSION['id_usuario'])) {
 
 $id_empresa = $_SESSION['id_empresa'] ?? 0;
 
+// =========================================================================
+// PROCESSAMENTO DO SALVAMENTO (Atomic e Seguro)
+// =========================================================================
+$mensagem_sucesso = '';
+$mensagem_erro = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $chaves_permitidas = [
+        'titulo_pagina', 'subtitulo_pagina', 'texto_botao', 'placeholder_busca', 'mensagem_vazio',
+        'fonte_pagina', 'tamanho_fonte', 'vis_receitas', 'vis_despesas', 'vis_saldo', 'vis_lista'
+    ];
+    
+    try {
+        $sql = "INSERT INTO configs_paginas (id_empresa, chave_config, valor_config) 
+                VALUES (:empresa, :chave, :valor)
+                ON CONFLICT (chave_config, id_empresa) 
+                DO UPDATE SET valor_config = EXCLUDED.valor_config";
+    
+        $stmt = $pdo->prepare($sql);
+
+        foreach ($chaves_permitidas as $chave) {
+            if (isset($_POST[$chave])) {
+                $valor = trim($_POST[$chave]);
+                $stmt->execute([
+                    ':empresa' => $id_empresa, 
+                    ':chave'   => $chave, 
+                    ':valor'   => $valor
+                ]);
+            }
+        }
+        $mensagem_sucesso = "Configurações salvas com sucesso!";
+    } catch (Exception $e) {
+        $mensagem_erro = "Erro ao salvar: " . $e->getMessage();
+    }
+}
+
+// =========================================================================
 // Valores padrões (Fallback)
+// =========================================================================
 $config_titulo = "Transações";
 $config_subtitulo = "Gerencie todas as receitas e despesas da empresa";
 $config_botao = "Nova Transação";
 $config_busca = "Buscar transações...";
 $config_vazio = "Nenhuma transação encontrada";
+$config_fonte = "Inter";
+$config_tamanho = "medio";
+$config_vis_receitas = "1";
+$config_vis_despesas = "1";
+$config_vis_saldo = "1";
+$config_vis_lista = "1"; 
 
-// Busca as configurações já salvas no banco de dados
+// Busca as configurações já salvas
 try {
     $sql_load = "SELECT chave_config, valor_config FROM configs_paginas WHERE id_empresa = :empresa";
     $stmt_load = $pdo->prepare($sql_load);
@@ -32,9 +76,24 @@ try {
         if (isset($configs['texto_botao'])) $config_botao = $configs['texto_botao'];
         if (isset($configs['placeholder_busca'])) $config_busca = $configs['placeholder_busca'];
         if (isset($configs['mensagem_vazio'])) $config_vazio = $configs['mensagem_vazio'];
+        if (isset($configs['fonte_pagina'])) $config_fonte = $configs['fonte_pagina'];
+        if (isset($configs['tamanho_fonte'])) $config_tamanho = $configs['tamanho_fonte'];
+        if (isset($configs['vis_receitas'])) $config_vis_receitas = $configs['vis_receitas'];
+        if (isset($configs['vis_despesas'])) $config_vis_despesas = $configs['vis_despesas'];
+        if (isset($configs['vis_saldo'])) $config_vis_saldo = $configs['vis_saldo'];
+        if (isset($configs['vis_lista'])) $config_vis_lista = $configs['vis_lista'];
     }
 } catch (PDOException $e) {
-    error_log("Erro ao carregar configurações no editor: " . $e->getMessage());
+    $mensagem_erro = "Erro ao carregar configurações: " . $e->getMessage();
+}
+
+$btn_ativo = "bg-meta-destaque text-white shadow-sm hover:opacity-95";
+$btn_inativo = "border border-slate-200 text-slate-600 hover:bg-slate-50";
+
+function getVisibilityClasses($isActive) {
+    return $isActive === "1" 
+        ? ['bg-white border-slate-200 hover:border-meta-destaque', 'fas fa-eye text-meta-destaque', 'text-slate-800'] 
+        : ['bg-slate-50 border-slate-200', 'fas fa-eye-slash text-slate-400', 'text-slate-400'];
 }
 ?>
 <!DOCTYPE html>
@@ -70,7 +129,8 @@ try {
         }}}};
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Open+Sans:wght@300;400;600;700&display=swap');
+        
         :root {
             --meta-menu: #0F172A;
             --meta-btn1: #1E293B;
@@ -79,7 +139,8 @@ try {
             --meta-clara: #38BDF8;
             --meta-fundo: #F8FAFC;
         }
-        body { font-family: 'Inter', sans-serif; }
+        /* Fix aplicado abaixo: removida a variável dinâmica para não afetar esta página */
+        body { font-family: 'Inter', sans-serif; } 
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -99,23 +160,46 @@ try {
             </div>
         </header>
 
-        <form action="../app/salvarConfigTransacao.php" method="POST">
+        <?php if ($mensagem_sucesso): ?>
+            <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center">
+                <i class="fas fa-check-circle mr-3 text-emerald-500"></i> <span class="font-medium"><?= $mensagem_sucesso ?></span>
+            </div>
+        <?php endif; ?>
+        <?php if ($mensagem_erro): ?>
+            <div class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center">
+                <i class="fas fa-exclamation-circle mr-3 text-rose-500"></i> <span class="font-medium"><?= $mensagem_erro ?></span>
+            </div>
+        <?php endif; ?>
+
+        <form action="" method="POST" id="formConfig">
+            <input type="hidden" name="tamanho_fonte" id="input_tamanho_fonte" value="<?= htmlspecialchars($config_tamanho) ?>">
+            <input type="hidden" name="vis_receitas" id="input_vis_receitas" value="<?= htmlspecialchars($config_vis_receitas) ?>">
+            <input type="hidden" name="vis_despesas" id="input_vis_despesas" value="<?= htmlspecialchars($config_vis_despesas) ?>">
+            <input type="hidden" name="vis_saldo" id="input_vis_saldo" value="<?= htmlspecialchars($config_vis_saldo) ?>">
+            <input type="hidden" name="vis_lista" id="input_vis_lista" value="<?= htmlspecialchars($config_vis_lista) ?>">
+
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div class="xl:col-span-2 space-y-6">
                     <section class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-cog mr-2 text-slate-400"></i> Configurações Gerais</h4>
+                        
                         <label class="text-xs font-bold text-slate-500 uppercase">Fonte</label>
-                        <select class="w-full border border-slate-200 rounded-lg p-3 mt-1 mb-4 bg-white focus:ring-2 focus:ring-meta-destaque outline-none"><option>Inter</option></select>
-                        <p class="text-sm text-slate-400 mb-4">Prévia: Texto de exemplo com a fonte selecionada</p>
+                        <select name="fonte_pagina" class="w-full border border-slate-200 rounded-lg p-3 mt-1 mb-4 bg-white focus:ring-2 focus:ring-meta-destaque outline-none">
+                            <option value="Inter" <?= $config_fonte == 'Inter' ? 'selected' : '' ?>>Inter</option>
+                            <option value="Roboto" <?= $config_fonte == 'Roboto' ? 'selected' : '' ?>>Roboto</option>
+                            <option value="Poppins" <?= $config_fonte == 'Poppins' ? 'selected' : '' ?>>Poppins</option>
+                            <option value="Montserrat" <?= $config_fonte == 'Montserrat' ? 'selected' : '' ?>>Montserrat</option>
+                            <option value="Lato" <?= $config_fonte == 'Lato' ? 'selected' : '' ?>>Lato</option>
+                            <option value="OpenSans" <?= $config_fonte == 'OpenSans' ? 'selected' : '' ?>>Open Sans</option>
+                        </select>
                         
                         <label class="text-xs font-bold text-slate-500 uppercase">Tamanho da Fonte</label>
-                        <div class="grid grid-cols-2 gap-4 mt-1">
-                            <button type="button" class="border border-slate-200 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50 transition">Pequeno</button>
-                            <button type="button" class="bg-meta-destaque text-white py-3 rounded-lg font-medium shadow-sm hover:opacity-95 transition">Médio</button>
-                            <button type="button" class="border border-slate-200 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50 transition">Grande</button>
-                            <button type="button" class="border border-slate-200 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50 transition">Extra Grande</button>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-1">
+                            <button type="button" onclick="setTamanhoFonte('pequeno', this)" class="btn-fonte py-3 rounded-lg font-medium transition <?= $config_tamanho === 'pequeno' ? $btn_ativo : $btn_inativo ?>">Pequeno</button>
+                            <button type="button" onclick="setTamanhoFonte('medio', this)" class="btn-fonte py-3 rounded-lg font-medium transition <?= $config_tamanho === 'medio' ? $btn_ativo : $btn_inativo ?>">Médio</button>
+                            <button type="button" onclick="setTamanhoFonte('grande', this)" class="btn-fonte py-3 rounded-lg font-medium transition <?= $config_tamanho === 'grande' ? $btn_ativo : $btn_inativo ?>">Grande</button>
+                            <button type="button" onclick="setTamanhoFonte('extra', this)" class="btn-fonte py-3 rounded-lg font-medium transition <?= $config_tamanho === 'extra' ? $btn_ativo : $btn_inativo ?>">Extra Grande</button>
                         </div>
-                        <p class="text-sm text-slate-400 mt-4">Prévia: Este é um exemplo de texto</p>
                     </section>
 
                     <section class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
@@ -148,22 +232,97 @@ try {
 
                 <div class="xl:col-span-1">
                     <section class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                        <h4 class="font-bold text-slate-800 mb-6">Colunas Visíveis (5/6)</h4>
+                        <h4 class="font-bold text-slate-800 mb-6">Colunas Visíveis</h4>
                         <div class="space-y-3">
-                            <div class="border border-slate-200 rounded-xl p-3 flex justify-between items-center hover:border-meta-destaque transition"><div class="flex items-center gap-3"><i class="fas fa-chart-line text-meta-destaque"></i><div><p class="font-bold text-sm">Card de Receitas</p><p class="text-xs text-slate-400">Tamanho: pequeno</p></div></div><div class="flex gap-2 text-slate-400"><i class="fas fa-pen text-xs cursor-pointer hover:text-slate-600"></i><i class="fas fa-eye text-xs cursor-pointer hover:text-meta-destaque"></i></div></div>
-                            <div class="border border-slate-200 rounded-xl p-3 flex justify-between items-center hover:border-meta-destaque transition"><div class="flex items-center gap-3"><i class="fas fa-chart-area text-meta-destaque"></i><div><p class="font-bold text-sm">Card de Despesas</p><p class="text-xs text-slate-400">Tamanho: pequeno</p></div></div><div class="flex gap-2 text-slate-400"><i class="fas fa-pen text-xs cursor-pointer hover:text-slate-600"></i><i class="fas fa-eye text-xs cursor-pointer hover:text-meta-destaque"></i></div></div>
-                            <div class="border border-slate-200 rounded-xl p-3 flex justify-between items-center hover:border-meta-destaque transition"><div class="flex items-center gap-3"><i class="fas fa-dollar-sign text-meta-destaque"></i><div><p class="font-bold text-sm">Card de Saldo</p><p class="text-xs text-slate-400">Tamanho: pequeno</p></div></div><div class="flex gap-2 text-slate-400"><i class="fas fa-pen text-xs cursor-pointer hover:text-slate-600"></i><i class="fas fa-eye text-xs cursor-pointer hover:text-meta-destaque"></i></div></div>
-                            <div class="border border-slate-200 rounded-xl p-3 flex justify-between items-center bg-slate-50"><div class="flex items-center gap-3"><i class="fas fa-list text-slate-400"></i><div><p class="font-bold text-sm text-slate-500">Lista de Transações</p><p class="text-xs text-slate-400">Tamanho: médio</p></div></div><div class="flex gap-2 text-slate-400"><i class="fas fa-pen text-xs cursor-pointer hover:text-slate-600"></i><i class="fas fa-eye-slash text-xs cursor-pointer text-slate-400"></i></div></div>
+                            
+                            <?php $cls = getVisibilityClasses($config_vis_receitas); ?>
+                            <div id="card_vis_receitas" class="border rounded-xl p-3 flex justify-between items-center transition <?= $cls[0] ?>">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-chart-line text-meta-destaque"></i>
+                                    <div><p id="txt_vis_receitas" class="font-bold text-sm <?= $cls[2] ?>">Card de Receitas</p><p class="text-xs text-slate-400">Tamanho: pequeno</p></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <i onclick="toggleVisibility('vis_receitas')" id="icon_vis_receitas" class="<?= $cls[1] ?> cursor-pointer transition"></i>
+                                </div>
+                            </div>
+
+                            <?php $cls = getVisibilityClasses($config_vis_despesas); ?>
+                            <div id="card_vis_despesas" class="border rounded-xl p-3 flex justify-between items-center transition <?= $cls[0] ?>">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-chart-area text-rose-500"></i>
+                                    <div><p id="txt_vis_despesas" class="font-bold text-sm <?= $cls[2] ?>">Card de Despesas</p><p class="text-xs text-slate-400">Tamanho: pequeno</p></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <i onclick="toggleVisibility('vis_despesas')" id="icon_vis_despesas" class="<?= $cls[1] ?> cursor-pointer transition"></i>
+                                </div>
+                            </div>
+
+                            <?php $cls = getVisibilityClasses($config_vis_saldo); ?>
+                            <div id="card_vis_saldo" class="border rounded-xl p-3 flex justify-between items-center transition <?= $cls[0] ?>">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-dollar-sign text-emerald-500"></i>
+                                    <div><p id="txt_vis_saldo" class="font-bold text-sm <?= $cls[2] ?>">Card de Saldo</p><p class="text-xs text-slate-400">Tamanho: pequeno</p></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <i onclick="toggleVisibility('vis_saldo')" id="icon_vis_saldo" class="<?= $cls[1] ?> cursor-pointer transition"></i>
+                                </div>
+                            </div>
+
+                            <?php $cls = getVisibilityClasses($config_vis_lista); ?>
+                            <div id="card_vis_lista" class="border rounded-xl p-3 flex justify-between items-center transition <?= $cls[0] ?>">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-list text-meta-clara"></i>
+                                    <div><p id="txt_vis_lista" class="font-bold text-sm <?= $cls[2] ?>">Lista de Transações</p><p class="text-xs text-slate-400">Tamanho: médio</p></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <i onclick="toggleVisibility('vis_lista')" id="icon_vis_lista" class="<?= $cls[1] ?> cursor-pointer transition"></i>
+                                </div>
+                            </div>
+
                         </div>
                     </section>
 
                     <div class="mt-6 space-y-3">
                         <button type="submit" class="w-full bg-meta-menu text-white py-3 rounded-lg font-bold shadow-md hover:opacity-95 transition"><i class="fas fa-save mr-2"></i> Salvar Alterações</button>
-                        <button type="button" onclick="window.location.reload();" class="w-full bg-white text-rose-500 border border-rose-200 py-3 rounded-lg font-bold hover:bg-rose-50 transition"><i class="fas fa-trash-alt mr-2"></i> Cancelar</button>
+                        <button type="button" onclick="window.location.reload()" class="w-full block text-center bg-white text-rose-500 border border-rose-200 py-3 rounded-lg font-bold hover:bg-rose-50 transition"><i class="fas fa-undo-alt mr-2"></i> Descartar Alterações</button>
                     </div>
                 </div>
             </div>
         </form>
     </main>
+
+    <script>
+        function setTamanhoFonte(tamanho, btnSelecionado) {
+            document.getElementById('input_tamanho_fonte').value = tamanho;
+            const botoes = document.querySelectorAll('.btn-fonte');
+            botoes.forEach(btn => {
+                btn.className = "btn-fonte py-3 rounded-lg font-medium transition border border-slate-200 text-slate-600 hover:bg-slate-50";
+            });
+            btnSelecionado.className = "btn-fonte py-3 rounded-lg font-medium transition bg-meta-destaque text-white shadow-sm hover:opacity-95";
+        }
+
+        function toggleVisibility(chave) {
+            const input = document.getElementById('input_' + chave);
+            const card = document.getElementById('card_' + chave);
+            const icon = document.getElementById('icon_' + chave);
+            const txt = document.getElementById('txt_' + chave);
+
+            if (input.value === "1") {
+                input.value = "0";
+                icon.className = "fas fa-eye-slash text-slate-400 cursor-pointer transition";
+                card.classList.remove('bg-white', 'hover:border-meta-destaque');
+                card.classList.add('bg-slate-50');
+                txt.classList.remove('text-slate-800');
+                txt.classList.add('text-slate-400');
+            } else {
+                input.value = "1";
+                icon.className = "fas fa-eye text-meta-destaque cursor-pointer transition";
+                card.classList.remove('bg-slate-50');
+                card.classList.add('bg-white', 'hover:border-meta-destaque');
+                txt.classList.remove('text-slate-400');
+                txt.classList.add('text-slate-800');
+            }
+        }
+    </script>
 </body>
 </html>

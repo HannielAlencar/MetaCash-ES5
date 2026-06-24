@@ -92,7 +92,7 @@ $dados_financeiros = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MetaCash - Transações</title>
+    <title>MetaCash - Transações Gerente</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
@@ -142,7 +142,7 @@ $dados_financeiros = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/transacoesGerente.css"> 
 </head>
-<body class="bg-gray-50 transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden w-full">
+<body class="bg-meta-fundo transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden w-full">
 
     <?php include_once '../includes/sidebarGerente.php'; ?>
 
@@ -154,7 +154,7 @@ $dados_financeiros = [
                         <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Transações</h1>
                         <p class="text-lg text-[#334155] mt-2">Gerencie suas finanças</p>
                     </div>
-                    <button onclick="toggleModal('modalTransacao')" class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition transform active:scale-95">
+                    <button onclick="toggleModal('modalTransacao')" class="bg-gradient-to-r from-meta-menu to-meta-destaque text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition transform active:scale-95">
                         + Adicionar Transação
                     </button>
                 </div>
@@ -280,7 +280,7 @@ $dados_financeiros = [
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleModal('modalTransacao')" class="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition">Cancelar</button>
-                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-slate-800 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Adicionar</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-meta-menu to-meta-destaque text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Adicionar</button>
                 </div>
             </form>
          </div>

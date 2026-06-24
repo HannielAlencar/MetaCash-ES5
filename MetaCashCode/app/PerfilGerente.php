@@ -10,6 +10,8 @@ require_once '../config.php';
 $id_usuario = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 23; 
 $id_empresa = $_SESSION['id_empresa'] ?? 27; 
 
+$alerta_js = ""; // Variável para exibir alertas
+
 // ==========================================
 // LÓGICA 1: ATUALIZAR INFORMAÇÕES PESSOAIS (PERFIL)
 // ==========================================
@@ -31,7 +33,9 @@ if (isset($_POST['btn_atualizar_perfil'])) {
         $_SESSION['email'] = $email;
 
         // Grava no histórico (função do seu config.php)
-        registrarHistorico($pdo, $id_usuario, 'ALTERAR', 'Perfil', "Atualizou suas informações pessoais via painel.");
+        if (function_exists('registrarHistorico')) {
+            registrarHistorico($pdo, $id_usuario, 'ALTERAR', 'Perfil', "Atualizou suas informações pessoais via painel.");
+        }
 
         // Redireciona para limpar o POST e evitar reenvio ao fazer F5
         header("Location: " . $_SERVER['PHP_SELF'] . "?sucesso=perfil_atualizado");
@@ -54,7 +58,9 @@ if (isset($_POST['btn_atualizar_empresa'])) {
         $updateDados = $pdo->prepare("UPDATE empresas SET nome_empresa = ?, cnpj = ? WHERE id_empresa = ?");
         $updateDados->execute([$nome_empresa_input, $cnpj_input, $id_empresa]);
 
-        registrarHistorico($pdo, $id_usuario, 'ALTERAR', 'Empresa', "Atualizou os dados da empresa para: $nome_empresa_input");
+        if (function_exists('registrarHistorico')) {
+            registrarHistorico($pdo, $id_usuario, 'ALTERAR', 'Empresa', "Atualizou os dados da empresa para: $nome_empresa_input");
+        }
 
         header("Location: " . $_SERVER['PHP_SELF'] . "?sucesso=empresa_atualizada");
         exit;
@@ -73,7 +79,9 @@ if (isset($_POST['btn_resetar_logo'])) {
         $updateLogo = $pdo->prepare("UPDATE empresas SET logo_path = NULL WHERE id_empresa = ?");
         $updateLogo->execute([$id_empresa]);
         
-        registrarHistorico($pdo, $id_usuario, 'ALTERAR', 'Empresa', 'Resetou a logo da empresa para o padrão.');
+        if (function_exists('registrarHistorico')) {
+            registrarHistorico($pdo, $id_usuario, 'ALTERAR', 'Empresa', 'Resetou a logo da empresa para o padrão.');
+        }
 
         header("Location: " . $_SERVER['PHP_SELF'] . "?sucesso=logo_resetada");
         exit;
@@ -85,7 +93,48 @@ if (isset($_POST['btn_resetar_logo'])) {
 }
 
 // ==========================================
-// LÓGICA 4: BUSCAR DADOS DO BANCO PARA ALIMENTAR OS INPUTS
+// LÓGICA 4: ALTERAR SENHA
+// ==========================================
+if (isset($_POST['btn_alterar_senha'])) {
+    $senha_atual     = $_POST['senha_atual'];
+    $nova_senha      = $_POST['nova_senha'];
+    $confirmar_senha = $_POST['confirmar_senha'];
+
+    if ($nova_senha !== $confirmar_senha) {
+        $alerta_js = "<script>alert('As novas senhas não coincidem!');</script>";
+    } else {
+        // Validação dos requisitos no backend
+        if (strlen($nova_senha) < 8 || !preg_match('/[A-Z]/', $nova_senha) || !preg_match('/[a-z]/', $nova_senha) || !preg_match('/[0-9]/', $nova_senha) || !preg_match('/[^A-Za-z0-9]/', $nova_senha)) {
+            $alerta_js = "<script>alert('A nova senha não atende a todos os requisitos de segurança!');</script>";
+        } else {
+            try {
+                $queryPw = $pdo->prepare("SELECT senha FROM usuarios WHERE id_usuario = ?");
+                $queryPw->execute([$id_usuario]);
+                $dadosPw = $queryPw->fetch();
+
+                // Verifica a senha atual (Usando password_verify. Se seu BD usa MD5, mude para: if (md5($senha_atual) === $dadosPw['senha']))
+                if ($dadosPw && password_verify($senha_atual, $dadosPw['senha'])) {
+                    $nova_senha_hash = password_hash($nova_senha, PASSWORD_DEFAULT);
+                    $updatePw = $pdo->prepare("UPDATE usuarios SET senha = ? WHERE id_usuario = ?");
+                    $updatePw->execute([$nova_senha_hash, $id_usuario]);
+
+                    if (function_exists('registrarHistorico')) {
+                        registrarHistorico($pdo, $id_usuario, 'ALTERAR', 'Segurança', 'Alterou a senha de acesso.');
+                    }
+                    $alerta_js = "<script>alert('Senha alterada com sucesso!'); window.location.href='" . $_SERVER['PHP_SELF'] . "';</script>";
+                } else {
+                    $alerta_js = "<script>alert('A senha atual está incorreta!');</script>";
+                }
+            } catch (PDOException $e) {
+                error_log("Erro ao alterar senha: " . $e->getMessage());
+                $alerta_js = "<script>alert('Erro interno ao tentar alterar a senha.');</script>";
+            }
+        }
+    }
+}
+
+// ==========================================
+// LÓGICA 5: BUSCAR DADOS DO BANCO PARA ALIMENTAR OS INPUTS
 // ==========================================
 try {
     // CORRIGIDO: Ajustado para buscar nome_completo e cpf
@@ -128,20 +177,18 @@ try {
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { 
-                        meta: { 
-                            menu: 'var(--meta-menu)', 
-                            btn1: 'var(--meta-btn1)', 
-                            destaque: 'var(--meta-destaque)', 
-                            btn2: 'var(--meta-btn2)', 
-                            clara: 'var(--meta-clara)', 
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        meta: {
+                            menu: 'var(--meta-menu)',
+                            btn1: 'var(--meta-btn1)',
+                            destaque: 'var(--meta-destaque)',
+                            btn2: 'var(--meta-btn2)',
+                            clara: 'var(--meta-clara)',
                             fundo: 'var(--meta-fundo)',
-                            text: 'var(--meta-text)',
-                            active: 'var(--meta-active)'
-                        } 
+                        }
                     }
                 }
             }
@@ -150,20 +197,37 @@ try {
     
     <style>
         :root {
-            --meta-menu: #1e293b;     /* Azul escuro/Ardósia para o menu principal */
-            --meta-destaque: #2563eb; /* Azul padrão de destaque do MetaCash */
-            --meta-btn1: #3b82f6;     /* Azul intermediário para botões */
-            --meta-btn2: #10b981;     /* Verde para sucesso/receitas */
-            --meta-clara: #3b82f6;    /* Cor azul clara de feedback */
-            --meta-fundo: #f8fafc;    /* Fundo da tela */
-            --meta-text: #334155;     /* Cor padrão do texto */
-            --meta-active: #1d4ed8;   /* Cor de estado ativo/hover */
+            --meta-menu: #0F2440;
+            --meta-btn1: #204C73;
+            --meta-destaque: #24A6B6;
+            --meta-btn2: #35C59A;
+            --meta-clara: #5DA4C0;
+            --meta-fundo: #FDFEFB;
         }
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar a:hover { color: white; }
     </style>
+    <script>
+    try {
+        const temaSalvo = localStorage.getItem('metaCashTheme');
+        if (temaSalvo) {
+            const cores = JSON.parse(temaSalvo);
+            const raiz = document.documentElement;
+            if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
+            if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
+            if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
+            if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
+            if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
+            if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
+        }
+    } catch (erro) {
+        console.error("Erro ao ler localStorage do tema:", erro);
+    }
+    </script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
+<body class="bg-meta-fundo transition-colors duration-200 min-h-screen configured flex overflow-x-hidden w-full">
 
     <?php include_once '../includes/sidebarGerente.php'; ?>
     
@@ -246,59 +310,6 @@ try {
 
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-slate-100 flex items-center gap-3">
-                    <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-building text-sm"></i>
-                    </div>
-                    <h2 class="font-bold text-slate-800">Dados da Empresa</h2>
-                </div>
-
-                <div class="p-8">
-                    <form method="POST" action="" enctype="multipart/form-data" class="space-y-6">
-                        
-                        <div class="flex items-center gap-6 mb-6 pb-6 border-b border-slate-100">
-                            <div class="w-24 h-24 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
-                                <?php if (!empty($logo_path)): ?>
-                                    <img src="<?= htmlspecialchars($logo_path); ?>" alt="Logo da Empresa" class="w-full h-full object-contain">
-                                <?php else: ?>
-                                    <div class="text-center text-slate-400 p-2">
-                                        <i class="fas fa-image text-2xl mb-1 block"></i>
-                                        <span class="text-[10px] uppercase font-bold">Logo Padrão</span>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-slate-700 text-sm">Logo da Empresa</h4>
-                                <p class="text-xs text-slate-400 mt-1 mb-3">Formatos aceitos: PNG ou JPG. Tamanho máximo recomendado: 2MB.</p>
-                                
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <label class="cursor-pointer bg-slate-100 border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-200 transition">
-                                        <i class="fas fa-upload mr-1"></i> Escolher Nova Imagem
-                                        <input type="file" name="logo_empresa" class="hidden" accept="image/*">
-                                    </label>
-
-                                    <button type="submit" name="btn_resetar_logo" class="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition flex items-center gap-1.5">
-                                        <i class="fas fa-trash-alt text-[10px]"></i> Voltar ao Padrão
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="flex justify-end items-center gap-3 pt-4">
-                            <button type="reset" class="px-6 py-3 border border-slate-200 text-slate-500 rounded-xl text-sm font-bold hover:bg-slate-50 transition">
-                                Desfazer Edições
-                            </button>
-                            
-                            <button type="submit" name="btn_atualizar_empresa" class="bg-meta-destaque text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg flex items-center gap-2">
-                                <i class="fas fa-sync-alt"></i> Atualizar Dados da Empresa
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
-            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex items-center gap-3">
                     <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
                         <i class="fas fa-lock text-sm"></i>
                     </div>
@@ -322,7 +333,7 @@ try {
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nova Senha <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <i class="fas fa-unlock-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                                    <input type="password" name="nova_senha" placeholder="Digite sua nova senha" class="w-full pl-11 pr-12 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-meta-destaque outline-none transition" required>
+                                    <input type="password" id="nova_senha_input" name="nova_senha" placeholder="Digite sua nova senha" class="w-full pl-11 pr-12 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-meta-destaque outline-none transition" required>
                                     <button type="button" onclick="togglePassword(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
                                         <i class="far fa-eye"></i>
                                     </button>
@@ -344,11 +355,11 @@ try {
                             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 w-full md:w-fit">
                                 <h4 class="text-xs font-bold text-slate-600 mb-3">Requisitos de Senha:</h4>
                                 <div class="grid grid-cols-2 gap-x-8 gap-y-2">
-                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i class="fas fa-times text-red-400"></i> Mínimo de 8 caracteres</div>
-                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i class="fas fa-times text-red-400"></i> Letra maiúscula (A-Z)</div>
-                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i class="fas fa-times text-red-400"></i> Letra minúscula (a-z)</div>
-                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i class="fas fa-times text-red-400"></i> Número (0-9)</div>
-                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i class="fas fa-times text-red-400"></i> Caractere especial (!@#$...)</div>
+                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i id="req-length" class="fas fa-times text-red-400 w-3 text-center transition-colors"></i> Mínimo de 8 caracteres</div>
+                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i id="req-upper" class="fas fa-times text-red-400 w-3 text-center transition-colors"></i> Letra maiúscula (A-Z)</div>
+                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i id="req-lower" class="fas fa-times text-red-400 w-3 text-center transition-colors"></i> Letra minúscula (a-z)</div>
+                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i id="req-number" class="fas fa-times text-red-400 w-3 text-center transition-colors"></i> Número (0-9)</div>
+                                    <div class="text-[10px] text-slate-500 flex items-center gap-2"><i id="req-special" class="fas fa-times text-red-400 w-3 text-center transition-colors"></i> Caractere especial (!@#$...)</div>
                                 </div>
                             </div>
                             <button type="submit" name="btn_alterar_senha" class="bg-slate-100 text-slate-600 px-6 py-2.5 rounded-lg text-sm hover:bg-red-50 hover:text-red-600 transition duration-300 flex items-center gap-2 border border-slate-200 hover:border-red-200 shadow-sm">
@@ -464,6 +475,38 @@ try {
             icon.classList.add('far', 'fa-eye');
         }
     }
+
+    // Validação de requisitos de senha em tempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const novaSenhaInput = document.getElementById('nova_senha_input');
+        
+        if (novaSenhaInput) {
+            novaSenhaInput.addEventListener('input', function(e) {
+                const val = e.target.value;
+                
+                const updateIcon = (id, isValid) => {
+                    const icon = document.getElementById(id);
+                    if (icon) {
+                        if (isValid) {
+                            icon.classList.remove('fa-times', 'text-red-400');
+                            icon.classList.add('fa-check', 'text-emerald-500'); 
+                        } else {
+                            icon.classList.remove('fa-check', 'text-emerald-500');
+                            icon.classList.add('fa-times', 'text-red-400');
+                        }
+                    }
+                };
+
+                updateIcon('req-length', val.length >= 8);
+                updateIcon('req-upper', /[A-Z]/.test(val));
+                updateIcon('req-lower', /[a-z]/.test(val));
+                updateIcon('req-number', /[0-9]/.test(val));
+                updateIcon('req-special', /[^A-Za-z0-9]/.test(val));
+            });
+        }
+    });
     </script>
+
+    <?= $alerta_js ?>
 </body>
 </html>

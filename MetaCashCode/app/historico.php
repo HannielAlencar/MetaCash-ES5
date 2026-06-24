@@ -79,7 +79,6 @@ try {
         }
     </script>
     
-    <!-- ESTILOS E VARIÁVEIS DE PADRÃO (PREVINE BUG DE COMPORTAMENTO VISUAL) -->
     <style>
         :root {
             --meta-menu: #0F2440;
@@ -93,7 +92,6 @@ try {
         .sidebar a:hover { color: white; }
     </style>
 
-    <!-- VERIFICAÇÃO INLINE SEGURA DO TEMA PREFERIDO -->
     <script>
         try {
             const temaSalvo = localStorage.getItem('metaCashTheme');
@@ -118,17 +116,14 @@ try {
 <body class="bg-meta-fundo transition-colors duration-200 min-h-screen">
     <div class="flex min-h-screen">
         
-        <!-- SIDEBAR IMPORTADA PELO PHP -->
         <?php include_once '../includes/sidebarGerente.php'; ?>
 
-        <!-- CONTEÚDO PRINCIPAL -->
         <main class="flex-1 p-10 ml-64">
             <header class="mb-8">
                 <h1 class="text-4xl font-extrabold text-meta-menu tracking-tight transition-colors duration-200">Histórico de Alterações</h1>
                 <p class="text-sm text-slate-500 mt-2">Acompanhe todas as mudanças registradas no ecossistema do sistema.</p>
             </header>
 
-            <!-- Filtros de Busca -->
             <section class="mb-6 p-6 bg-white rounded-3xl shadow-sm border border-gray-200">
                 <div class="grid grid-cols-12 gap-4 items-end">
                     <div class="col-span-7">
@@ -145,6 +140,7 @@ try {
                             <option value="criação">Criação</option>
                             <option value="edição">Edição</option>
                             <option value="exclusão">Exclusão</option>
+                            <option value="outros">Outros</option>
                         </select>
                     </div>
                     <div class="col-span-2">
@@ -154,7 +150,6 @@ try {
                 </div>
             </section>
 
-            <!-- Tabela de Registros -->
             <section class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="bg-meta-menu text-white px-6 py-4 flex justify-between items-center transition-colors duration-200">
                     <div class="flex items-center gap-3">
@@ -196,7 +191,6 @@ try {
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Mensagem de lista vazia -->
                 <div id="msgVazio" class="<?= count($registros) === 0 ? '' : 'hidden' ?> p-20 text-center text-slate-400">
                     <i class="fas fa-search fa-3x mb-4 block opacity-30 text-meta-clara"></i>
                     <p class="font-medium text-slate-600">Nenhum registro encontrado para os filtros selecionados.</p>
@@ -206,7 +200,6 @@ try {
         </main>
     </div>
 
-    <!-- MODAL RELATÓRIO -->
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
             <div class="flex justify-between items-center mb-8">
@@ -286,7 +279,6 @@ try {
         </div>
     </div>
 
-    <!-- LOGICAS DE COMPORTAMENTO EM JAVASCRIPT -->
     <script>
         function toggleModal(id) {
             const modal = document.getElementById(id);
@@ -321,7 +313,17 @@ try {
                 const data = item.dataset.data || '';
 
                 const matchesBusca = buscaQuery === '' || desc.includes(buscaQuery) || tipo.includes(buscaQuery) || data.includes(buscaQuery);
-                const matchesTipo = tipoQuery === 'todos' || tipo === tipoQuery;
+                
+                // Lógica de filtro do tipo ajustada para incluir "outros"
+                let matchesTipo = false;
+                if (tipoQuery === 'todos') {
+                    matchesTipo = true;
+                } else if (tipoQuery === 'outros') {
+                    matchesTipo = (tipo !== 'criação' && tipo !== 'edição' && tipo !== 'exclusão');
+                } else {
+                    matchesTipo = (tipo === tipoQuery);
+                }
+
                 const matchesData = dataQuery === '' || data.includes(dataQuery);
 
                 if (matchesBusca && matchesTipo && matchesData) {

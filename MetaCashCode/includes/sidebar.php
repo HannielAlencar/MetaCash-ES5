@@ -58,9 +58,9 @@ if (function_exists('mb_substr')) {
         --meta-menu: #0F2440;      /* Fundo Azul Escuro */
         --meta-btn1: #204C73;      /* Painel do Perfil */
         --meta-destaque: #24A6B6;  /* Azul Piscina Ativo */
-        --meta-btn2: #35C59A;      
-        --meta-clara: #5DA4C0;     
-        --meta-fundo: #FDFEFB;     
+        --meta-btn2: #35C59A;     
+        --meta-clara: #5DA4C0;    
+        --meta-fundo: #FDFEFB;    
         --meta-text: #94a3b8;      /* Texto inativo */
         --meta-active: #ffffff;    /* Texto ativo */
     }
@@ -77,10 +77,10 @@ if (function_exists('mb_substr')) {
 
     <nav class="flex-1 space-y-2">
         <?php 
-        // Links com verificação de estado ativo dinâmica usando a nova paleta
+        // Links corrigidos para navegação interna na pasta 'app'
         $links = [
-            ['url' => '../app/dashboardUsuario.php', 'icon' => 'fa-th-large', 'label' => 'Dashboard', 'file' => 'dashboardusuario.php'],
-            ['url' => '../app/transacoes.php', 'icon' => 'fa-exchange-alt', 'label' => 'Transações', 'file' => 'transacoes.php']
+            ['url' => 'dashboardUsuario.php', 'icon' => 'fa-th-large', 'label' => 'Dashboard', 'file' => 'dashboardusuario.php'],
+            ['url' => 'transacoes.php', 'icon' => 'fa-exchange-alt', 'label' => 'Transações', 'file' => 'transacoes.php']
         ];
 
         foreach ($links as $link) {

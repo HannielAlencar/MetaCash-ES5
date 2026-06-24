@@ -3,77 +3,65 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Trava de segurança corrigida: impede acesso se não estiver logado OU se não possuir o nível exigido
+// Trava de segurança: impede acesso se não estiver logado
 if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
     header("Location: dashboardUsuario.php");
     exit();
 }
 
-// Recupera a empresa do usuário logado para listar apenas os membros da mesma organização
+require_once '../config.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // CORREÇÃO: Removemos pontos e traços do CPF antes de salvar
+    $cpf_limpo = preg_replace('/\D/', '', $_POST['cpf']);
+
+    $stmt = $pdo->prepare("INSERT INTO usuarios (nome_completo, email, senha, matricula, cpf, id_empresa, nivel_permissao) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([
+        $_POST['nome_completo'],
+        $_POST['email'],
+        password_hash($_POST['senha'], PASSWORD_DEFAULT),
+        $_POST['matricula'],
+        $cpf_limpo, // Usamos o CPF sem máscara
+        $_SESSION['id_empresa'],
+        $_POST['nivel_permissao']
+    ]);
+    header("Location: ../Usuario/gerenciaEquipe.php?sucesso=1");
+    exit;
+}
+
+// Configuração de banco
+require_once __DIR__ . '/../config.php';
+
 $id_empresa_sessao = $_SESSION['id_empresa'] ?? null;
 $equipe = [];
 
 try {
-    $config_path = __DIR__ . '/../config.php';
-    if (file_exists($config_path)) {
-        require_once $config_path;
-        
-        $usuarios_db = [];
-        
-        // Mantido apenas o PDO para conexão com o Neon (PostgreSQL)
-        if (isset($pdo) && $pdo instanceof PDO) {
-            if ($id_empresa_sessao) {
-                $sql = "SELECT id_usuario, nome_completo, email, nivel_permissao AS cargo FROM usuarios WHERE id_empresa = :id_empresa ORDER BY nome_completo ASC";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute(['id_empresa' => $id_empresa_sessao]);
-            } else {
-                $sql = "SELECT id_usuario, nome_completo, email, nivel_permissao AS cargo FROM usuarios ORDER BY nome_completo ASC";
-                $stmt = $pdo->query($sql);
-            }
-            
-            if ($stmt) {
-                $usuarios_db = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            }
-        }
+    if (isset($pdo) && $pdo instanceof PDO && $id_empresa_sessao) {
+        $sql = "SELECT id_usuario, nome_completo, email, nivel_permissao AS cargo FROM usuarios WHERE id_empresa = :id_empresa ORDER BY nome_completo ASC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['id_empresa' => $id_empresa_sessao]);
+        $usuarios_db = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Se encontrar os registros reais no banco de dados, processa e monta a lista da equipe
-        if (!empty($usuarios_db)) {
-            foreach ($usuarios_db as $user) {
-                $partes_nome = explode(' ', trim($user['nome_completo']));
-                $primeiro = $partes_nome[0] ?? '';
-                $total_partes = count($partes_nome);
-                $ultimo = $total_partes > 1 ? $partes_nome[$total_partes - 1] : '';
-                
-                $sigla = strtoupper(substr($primeiro, 0, 1) . ($ultimo ? substr($ultimo, 0, 1) : ''));
-                
-                $equipe[] = [
-                    'id_usuario' => $user['id_usuario'],
-                    'nome' => $user['nome_completo'],
-                    'email' => $user['email'],
-                    'cargo' => $user['cargo'] ?? 'Membro',
-                    'sigla' => $sigla ?: 'U'
-                ];
-            }
+        foreach ($usuarios_db as $user) {
+            $partes_nome = explode(' ', trim($user['nome_completo']));
+            $primeiro = $partes_nome[0] ?? '';
+            $total_partes = count($partes_nome);
+            $ultimo = $total_partes > 1 ? $partes_nome[$total_partes - 1] : '';
+            $sigla = strtoupper(substr($primeiro, 0, 1) . ($ultimo ? substr($ultimo, 0, 1) : ''));
+            
+            $equipe[] = [
+                'id_usuario' => $user['id_usuario'],
+                'nome' => $user['nome_completo'],
+                'email' => $user['email'],
+                'cargo' => $user['cargo'] ?? 'Membro',
+                'sigla' => $sigla ?: 'U'
+            ];
         }
     }
 } catch (Throwable $e) {
-    // Agora o erro não é mais 100% silencioso. Ele será salvo nos logs do seu container Docker para facilitar o debug.
-    error_log("Erro ao buscar equipe no Neon: " . $e->getMessage());
-}
-
-// Dados de fallback locais definidos caso a conexão falhe ou a tabela esteja vazia
-if (empty($equipe)) {
-    $equipe = [
-        ['id_usuario' => 'f1', 'nome' => 'Ana Paula Silva', 'email' => 'ana.silva@empresa.co', 'cargo' => 'Gerente', 'sigla' => 'AP'],
-        ['id_usuario' => 'f2', 'nome' => 'Carlos Santos', 'email' => 'carlos.santos@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'CS'],
-        ['id_usuario' => 'f3', 'nome' => 'Mariana Costa', 'email' => 'mariana.costa@empresa.cc', 'cargo' => 'Membro', 'sigla' => 'MC'],
-        ['id_usuario' => 'f4', 'nome' => 'Roberto Alves', 'email' => 'roberto.alves@empresa.cc', 'cargo' => 'Gerente', 'sigla' => 'RA'],
-        ['id_usuario' => 'f5', 'nome' => 'Juliana Ferreira', 'email' => 'juliana.ferreira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'JF'],
-        ['id_usuario' => 'f6', 'nome' => 'Pedro Oliveira', 'email' => 'pedro.oliveira@empresa.co', 'cargo' => 'Membro', 'sigla' => 'PO'],
-    ];
+    error_log("Erro ao buscar equipe: " . $e->getMessage());
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -82,22 +70,22 @@ if (empty($equipe)) {
     <title>Equipe - MetaCash</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    meta: {
-                        menu: 'var(--meta-menu)',
-                        btn1: 'var(--meta-btn1)',
-                        destaque: 'var(--meta-destaque)',
-                        btn2: 'var(--meta-btn2)',
-                        clara: 'var(--meta-clara)',
-                        fundo: 'var(--meta-fundo)',
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        meta: {
+                            menu: 'var(--meta-menu)',
+                            btn1: 'var(--meta-btn1)',
+                            destaque: 'var(--meta-destaque)',
+                            btn2: 'var(--meta-btn2)',
+                            clara: 'var(--meta-clara)',
+                            fundo: 'var(--meta-fundo)',
+                        }
                     }
                 }
             }
         }
-    }
     </script>
 
     <style>
@@ -109,29 +97,31 @@ if (empty($equipe)) {
             --meta-clara: #5DA4C0;
             --meta-fundo: #FDFEFB;
         }
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar a:hover { color: white; }
     </style>
 
     <script>
-        try {
-            const temaSalvo = localStorage.getItem('metaCashTheme');
-            if (temaSalvo) {
-                const cores = JSON.parse(temaSalvo);
-                const raiz = document.documentElement;
-                if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
-                if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
-                if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
-                if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
-                if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
-                if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
-            }
-        } catch (erro) {
-            console.error("Erro ao ler localStorage do tema:", erro);
+    try {
+        const temaSalvo = localStorage.getItem('metaCashTheme');
+        if (temaSalvo) {
+            const cores = JSON.parse(temaSalvo);
+            const raiz = document.documentElement;
+            if(cores.menu) raiz.style.setProperty('--meta-menu', cores.menu);
+            if(cores.btn1) raiz.style.setProperty('--meta-btn1', cores.btn1);
+            if(cores.destaque) raiz.style.setProperty('--meta-destaque', cores.destaque);
+            if(cores.btn2) raiz.style.setProperty('--meta-btn2', cores.btn2);
+            if(cores.clara) raiz.style.setProperty('--meta-clara', cores.clara);
+            if(cores.fundo) raiz.style.setProperty('--meta-fundo', cores.fundo);
         }
+    } catch (erro) {
+        console.error("Erro ao ler localStorage do tema:", erro);
+    }
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-meta-fundo transition-colors duration-200 min-h-screen">
     <div class="flex min-h-screen">
         
         <?php include_once '../includes/sidebarGerente.php'; ?>
@@ -142,7 +132,7 @@ if (empty($equipe)) {
                     <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Equipe</h1>
                     <p class="text-lg text-[#334155] mt-2">Gerencie os membros e permissões da equipe corporativa</p>
                 </div>
-                <button onclick="toggleModal('modalMembro')" class="bg-[#2dd4bf] hover:bg-teal-500 text-[#0f172a] px-6 py-3 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 active:scale-95">
+                <button onclick="toggleModal('modalMembro')" class="bg-gradient-to-r from-meta-menu to-meta-destaque text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition transform active:scale-95">
                     <i class="fa-solid fa-plus"></i> Adicionar Membro
                 </button>
             </header>
@@ -216,8 +206,8 @@ if (empty($equipe)) {
     <div id="modalMembro" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl p-8">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-extrabold text-slate-800">Novo Membro da Equipe</h3>
-                <button onclick="toggleModal('modalMembro')" class="text-slate-400 hover:text-slate-600 transition">
+                <h3 class="text-2xl font-extrabold text-slate-800 ">Novo Membro da Equipe</h3>
+                <button onclick="toggleModal('modalMembro')" class="text-slate-400 hover:text-slate-600 transition ">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -232,11 +222,11 @@ if (empty($equipe)) {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Matrícula (Máx. 49 caracteres)</label>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Matrícula</label>
                         <input type="text" name="matricula" maxlength="49" placeholder="Ex: 2026XYZ01" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">CPF (Formatado)</label>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">CPF</label>
                         <input type="text" name="cpf" required maxlength="14" oninput="mascaraCPF(this)" placeholder="000.000.000-00" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
                     </div>
                 </div>
@@ -247,105 +237,22 @@ if (empty($equipe)) {
                         <input type="email" name="email" required placeholder="Ex: nome@empresa.com" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
                     </div>
                     <div>
-                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Senha Provisória (Máx. 8 dig.)</label>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Senha Provisória</label>
                         <input type="password" name="senha" required maxlength="8" placeholder="No máximo 8 caracteres" class="w-full p-4 rounded-2xl border border-slate-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all text-sm">
                     </div>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Nível de Permissão (Privilégio)</label>
-                    <div class="relative">
-                        <select name="nivel_permissao" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer text-sm">
-                            <option value="Membro">Membro (Usuário Padrão)</option>
-                            <option value="Gerente">Gerente (Gestão Completa corporativa)</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
-                    </div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-2 tracking-widest">Nível de Permissão</label>
+                    <select name="nivel_permissao" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer text-sm">
+                        <option value="Membro">Membro (Usuário Padrão)</option>
+                        <option value="Gerente">Gerente (Gestão Completa)</option>
+                    </select>
                 </div>
 
                 <div class="flex gap-4 pt-4 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modalMembro')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all text-sm">Cancelar</button>
-                    <button type="submit" class="flex-1 py-4 bg-[#0d9488] text-white font-bold rounded-2xl shadow-lg hover:bg-[#0f766e] transition-all text-sm">Criar Conta</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL RELATÓRIO -->
-    <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-2xl font-extrabold text-slate-800">Baixar Relatório</h3>
-                <button onclick="toggleModal('modalRelatorio')" class="text-slate-400 hover:text-slate-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <form action="/MetaCashCode/Usuario/Transacoes.php/gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Tipo de Transação</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="tipo" value="e" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Receita</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="tipo" value="s" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Despesa</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="tipo" value="todos" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Ambos</div>
-                        </label>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Período</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Mensal</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="periodo" value="anual" class="hidden peer">
-                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Anual</div>
-                        </label>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Mês</label>
-                    <select name="mes" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
-                        <option value="1">Janeiro</option>
-                        <option value="2">Fevereiro</option>
-                        <option value="3">Março</option>
-                        <option value="4">Abril</option>
-                        <option value="5" selected>Maio</option>
-                        <option value="6">Junho</option>
-                        <option value="7">Julho</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Ano</label>
-                    <select name="ano" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026" selected>2026</option>
-                    </select>
-                </div>
-
-                <div class="flex gap-4 pt-6 border-t border-slate-100">
-                    <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">Cancelar</button>
-                    <button type="submit" class="flex-1 py-4 bg-meta-destaque hover:opacity-90 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-download"></i> Baixar PDF
-                    </button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-meta-menu to-meta-destaque text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition ">Criar Conta</button>
                 </div>
             </form>
         </div>
@@ -356,8 +263,8 @@ if (empty($equipe)) {
         const eGerente = (cargoAtual === 'Gerente' || cargoAtual === 'Admin');
         const novoCargo = eGerente ? 'Membro' : 'Gerente';
         const mensagemAcao = eGerente 
-            ? `Deseja realmente REBAIXAR o usuário "${nome}" para o nível de Membro (Usuário Padrão)?`
-            : `Deseja realmente TORNAR o usuário "${nome}" um Gerente (Gestão Completa)?`;
+            ? `Deseja realmente REBAIXAR o usuário "${nome}" para o nível de Membro?`
+            : `Deseja realmente TORNAR o usuário "${nome}" um Gerente?`;
 
         if (confirm(mensagemAcao)) {
             window.location.href = `atualizarCargo.php?id=${encodeURIComponent(id)}&novo_cargo=${encodeURIComponent(novoCargo)}`;
@@ -381,13 +288,9 @@ if (empty($equipe)) {
     function toggleDropdown(button, event) {
         event.stopPropagation();
         const currentMenu = button.nextElementSibling;
-        
         document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            if (menu !== currentMenu) {
-                menu.classList.add('hidden');
-            }
+            if (menu !== currentMenu) menu.classList.add('hidden');
         });
-
         currentMenu.classList.toggle('hidden');
     }
 
@@ -400,15 +303,8 @@ if (empty($equipe)) {
     }
 
     window.onclick = function(event) {
-        const mRel = document.getElementById('modalRelatorio');
-        const mMemb = document.getElementById('modalMembro');
-        if (event.target == mRel) toggleModal('modalRelatorio');
-        if (event.target == mMemb) toggleModal('modalMembro');
-
         if (!event.target.closest('.dropdown-menu') && !event.target.closest('button[onclick^="toggleDropdown"]')) {
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                menu.classList.add('hidden');
-            });
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
         }
     }
 
@@ -426,17 +322,8 @@ if (empty($equipe)) {
             const nome = card.dataset.nome;
             const email = card.dataset.email;
             const cargoCard = card.dataset.cargo;
-
             const matchesBusca = query === '' || nome.includes(query) || email.includes(query);
-            
-            let matchesCargo = false;
-            if (cargo === 'todos') {
-                matchesCargo = true;
-            } else if (cargo === 'gerente') {
-                matchesCargo = (cargoCard === 'gerente');
-            } else if (cargo === 'membro') {
-                matchesCargo = (cargoCard === 'membro');
-            }
+            let matchesCargo = (cargo === 'todos') || (cargo === cargoCard);
 
             if (matchesBusca && matchesCargo) {
                 card.classList.remove('hidden');
@@ -445,12 +332,7 @@ if (empty($equipe)) {
                 card.classList.add('hidden');
             }
         });
-
-        if (visiveis === 0) {
-            msgVazio.classList.remove('hidden');
-        } else {
-            msgVazio.classList.add('hidden');
-        }
+        msgVazio.classList.toggle('hidden', visiveis > 0);
     }
 
     inputBusca.addEventListener('input', filtrarEquipe);

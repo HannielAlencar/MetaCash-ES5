@@ -293,7 +293,7 @@ if (empty($categorias_agrupadas)) {
             <div id="widget-total_transacoes" class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm mb-10">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Transações Recentes</h3>
-                    <a href="../app/transacoesUsuario.php" class="text-xs font-bold text-meta-destaque hover:underline uppercase">Ver todas</a>
+                    <a href="../app/transacoes.php" class="text-xs font-bold text-meta-destaque hover:underline uppercase">Ver todas</a>
                 </div>
                 <div class="divide-y divide-slate-100 px-6">
                   <?php foreach ($transacoes_recentes as $tr): 

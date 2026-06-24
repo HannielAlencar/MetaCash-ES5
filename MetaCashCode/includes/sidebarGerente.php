@@ -118,6 +118,78 @@ if ($id_empresa && isset($pdo)) {
         </button>
     </nav>
 
+    <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 class="text-xl font-bold text-slate-800">Baixar Relatório</h3>
+                <button type="button" onclick="toggleModal('modalRelatorio')" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form action="../app/gerarPDF.php" method="GET" target="_blank" class="space-y-6">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Tipo de Transação</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="e" class="hidden peer">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition">Receita</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="s" class="hidden peer">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition">Despesa</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="todos" checked class="hidden peer">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition">Ambos</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Período</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='block'">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition">Mensal</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="anual" class="hidden peer" onclick="document.getElementById('campoMesRelatorio').style.display='none'">
+                            <div class="text-sm text-center p-2 rounded-lg border bg-blue-50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition">Anual</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="campoMesRelatorio">
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Mês</label>
+                    <select name="mes" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-meta-destaque transition bg-white text-slate-700">
+                        <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+                        <option value="03">Março</option><option value="04">Abril</option>
+                        <option value="05" selected>Maio</option><option value="06">Junho</option>
+                        <option value="07">Julho</option><option value="08">Agosto</option>
+                        <option value="09">Setembro</option><option value="10">Outubro</option>
+                        <option value="11">Novembro</option><option value="12">Dezembro</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Ano</label>
+                    <select name="ano" class="w-full border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-meta-destaque transition bg-white text-slate-700">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t">
+                    <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-3 border border-slate-300 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-meta-menu to-meta-destaque text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">
+                        <i class="fas fa-download mr-2"></i> Baixar PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="mt-auto pt-6 border-t border-white/10 space-y-4 pb-2">
         <a href="../app/PerfilGerente.php" class="bg-meta-btn1/40 p-3 rounded-2xl flex items-center gap-3 border border-white/10 hover:bg-meta-btn1/60 transition block group <?= ($pagina_atual === 'perfilgerente.php') ? 'border-meta-destaque' : '' ?>">
             <div class="w-10 h-10 bg-meta-destaque rounded-full flex items-center justify-center text-meta-menu font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">

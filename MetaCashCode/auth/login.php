@@ -32,7 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['cpf_usuario'] = $usuario['cpf'];
                 $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
 
-                header("Location: ../app/dashboardGerente.php");
+                // Redirecionamento condicional baseado no nível de permissão
+                if ($usuario['nivel_permissao'] === 'Gerente' || $usuario['nivel_permissao'] === 'Admin') {
+                    header("Location: ../app/dashboardGerente.php");
+                } else {
+                    header("Location: ../app/dashboardUsuario.php");
+                }
                 exit();
             }
 

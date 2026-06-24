@@ -1,39 +1,47 @@
 <?php
-// Simulação de banco de dados baseado exatamente nos dados do print
-$empresas = [
-    [
-        'nome' => 'Tech Solutions LTDA',
-        'email' => 'contato@techsolutions.com',
-        'cnpj' => '12.345.678/0001-90',
-        'responsavel' => 'Fernando Alves Almeida Costa',
-        'usuarios' => 15,
-        'status' => 'Ativa'
-    ],
-    [
-        'nome' => 'Comércio Brasil',
-        'email' => 'financeiro@comerciobrasil.com',
-        'cnpj' => '98.765.432/0001-10',
-        'responsavel' => 'Lucas Oliveira Duraes Ferreira',
-        'usuarios' => 8,
-        'status' => 'Ativa'
-    ],
-    [
-        'nome' => 'Startup Inovação',
-        'email' => 'admin@startupinovacao.com',
-        'cnpj' => '11.222.333/0001-44',
-        'responsavel' => 'Roberta Maria Soares Machado',
-        'usuarios' => 3,
-        'status' => 'Inativo'
-    ],
-    [
-        'nome' => 'Empresa Suspensa',
-        'email' => 'contato@suspensa.com',
-        'cnpj' => '55.666.777/0001-88',
-        'responsavel' => 'Amanda Paula Souza Pereira',
-        'usuarios' => 12,
-        'status' => 'Inativo'
-    ]
-];
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+// Inclui a conexão com o banco de dados
+require_once '../config.php';
+
+$current_page = basename($_SERVER['PHP_SELF']);
+$id_usuario = $_SESSION['id_usuario'] ?? null;
+$nome_usuario = $_SESSION['nome_usuario'] ?? 'Admin';
+$email_usuario = $_SESSION['email_usuario'] ?? 'gerente@exemplo.com';
+
+// Pega as iniciais para o ícone de perfil
+if (function_exists('mb_substr')) {
+    $iniciais = mb_strtoupper(mb_substr($nome_usuario, 0, 1));
+} else {
+    $iniciais = strtoupper(substr($nome_usuario, 0, 1));
+}
+
+try {
+    // Consulta SQL atualizada:
+    // Agora vai buscar o e-mail e o nome do Responsável (Gerente) diretamente à tabela de utilizadores.
+    $query = "
+    SELECT 
+        e.id_empresa, -- ADICIONADO AQUI
+        e.nome_empresa AS nome, 
+        e.cnpj,
+        e.status, -- ADICIONADO AQUI
+        COALESCE((SELECT email FROM usuarios WHERE id_empresa = e.id_empresa AND nivel_permissao = 'Gerente' LIMIT 1), 'Sem e-mail associado') AS email,
+        COALESCE((SELECT nome_completo FROM usuarios WHERE id_empresa = e.id_empresa AND nivel_permissao = 'Gerente' LIMIT 1), 'Sem Responsável') AS responsavel,
+        (SELECT COUNT(*) FROM usuarios WHERE id_empresa = e.id_empresa) AS usuarios
+    FROM empresas e
+";
+    
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+    
+    // Busca todos os resultados como um array associativo
+    $empresas = $stmt->fetchAll();
+    
+} catch (PDOException $e) {
+    $empresas = [];
+    $erro_db = "Erro ao buscar empresas: " . $e->getMessage();
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -58,7 +66,6 @@ $empresas = [
 
     <!-- SIDEBAR -->
     <aside class="w-64 bg-sidebar text-white flex flex-col fixed h-screen z-40 border-r border-slate-800">
-        <!-- Logo -->
         <div class="flex items-center gap-3 p-6 mb-2 border-b border-slate-700/50">
             <div class="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg">
                 <i class="fas fa-shield-halved text-xl"></i>
@@ -69,36 +76,35 @@ $empresas = [
             </div>
         </div>
 
-        <!-- Navegação -->
         <nav class="flex-1 px-4 py-6 space-y-2">
-            <!-- Item ativo -->
             <a href="empresasADMIN.php" class="flex items-center gap-3 px-4 py-3 bg-accent text-white rounded-xl shadow-md transition">
                 <i class="far fa-building w-5 text-lg"></i>
                 <span class="font-semibold text-sm">Empresas</span>
             </a>
             
-            <!-- Item inativo -->
             <a href="usuariosADMIN.php" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-xl transition">
                 <i class="fas fa-user-group w-5 text-lg"></i>
                 <span class="font-medium text-sm">Usuários</span>
             </a>
         </nav>
 
-        <!-- Perfil e Sair -->
-        <div class="p-4 border-t border-slate-700/50">
-            <div class="bg-sidebar-darker p-3 rounded-xl flex items-center gap-3 mb-4 border border-slate-700/50">
-                <div class="w-9 h-9 bg-accent rounded-full flex items-center justify-center text-white shrink-0">
-                    <i class="fas fa-shield-halved text-sm"></i>
+        <div class="mt-auto p-4 border-t border-slate-700/50 flex flex-col gap-4">
+            <a class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border border-slate-700/50 hover:bg-[#1e3a5f]/60 transition block group cursor-pointer">
+                <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">
+                    <?= htmlspecialchars($iniciais ?? 'A', ENT_QUOTES, 'UTF-8') ?>
                 </div>
                 <div class="flex flex-col overflow-hidden">
-                    <span class="text-sm font-bold truncate text-white">Admin Master</span>
-                    <span class="text-[11px] text-slate-400 truncate">admin@metacash.com</span>
+                    <span class="text-sm font-bold truncate text-white"><?= htmlspecialchars($nome_usuario ?? 'Admin Master', ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="text-[10px] text-gray-400 truncate"><?= htmlspecialchars($email_usuario ?? 'admin@metacash.com', ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
-            </div>
-            <a href="../auth/loginADMIN.php" class="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition">
-                <i class="fas fa-arrow-right-from-bracket w-5"></i>
-                <span class="font-medium text-sm">Sair</span>
             </a>
+            
+            <form method="POST" action="../auth/logout.php" class="w-full">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-slate-800 hover:text-red-300 transition text-left">
+                    <i class="fas fa-sign-out-alt w-5 text-center"></i>
+                    <span class="font-medium">Sair</span>
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -124,33 +130,37 @@ $empresas = [
 
         <!-- Tabela -->
         <div class="bg-white border-2 border-custom-dark rounded-2xl shadow-sm overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <!-- Cabeçalho da Tabela -->
+            <table class="w-full text-left border-collapse table-fixed">
                 <thead class="bg-sidebar text-white">
                     <tr class="border-b-2 border-custom-dark">
-                        <th class="py-4 px-6 text-sm font-semibold tracking-wide">Empresa</th>
-                        <th class="py-4 px-6 text-sm font-semibold tracking-wide">CNPJ</th>
-                        <th class="py-4 px-6 text-sm font-semibold tracking-wide">Nome do Responsável</th>
-                        <th class="py-4 px-6 text-sm font-semibold tracking-wide">Usuários</th>
-                        <th class="py-4 px-6 text-sm font-semibold tracking-wide">Status</th>
-                        <th class="py-4 px-6 text-sm font-semibold tracking-wide">Ações</th>
+                        <th class="py-4 px-6 text-sm font-semibold tracking-wide w-[28%]">Empresa</th>
+                        <th class="py-4 px-6 text-sm font-semibold tracking-wide w-[18%]">CNPJ</th>
+                        <th class="py-4 px-6 text-sm font-semibold tracking-wide w-[22%]">Nome do Responsável</th>
+                        <th class="py-4 px-6 text-sm font-semibold tracking-wide w-[12%]">Usuários</th>
+                        <th class="py-4 px-6 text-sm font-semibold tracking-wide w-[10%]">Status</th>
+                        <th class="py-4 px-6 text-sm font-semibold tracking-wide w-[10%]">Ações</th>
                     </tr>
                 </thead>
                 <!-- Corpo da Tabela -->
                 <tbody class="divide-y divide-slate-200" id="tabelaCorpo">
                     <?php foreach ($empresas as $index => $empresa): ?>
                     <tr class="hover:bg-slate-50/50 transition row-empresa" 
-                        data-nome="<?= htmlspecialchars(strtolower($empresa['nome'])) ?>" 
+                        data-id="<?= $empresa['id_empresa'] ?>" 
+                        data-nome="<?= htmlspecialchars(strtolower($empresa['nome'])) ?>"
                         data-email="<?= htmlspecialchars(strtolower($empresa['email'])) ?>" 
                         data-cnpj="<?= htmlspecialchars($empresa['cnpj']) ?>"
                         data-nome-original="<?= htmlspecialchars($empresa['nome']) ?>"
                         data-email-original="<?= htmlspecialchars($empresa['email']) ?>">
                         
-                        <!-- Empresa Info -->
                         <td class="py-5 px-6 td-empresa-info">
-                            <p class="font-bold text-sm text-[#0b192c] label-nome-empresa"><?= htmlspecialchars($empresa['nome']) ?></p>
-                            <p class="text-[13px] text-slate-500 mt-0.5 label-email-empresa"><?= htmlspecialchars($empresa['email']) ?></p>
+                            <p class="font-bold text-sm text-[#0b192c] label-nome-empresa">
+                                <?= $empresa['status'] === 'Ativa' ? htmlspecialchars($empresa['nome']) : 'Empresa Suspensa' ?>
+                            </p>
+                            <p class="text-[13px] text-slate-500 mt-0.5 label-email-empresa">
+                                <?= htmlspecialchars($empresa['email']) ?>
+                            </p>
                         </td>
+                        
                         
                         <!-- CNPJ -->
                         <td class="py-5 px-6 text-sm text-slate-600 font-medium">
@@ -212,38 +222,35 @@ $empresas = [
     </main>
 
     <!-- POP UP DE CONFIRMAÇÃO DE DESATIVAÇÃO (Exatamente igual ao print) -->
-    <div id="modalDesativar" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] w-full max-w-[390px] shadow-2xl overflow-hidden border border-slate-100 transform scale-95 transition-all duration-300">
-            <!-- Header com título e fechar -->
+    <div id="modalConfirmacao" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div id="modalContent" class="bg-white rounded-[2rem] w-full max-w-[390px] shadow-2xl overflow-hidden border border-slate-100 transform scale-95 transition-all duration-300">
             <div class="p-8 pb-5 flex justify-between items-start">
-                <h3 class="text-[22px] font-bold text-[#0f2440] leading-snug tracking-tight">Tem certeza que deseja desativar?</h3>
-                <button onclick="fecharModalDesativar()" class="text-slate-400 hover:text-slate-600 transition-colors mt-1">
+                <h3 id="modalTitulo" class="text-[22px] font-bold text-[#0f2440] leading-snug tracking-tight">Tem certeza?</h3>
+                <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-600 transition-colors mt-1">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
             
-            <!-- Divisor azul escuro fiel ao print -->
             <div class="border-b-2 border-[#0b192c] mx-8"></div>
             
-            <!-- Ações -->
             <div class="p-8 pt-6 flex gap-4">
-                <button onclick="fecharModalDesativar()" class="flex-1 py-3 border-2 border-[#0f2440] text-[#0f2440] font-bold rounded-2xl hover:bg-slate-50 transition-all text-sm">
+                <button onclick="fecharModal()" class="flex-1 py-3 border-2 border-[#0f2440] text-[#0f2440] font-bold rounded-2xl hover:bg-slate-50 transition-all text-sm">
                     Não
                 </button>
-                <button id="btnConfirmarDesativar" class="flex-1 py-3 bg-[#ff3b30] text-white font-bold rounded-2xl hover:bg-[#e03128] transition-all text-sm shadow-[0_4px_12px_rgba(255,59,48,0.25)]">
+                <button id="btnConfirmarAcao" class="flex-1 py-3 text-white font-bold rounded-2xl transition-all text-sm">
                     Sim
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- LOGICA INTERATIVA CLIENT-SIDE (JS) -->
     <script>
-        let empresaParaDesativar = null;
+        let acaoAtual = null; // Guarda se é "desativar", "reativar" ou "excluir"
+        let elementoAlvo = null; // Guarda a linha da empresa clicada
 
-        // Função para realizar filtro instantâneo ao digitar na barra de busca
+        // Filtro de Busca
         document.getElementById('inputBusca').addEventListener('input', function() {
             const query = this.value.toLowerCase().trim();
             const rows = document.querySelectorAll('.row-empresa');
@@ -262,119 +269,137 @@ $empresas = [
                 }
             });
 
-            // Gerencia feedback visual de pesquisa sem resultados
             const msgVazia = document.getElementById('buscaVazia');
-            if (encontrouAlguma) {
-                msgVazia.classList.add('hidden');
-            } else {
-                msgVazia.classList.remove('hidden');
-            }
+            if (encontrouAlguma) msgVazia.classList.add('hidden');
+            else msgVazia.classList.remove('hidden');
         });
 
-        // Alternador de Status Dinâmico (Chama o modal de desativação ou ativa novamente)
+        // Função Genérica para Abrir o Pop-up Dinâmico
+        function abrirModal(titulo, acao, botao) {
+            acaoAtual = acao;
+            elementoAlvo = botao;
+            document.getElementById('modalTitulo').textContent = titulo;
+            
+            const btnConfirmar = document.getElementById('btnConfirmarAcao');
+            
+            // Se for para reativar, o botão SIM fica Verde. Se não, fica Vermelho.
+            if(acao === 'reativar') {
+                btnConfirmar.className = "flex-1 py-3 text-white font-bold rounded-2xl transition-all text-sm bg-emerald-500 hover:bg-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.25)]";
+            } else {
+                btnConfirmar.className = "flex-1 py-3 text-white font-bold rounded-2xl transition-all text-sm bg-[#ff3b30] hover:bg-[#e03128] shadow-[0_4px_12px_rgba(255,59,48,0.25)]";
+            }
+
+            const modal = document.getElementById('modalConfirmacao');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                document.getElementById('modalContent').classList.remove('scale-95');
+                document.getElementById('modalContent').classList.add('scale-100');
+            }, 10);
+        }
+
+        // Função para Fechar o Pop-up
+        function fecharModal() {
+            const modal = document.getElementById('modalConfirmacao');
+            document.getElementById('modalContent').classList.remove('scale-100');
+            document.getElementById('modalContent').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                acaoAtual = null;
+                elementoAlvo = null;
+            }, 150);
+        }
+
+        // Fecha ao clicar no fundo preto
+        document.getElementById('modalConfirmacao').addEventListener('click', function(e) {
+            if (e.target === this) fecharModal();
+        });
+
+        // Clique no Botão de Status (Bloqueio / Certinho)
         function toggleEmpresaStatus(button) {
             const row = button.closest('.row-empresa');
             const badge = row.querySelector('.badge-status');
+            
+            if (badge.textContent.trim() === 'Ativa') {
+                abrirModal('Tem certeza que deseja desativar?', 'desativar', button);
+            } else {
+                abrirModal('Deseja reativar a empresa?', 'reativar', button);
+            }
+        }
+
+        // Clique no Botão Lixeira (Excluir Empresa)
+        function excluirEmpresa(button) {
+            const row = button.closest('.row-empresa');
+            // Pega o nome original da empresa mesmo que ela esteja suspensa
+            const nomeEmpresa = row.getAttribute('data-nome-original'); 
+            abrirModal(`Tem certeza que deseja remover a empresa "${nomeEmpresa}" do sistema?`, 'excluir', button);
+        }
+
+        // LÓGICA DO BOTÃO "SIM" (Executa a ação de acordo com o que foi clicado)
+        document.getElementById('btnConfirmarAcao').addEventListener('click', function() {
+            if (!elementoAlvo) return;
+            
+            const row = elementoAlvo.closest('.row-empresa');
+            const idEmpresa = row.getAttribute('data-id');
+            const badge = row.querySelector('.badge-status');
+            const icon = row.querySelector('.btn-status i');
             const nomeLabel = row.querySelector('.label-nome-empresa');
             const emailLabel = row.querySelector('.label-email-empresa');
             const nomeOriginal = row.getAttribute('data-nome-original');
             const emailOriginal = row.getAttribute('data-email-original');
 
-            if (badge.textContent.trim() === 'Ativa') {
-                // Configura referência e abre o modal de desativação idêntico ao do print
-                empresaParaDesativar = button;
-                abrirModalDesativar();
-            } else {
-                // Ativa novamente de forma direta (clicou no certinho)
-                badge.className = "badge-status inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-600 border border-emerald-200";
-                badge.textContent = 'Ativa';
-                button.querySelector('i').className = "fa-solid fa-ban text-red-500 hover:text-red-700";
-                
-                // NOVO REQUISITO: Restaura os dados originais ao clicar no certinho de reativação
-                nomeLabel.textContent = nomeOriginal;
-                emailLabel.textContent = emailOriginal;
+            // Qual API vai ser chamada?
+            const acaoParaBanco = (acaoAtual === 'desativar') ? 'desativar_empresa' : 
+                                  (acaoAtual === 'reativar') ? 'ativar_empresa' : 'excluir_empresa';
 
-                // Atualiza também os atributos de busca para coincidir com os dados originais restaurados
-                row.setAttribute('data-nome', nomeOriginal.toLowerCase());
-                row.setAttribute('data-email', emailOriginal.toLowerCase());
-            }
-        }
-
-        // Funções de Controle do Modal de Desativação
-        function abrirModalDesativar() {
-            const modal = document.getElementById('modalDesativar');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            // Pequeno delay para animação de scale
-            setTimeout(() => {
-                modal.firstElementChild.classList.remove('scale-95');
-                modal.firstElementChild.classList.add('scale-100');
-            }, 10);
-        }
-
-        // Fecha o modal de desativação
-        function fecharModalDesativar() {
-            const modal = document.getElementById('modalDesativar');
-            modal.firstElementChild.classList.remove('scale-100');
-            modal.firstElementChild.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                empresaParaDesativar = null;
-            }, 150);
-        }
-
-        // Listener do botão de confirmação dentro do Modal
-        document.getElementById('btnConfirmarDesativar').addEventListener('click', function() {
-            if (empresaParaDesativar) {
-                const row = empresaParaDesativar.closest('.row-empresa');
-                const badge = row.querySelector('.badge-status');
-                const icon = empresaParaDesativar.querySelector('i');
-                const nomeLabel = row.querySelector('.label-nome-empresa');
-                const emailLabel = row.querySelector('.label-email-empresa');
-
-                // Executa a ação de desativar (Altera visualmente para Inativo)
-                badge.className = "badge-status inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-500 border border-red-200";
-                badge.textContent = 'Inativo';
-                icon.className = "fa-regular fa-circle-check text-emerald-500 hover:text-emerald-700";
-
-                // REQUISITO ANTERIOR: Altera os dados exibidos da empresa para os valores suspensos requisitados
-                nomeLabel.textContent = "Empresa Suspensa";
-                emailLabel.textContent = "contato@suspensa.com";
-
-                // Atualiza também os atributos de busca para coincidir com a alteração
-                row.setAttribute('data-nome', 'empresa suspensa');
-                row.setAttribute('data-email', 'contato@suspensa.com');
-
-                fecharModalDesativar();
-            }
-        });
-
-        // Fecha modal ao clicar no fundo
-        document.getElementById('modalDesativar').addEventListener('click', function(e) {
-            if (e.target === this) {
-                fecharModalDesativar();
-            }
-        });
-
-        // Função para Excluir Empresa (Simulação)
-        function excluirEmpresa(button) {
-            const row = button.closest('.row-empresa');
-            const nomeEmpresa = row.querySelector('.label-nome-empresa').textContent;
-            
-            if (confirm(`Deseja realmente remover a empresa "${nomeEmpresa}" do painel?`)) {
-                row.style.transition = 'all 0.3s ease';
-                row.style.opacity = '0';
-                setTimeout(() => {
-                    row.remove();
-                    // Atualiza a validação da tabela vazia
-                    const rows = document.querySelectorAll('.row-empresa');
-                    if (rows.length === 0) {
-                        document.getElementById('buscaVazia').classList.remove('hidden');
+            // Comunica com o ficheiro acoes_admin.php
+            fetch('acoes_admin.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `acao=${acaoParaBanco}&id=${idEmpresa}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.sucesso) {
+                    if (acaoAtual === 'desativar') {
+                        badge.className = "badge-status inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-500 border border-red-200";
+                        badge.textContent = 'Inativo';
+                        icon.className = "fa-regular fa-circle-check text-emerald-500 hover:text-emerald-700";
+                        nomeLabel.textContent = "Empresa Suspensa";
+                        emailLabel.textContent = emailOriginal; 
+                        row.setAttribute('data-nome', 'empresa suspensa');
+                        row.setAttribute('data-email', emailOriginal.toLowerCase());
+                        fecharModal();
+                    } 
+                    else if (acaoAtual === 'reativar') {
+                        badge.className = "badge-status inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-600 border border-emerald-200";
+                        badge.textContent = 'Ativa';
+                        icon.className = "fa-solid fa-ban text-red-500 hover:text-red-700";
+                        nomeLabel.textContent = nomeOriginal;
+                        emailLabel.textContent = emailOriginal;
+                        row.setAttribute('data-nome', nomeOriginal.toLowerCase());
+                        row.setAttribute('data-email', emailOriginal.toLowerCase());
+                        fecharModal();
+                    } 
+                    else if (acaoAtual === 'excluir') {
+                        row.style.transition = 'all 0.3s ease';
+                        row.style.opacity = '0';
+                        fecharModal();
+                        setTimeout(() => {
+                            row.remove();
+                            const rows = document.querySelectorAll('.row-empresa');
+                            if (rows.length === 0) document.getElementById('buscaVazia').classList.remove('hidden');
+                        }, 300);
                     }
-                }, 300);
-            }
-        }
+                } else {
+                    alert("Erro ao executar ação: " + data.erro);
+                    fecharModal();
+                }
+            })
+            .catch(erro => console.error("Erro na requisição:", erro));
+        });
     </script>
+   
 </body>
 </html>

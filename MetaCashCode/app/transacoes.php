@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once '../config.php'; 
 
 // Trava de segurança corrigida: impede acesso se não estiver logado OU se não possuir o nível exigido
-if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
+if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Membro' && $_SESSION['nivel_permissao'] !== 'Admin')) {
     header("Location: dashboardUsuario.php");
     exit();
 }
@@ -142,7 +142,7 @@ $dados_financeiros = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/transacoesGerente.css"> 
 </head>
-<body class="bg-gray-50 transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden w-full">
+<body class="bg-meta-fundo transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden w-full">
 
     <?php include_once '../includes/sidebar.php'; ?>
 
@@ -154,7 +154,7 @@ $dados_financeiros = [
                         <h1 class="text-4xl font-extrabold text-[#0f172a] tracking-tight">Transações</h1>
                         <p class="text-lg text-[#334155] mt-2">Gerencie suas finanças</p>
                     </div>
-                    <button onclick="toggleModal('modalTransacao')" class="bg-gradient-to-r from-slate-800 to-teal-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition transform active:scale-95">
+                    <button onclick="toggleModal('modalTransacao')" class="bg-gradient-to-r from-meta-menu to-meta-destaque text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:opacity-90 transition transform active:scale-95">
                         + Adicionar Transação
                     </button>
                 </div>
@@ -280,7 +280,7 @@ $dados_financeiros = [
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleModal('modalTransacao')" class="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition">Cancelar</button>
-                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-slate-800 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Adicionar</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-meta-menu to-meta-destaque text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Adicionar</button>
                 </div>
             </form>
          </div>

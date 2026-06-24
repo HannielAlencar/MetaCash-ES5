@@ -1,12 +1,11 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-body { 
-    font-family: 'Inter', sans-serif; 
-    /* Define a imagem de fundo */
-    background-image: url('../assets/img/fundo.png'); 
-    background-size: cover; 
+body {
+    background-image: url('../img/fundo.png');
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    background-attachment: fixed;
     
     /* Cor sólida de fundo (apenas se a imagem falhar) */
     background-color: #ffffff; 
@@ -22,7 +21,6 @@ body {
 
     font-family: 'Inter', sans-serif; 
     background: radial-gradient(circle at 70% 30%, #2b6a7a 0%, #152c3f 50%, #0a111a 100%);
-    background-attachment: fixed;
 }
 
 /* Camada de escurecimento opcional para o fundo (melhora a leitura) */

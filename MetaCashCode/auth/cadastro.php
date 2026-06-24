@@ -71,8 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../assets/css/cadastro.css">
 
 </head>
+<<<<<<< Updated upstream
 <body class="h-screen overflow-hidden relative text-slate-800 flex items-center justify-center">
     <!-- Pop-up de Sucesso -->
+=======
+<body class="h-screen overflow-hidden relative text-slate-800 flex items-center justify-center" style="background-image: url('../assets/img/fundo.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+ 
+    <div class="max-h-[90vh] overflow-y-auto p-4"></div>
+
+>>>>>>> Stashed changes
     <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500">
         <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -82,9 +89,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+<<<<<<< Updated upstream
     <div class="noise-overlay"></div>
 
     <a href="../app/homePB.php" class="fixed top-4 left-6 z-20 inline-flex items-center gap-2 text-white font-medium hover:text-slate-200 transition-colors">
+=======
+    <?php if (isset($_GET['erro'])): ?>
+        <div class="fixed top-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+            <?php echo htmlspecialchars($_GET['erro']); ?>
+        </div>
+    <?php endif; ?>
+
+
+    <a href="../index.php" class="fixed top-4 left-6 z-20 inline-flex items-center gap-2 text-white font-medium hover:text-slate-200 transition-colors">
+>>>>>>> Stashed changes
         <i class="fas fa-arrow-left text-sm"></i> Voltar
     </a>
 
@@ -94,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <img src="../assets/img/logo.php" alt="Logo MetaCash" class="w-14 h-14 object-contain">
             </div>
             <h1 class="text-white text-xl font-bold tracking-tight">MetaCash</h1>
-            <p class="text-slate-300 text-xs font-medium">Cadastre sua empresa</p>
+            <p class="text-slate-200 text-xs font-medium">Cadastre sua empresa</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-2xl p-6">

@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+<<<<<<< Updated upstream
 if (!isset($_SESSION['id_empresa'])) {
     // Se não tiver empresa logada, não carrega dados
     $id_empresa = 0; 
@@ -13,6 +14,26 @@ if (!isset($_SESSION['id_empresa'])) {
 }
 
 // BUSCA TOTAIS DO BANCO DE DADOS (MySQL)
+=======
+// Trava de segurança: impede acesso se não estiver logado OU se não possuir o nível exigido
+if (!isset($_SESSION['id_usuario']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
+    header("Location: dashboardUsuario.php");
+    exit();
+}
+
+$id_empresa = $_SESSION['id_empresa'];
+$config_dashboard_db = 'null';
+
+try {
+    $stmt = $pdo->prepare("SELECT config_dashboard FROM configuracoes_paginas WHERE id_empresa = :id");
+    $stmt->execute([':id' => $id_empresa]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row && !empty($row['config_dashboard'])) {
+        $config_dashboard_db = $row['config_dashboard'];
+    }
+} catch (PDOException $e) {}
+
+>>>>>>> Stashed changes
 $total_receitas = 0;
 $total_despesas = 0;
 $saldo_total = 0;
@@ -287,6 +308,187 @@ if (!function_exists('formatarMoeda')) {
         </div>
     </main>
 
+<<<<<<< Updated upstream
     <script src="../assets/js/dashboardGerente.js"></script>
+=======
+    <!-- MODAL RELATÓRIO -->
+    <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-2xl font-extrabold text-slate-800">Baixar Relatório</h3>
+                <button onclick="toggleModal('modalRelatorio')" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form action="/MetaCashCode/Usuario/Transacoes.php/gerar_pdf.php" method="GET" target="_blank" class="space-y-6">
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Tipo de Transação</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="e" class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Receita</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="s" class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Despesa</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="tipo" value="todos" checked class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Ambos</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Período</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="mensal" checked class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Mensal</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="periodo" value="anual" class="hidden peer">
+                            <div class="text-sm font-semibold text-center py-3 rounded-xl border border-blue-50 bg-blue-50/50 text-blue-600 peer-checked:bg-meta-menu peer-checked:text-white transition-all">Anual</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Mês</label>
+                    <select name="mes" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5" selected>Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase block mb-3 tracking-widest">Ano</label>
+                    <select name="ano" class="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-meta-destaque/20 transition-all cursor-pointer">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-4 pt-6 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modalRelatorio')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">Cancelar</button>
+                    <button type="submit" class="flex-1 py-4 bg-meta-destaque hover:opacity-90 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i> Baixar PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        window.labels_meses = <?= json_encode($labels_meses) ?>;
+        window.dados_receitas = <?= json_encode($dados_receitas) ?>;
+        window.dados_despesas = <?= json_encode($dados_despesas) ?>;
+        window.dados_lucro = <?= json_encode($dados_lucro) ?>;
+        window.categorias_labels = <?= json_encode($categorias_labels) ?>;
+        window.categorias_valores = <?= json_encode($categorias_valores) ?>;
+    </script>
+
+    <script id="chart-data" type="application/json">
+        <?= json_encode([
+            'labels' => $labels_meses,
+            'receitas' => $dados_receitas,
+            'despesas' => $dados_despesas,
+            'lucro' => $dados_lucro,
+            'catLabels' => $categorias_labels,
+            'catValores' => $categorias_valores
+        ]) ?>
+    </script>
+    
+    <script src="../assets/js/dashboardUsuario.js"></script>
+
+    <script>
+        const configSalvaNoBanco = <?= $config_dashboard_db ?>;
+
+        if (configSalvaNoBanco) {
+            // Aqui você pega o JSON e aplica nas classes do Tailwind ou estilos da página
+            // Ex: escondendo as divs que o gerente marcou como "visivel: false"
+            aplicarConfiguracoesNaTela(configSalvaNoBanco);
+        }
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const configSalva = localStorage.getItem('metaCashDashboardConfig');
+            if (configSalva) {
+                try {
+                    const config = JSON.parse(configSalva);
+
+                    // 1. Aplica a Fonte Dinâmica alterando o valor da variável mapeada no Tailwind
+                    if (config.fonte) {
+                        document.documentElement.style.setProperty('--meta-font', config.fonte);
+                    }
+
+                    // 2. Aplica o Tamanho de Fonte Global
+                    if (config.tamanhoFonte) {
+                        const mainElement = document.querySelector('main');
+                        if (mainElement) {
+                            if (config.tamanhoFonte === 'small') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-xs";
+                            if (config.tamanhoFonte === 'medium') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-sm";
+                            if (config.tamanhoFonte === 'large') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-base";
+                            if (config.tamanhoFonte === 'xlarge') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-lg";
+                        }
+                    }
+
+                    // 3. Aplica os Textos Personalizados
+                    if (config.textos) {
+                        if (config.textos.titulo_pagina) document.getElementById('txt-titulo_pagina').textContent = config.textos.titulo_pagina;
+                        if (config.textos.card_saldo) {
+                            document.getElementById('txt-card_saldo').textContent = config.textos.card_saldo;
+                            document.getElementById('label-card_saldo').textContent = config.textos.card_saldo;
+                        }
+                        if (config.textos.card_receitas) document.getElementById('label-card_receitas').textContent = config.textos.card_receitas;
+                        if (config.textos.card_despesas) document.getElementById('label-card_despesas').textContent = config.textos.card_despesas;
+                        if (config.textos.titulo_grafico_receitas) {
+                            const node = document.getElementById('txt-titulo_grafico_receitas');
+                            if(node) node.innerHTML = `<i class="fas fa-chart-line text-slate-400"></i> ${config.textos.titulo_grafico_receitas}`;
+                        }
+                        if (config.textos.titulo_grafico_despesas) {
+                            const node = document.getElementById('txt-titulo_grafico_despesas');
+                            if(node) node.innerHTML = `<i class="fas fa-chart-pie text-slate-400"></i> ${config.textos.titulo_grafico_despesas}`;
+                        }
+                    }
+
+                    // 4. Gerencia Ocultação e Tamanhos de Widgets Ativos
+                    if (config.widgets) {
+                        const widgetSaldo = document.getElementById('widget-saldo_total');
+                        if (widgetSaldo && config.widgets.saldo_total) {
+                            if (!config.widgets.saldo_total.visivel) {
+                                widgetSaldo.classList.add('hidden');
+                            } else {
+                                const txtSaldo = document.getElementById('txt-saldo_container');
+                                if (config.widgets.saldo_total.tamanho === 'P') txtSaldo.className = "text-2xl font-bold mb-4 tracking-tighter text-white";
+                                if (config.widgets.saldo_total.tamanho === 'M') txtSaldo.className = "text-4xl font-bold mb-6 tracking-tighter text-white";
+                                if (config.widgets.saldo_total.tamanho === 'G') txtSaldo.className = "text-5xl font-bold mb-8 tracking-tighter text-white";
+                            }
+                        }
+
+                        if (config.widgets.receitas && !config.widgets.receitas.visivel) document.getElementById('widget-receitas').classList.add('hidden');
+                        if (config.widgets.despesas && !config.widgets.despesas.visivel) document.getElementById('widget-card_despesas').classList.add('hidden');
+                        if (config.widgets.total_transacoes && !config.widgets.total_transacoes.visivel) document.getElementById('widget-total_transacoes').classList.add('hidden');
+                        if (config.widgets.grafico_despesas && !config.widgets.grafico_despesas.visivel) document.getElementById('widget-grafico_despesas').classList.add('hidden');
+                    }
+                } catch (e) {
+                    console.error("Erro ao sincronizar modificações do localStorage:", e);
+                }
+            }
+        });
+    </script>
+>>>>>>> Stashed changes
 </body>
 </html>

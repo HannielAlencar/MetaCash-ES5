@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../assets/css/login.css">
     
 </head>
+<<<<<<< Updated upstream
 <body>
 
     <!-- Pop-up de Sucesso -->
@@ -65,14 +66,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h3 class="text-lg font-bold text-slate-800">Login realizado com sucesso</h3>
         </div>
     </div>
+=======
+<body class="min-h-screen flex items-center justify-center p-4" style="background-image: url('../assets/img/fundo.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;">
+>>>>>>> Stashed changes
 
     <div class="header-logo">
-        <div class="icon">
-            <img src="../assets/img/logo.png" alt="Logo MetaCash">
-        </div> 
-        <h1>MetaCash</h1>
-        <p>Gestão Financeira Empresarial</p>
-    </div>
+    <div class="icon">
+        <img src="../assets/img/logo.png" alt="Logo MetaCash">
+    </div> 
+    <h1 class="text-white font-bold text-2xl">MetaCash</h1>
+    <p class="text-slate-200">Gestão Financeira Empresarial</p>
+</div>
+
+    <a href="../index.php" class="fixed top-4 left-6 z-20 inline-flex items-center gap-2 text-white font-medium hover:text-slate-200 transition-colors">
+            <i class="fas fa-arrow-left text-sm"></i> Voltar
+    </a>
 
     <div class="login-card">
         <h2>Entrar</h2>
@@ -97,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="input-container">
                     <i class="fa-solid fa-lock left-icon"></i>
                     <input type="password" name="senha" id="password" placeholder="••••••••" required>
+                    <i class="fa-regular fa-eye right-icon toggle-password" data-target="password"></i>
                 </div>
             </div>
 
@@ -110,8 +119,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn-entrar">Entrar</button>
         </form>
 
-        <p class="footer-text">Não tem uma conta? <a href="../auth/cadastro.php">Cadastre-se</a></p>
     </div>
+
+    <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500 pointer-events-none">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl text-center transform scale-95 transition-transform duration-300">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-check text-2xl text-green-600"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">Login realizado com sucesso</h3>
+        <p class="text-sm text-slate-500 mt-2">Redirecionando...</p>
+    </div>
+</div>
 
     <p class="copyright">© 2026 MetaCash. Todos os direitos reservados.</p>
 

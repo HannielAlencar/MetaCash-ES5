@@ -8,26 +8,31 @@
 }
 
 body {
-    /* Camada escura + sua imagem */
-    background:
-                url('../img/fundo.png') no-repeat center center fixed;
-
-    /* Aumente o valor de 110% para 120% ou 130% se quiser "aproximar" ainda mais */
-    background-size: 115%; 
-    
-    /* Garante que a imagem não se repita se a tela for muito grande */
+    background-image: url('../img/fundo.png');
+    background-size: cover;
+    background-position: center;
     background-repeat: no-repeat;
+    background-attachment: fixed;
+    background: radial-gradient(circle at 70% 30%, #2b6a7a 0%, #152c3f 50%, #0a111a 100%);
+
+     
+    /* Cor sólida de fundo (apenas se a imagem falhar) */
+    background-color: #ffffff; 
+    
     
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    color: white;
+    padding: 20px;
+    color: #fff;
     
+    font-family: 'Inter', sans-serif; 
     /* Suaviza o movimento se você redimensionar a tela */
     transition: background-size 0.5s ease;
 }
+
 /* Logo e Título */
 .header-logo {
     text-align: center;

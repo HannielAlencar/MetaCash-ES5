@@ -11,6 +11,16 @@ if (!isset($_SESSION['id_usuario'])) {
 }
 
 $id_empresa = $_SESSION['id_empresa'];
+$config_dashboard_db = 'null';
+
+try {
+    $stmt = $pdo->prepare("SELECT config_dashboard FROM configuracoes_paginas WHERE id_empresa = :id");
+    $stmt->execute([':id' => $id_empresa]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row && !empty($row['config_dashboard'])) {
+        $config_dashboard_db = $row['config_dashboard'];
+    }
+} catch (PDOException $e) {}
 
 $total_receitas = 0;
 $total_despesas = 0;
@@ -286,5 +296,86 @@ if (empty($categorias_agrupadas)) {
         ]) ?>
     </script>
     <script src="../assets/js/dashboardUsuario.js"></script>
+<<<<<<< Updated upstream
+=======
+
+    <script>
+
+
+        const configSalvaNoBanco = <?= $config_dashboard_db ?>;
+
+        if (configSalvaNoBanco) {
+        // Aqui você pega o JSON e aplica nas classes do Tailwind ou estilos da página
+        // Ex: escondendo as divs que o gerente marcou como "visivel: false"
+            aplicarConfiguracoesNaTela(configSalvaNoBanco);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const configSalva = localStorage.getItem('metaCashDashboardConfig');
+            if (configSalva) {
+                try {
+                    const config = JSON.parse(configSalva);
+
+                    // 1. Aplica a Fonte Dinâmica alterando o valor da variável mapeada no Tailwind
+                    if (config.fonte) {
+                        document.documentElement.style.setProperty('--meta-font', config.fonte);
+                    }
+
+                    // 2. Aplica o Tamanho de Fonte Global
+                    if (config.tamanhoFonte) {
+                        const mainElement = document.querySelector('main');
+                        if (mainElement) {
+                            if (config.tamanhoFonte === 'small') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-xs";
+                            if (config.tamanhoFonte === 'medium') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-sm";
+                            if (config.tamanhoFonte === 'large') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-base";
+                            if (config.tamanhoFonte === 'xlarge') mainElement.className = "flex-1 p-8 ml-64 min-h-screen overflow-y-auto box-border text-lg";
+                        }
+                    }
+
+                    // 3. Aplica os Textos Personalizados
+                    if (config.textos) {
+                        if (config.textos.titulo_pagina) document.getElementById('txt-titulo_pagina').textContent = config.textos.titulo_pagina;
+                        if (config.textos.card_saldo) {
+                            document.getElementById('txt-card_saldo').textContent = config.textos.card_saldo;
+                            document.getElementById('label-card_saldo').textContent = config.textos.card_saldo;
+                        }
+                        if (config.textos.card_receitas) document.getElementById('label-card_receitas').textContent = config.textos.card_receitas;
+                        if (config.textos.card_despesas) document.getElementById('label-card_despesas').textContent = config.textos.card_despesas;
+                        if (config.textos.titulo_grafico_receitas) {
+                            const node = document.getElementById('txt-titulo_grafico_receitas');
+                            if(node) node.innerHTML = `<i class="fas fa-chart-line text-slate-400"></i> ${config.textos.titulo_grafico_receitas}`;
+                        }
+                        if (config.textos.titulo_grafico_despesas) {
+                            const node = document.getElementById('txt-titulo_grafico_despesas');
+                            if(node) node.innerHTML = `<i class="fas fa-chart-pie text-slate-400"></i> ${config.textos.titulo_grafico_despesas}`;
+                        }
+                    }
+
+                    // 4. Gerencia Ocultação e Tamanhos de Widgets Ativos
+                    if (config.widgets) {
+                        const widgetSaldo = document.getElementById('widget-saldo_total');
+                        if (widgetSaldo && config.widgets.saldo_total) {
+                            if (!config.widgets.saldo_total.visivel) {
+                                widgetSaldo.classList.add('hidden');
+                            } else {
+                                const txtSaldo = document.getElementById('txt-saldo_container');
+                                if (config.widgets.saldo_total.tamanho === 'P') txtSaldo.className = "text-2xl font-bold mb-4 tracking-tighter text-white";
+                                if (config.widgets.saldo_total.tamanho === 'M') txtSaldo.className = "text-4xl font-bold mb-6 tracking-tighter text-white";
+                                if (config.widgets.saldo_total.tamanho === 'G') txtSaldo.className = "text-5xl font-bold mb-8 tracking-tighter text-white";
+                            }
+                        }
+
+                        if (config.widgets.receitas && !config.widgets.receitas.visivel) document.getElementById('widget-receitas').classList.add('hidden');
+                        if (config.widgets.despesas && !config.widgets.despesas.visivel) document.getElementById('widget-card_despesas').classList.add('hidden');
+                        if (config.widgets.total_transacoes && !config.widgets.total_transacoes.visivel) document.getElementById('widget-total_transacoes').classList.add('hidden');
+                        if (config.widgets.grafico_despesas && !config.widgets.grafico_despesas.visivel) document.getElementById('widget-grafico_despesas').classList.add('hidden');
+                    }
+                } catch (e) {
+                    console.error("Erro ao sincronizar modificações do localStorage:", e);
+                }
+            }
+        });
+    </script>
+>>>>>>> Stashed changes
 </body>
 </html>

@@ -103,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="input-container">
                     <i class="fa-solid fa-lock left-icon"></i>
                     <input type="password" name="senha" id="password" placeholder="••••••••" required>
+                    <i class="fa-regular fa-eye right-icon toggle-password" data-target="password"></i>
                 </div>
             </div>
 

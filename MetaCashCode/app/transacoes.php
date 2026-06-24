@@ -166,7 +166,7 @@ $dados_financeiros = [
                     </div>
                     <div class="relative w-full md:w-auto">
                         <select id="filtroCategoria" class="w-full md:w-48 pl-10 pr-8 py-3 rounded-xl border-none bg-gray-50 appearance-none outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer">
-                            <option value="todas">Todas Categorias</option>
+                            <option value="todas">Filtros</option>
                             <?php foreach ($categorias_banco as $cat): ?>
                                 <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
                             <?php endforeach; ?>

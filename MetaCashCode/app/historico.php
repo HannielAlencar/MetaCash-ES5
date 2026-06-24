@@ -8,18 +8,19 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once '../config.php'; 
 
 $id_usuario = $_SESSION['usuario_id'] ?? null;
+// Captura o perfil do usuário da sessão
+$perfil_usuario = $_SESSION['nome_completo'] ?? 'Administrador'; 
 $registros = [];
 
 try {
     // 3. Busca os dados reais diretamente da tabela do Neon DB
-    // Ordena por data_criacao DESC para que as ações mais recentes apareçam primeiro
     $sql = "SELECT acao, categoria, descricao, data_criacao FROM historico WHERE usuario_id = ? ORDER BY data_criacao DESC";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$id_usuario]);
     $dados_banco = $stmt->fetchAll();
 
-    // Função interna para mapear dinamicamente as cores das tags do seu front-end
+    // Função interna para mapear dinamicamente as cores das tags
     function obterCorTag($acao) {
         switch (mb_strtolower(trim($acao), 'UTF-8')) {
             case 'criação': 
@@ -36,18 +37,17 @@ try {
     // 4. Converte os dados do banco para o formato exato que o seu HTML/JS espera
     foreach ($dados_banco as $item) {
         $registros[] = [
-            'tag'       => $item['acao'],
-            'tag_color' => obterCorTag($item['acao']),
-            'cat'       => $item['categoria'],
-            'desc'      => $item['descricao'],
-            // Formata a data do PostgreSQL (Y-m-d H:i:s) para o padrão brasileiro (d/m/Y)
-            'data'      => date('d/m/Y', strtotime($item['data_criacao'])),
-            'hora'      => date('H:i:s', strtotime($item['data_criacao']))
+            'tag'        => $item['acao'],
+            'tag_color'  => obterCorTag($item['acao']),
+            'cat'        => $item['categoria'],
+            'desc'       => $item['descricao'],
+            'data'       => date('d/m/Y', strtotime($item['data_criacao'])),
+            'hora'       => date('H:i:s', strtotime($item['data_criacao'])),
+            'perfil'     => $perfil_usuario // Chave corrigida para 'perfil'
         ];
     }
 
 } catch (PDOException $e) {
-    // Fallback de segurança: se o banco falhar, mantém a página no ar com a lista vazia
     $registros = [];
     error_log("Erro ao carregar o histórico: " . $e->getMessage());
 }
@@ -179,7 +179,7 @@ try {
                                     <?= htmlspecialchars($reg['desc'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                                 </p>
                                 <div class="flex flex-wrap gap-4 text-xs text-slate-400">
-                                    <span class="flex items-center gap-1.5"><i class="far fa-user"></i> Administrador</span>
+                                    <span class="flex items-center gap-1.5 capitalize"><i class="far fa-user"></i> <?= htmlspecialchars($reg['perfil'] ?? 'Administrador', ENT_QUOTES, 'UTF-8') ?></span>
                                     <span class="flex items-center gap-1.5"><i class="far fa-clock"></i> <?= htmlspecialchars($reg['data'] ?? date('d/m/Y'), ENT_QUOTES, 'UTF-8') ?>, <?= htmlspecialchars($reg['hora'] ?? '00:00:00', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                             </div>
@@ -314,7 +314,6 @@ try {
 
                 const matchesBusca = buscaQuery === '' || desc.includes(buscaQuery) || tipo.includes(buscaQuery) || data.includes(buscaQuery);
                 
-                // Lógica de filtro do tipo ajustada para incluir "outros"
                 let matchesTipo = false;
                 if (tipoQuery === 'todos') {
                     matchesTipo = true;

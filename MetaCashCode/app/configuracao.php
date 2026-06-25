@@ -33,6 +33,8 @@ if (isset($_POST['btn_remover_logo']) && $id_empresa) {
         $stmt = $pdo->prepare("UPDATE empresas SET logo_path = NULL WHERE id_empresa = ?");
         $stmt->execute([$id_empresa]);
         
+        $_SESSION['logo_path'] = null; // ATUALIZA A SESSÃO IMEDIATAMENTE PARA AS SIDEBARS
+        
         header("Location: " . $_SERVER['PHP_SELF'] . "?sucesso=logo_removida");
         exit;
     } catch (PDOException $e) {
@@ -55,6 +57,8 @@ if (isset($_POST['btn_reset_padrao_logo']) && $id_empresa) {
 
         $stmt = $pdo->prepare("UPDATE empresas SET logo_path = NULL WHERE id_empresa = ?");
         $stmt->execute([$id_empresa]);
+        
+        $_SESSION['logo_path'] = null; // ATUALIZA A SESSÃO IMEDIATAMENTE PARA AS SIDEBARS
         
         header("Location: " . $_SERVER['PHP_SELF'] . "?sucesso=logo_restaurada");
         exit;
@@ -87,9 +91,7 @@ if (isset($_GET['delete_categoria']) && $id_empresa) {
 // ==========================================
 if (isset($_POST['btn_add_categoria']) && $id_empresa) {
     $nome_cat = trim($_POST['nome_categoria']);
-    $tipo_input = $_POST['tipo_categoria']; // "e" ou "s"
-    
-    // CORREÇÃO: Mapeia o valor do select para o ENUM esperado pelo banco (Receita ou Despesa)
+    $tipo_input = $_POST['tipo_categoria']; 
     $tipo_cat = ($tipo_input === 'e') ? 'Receita' : 'Despesa';
 
     if (!empty($nome_cat)) {
@@ -115,15 +117,12 @@ if (isset($_POST['btn_add_categoria']) && $id_empresa) {
 // ==========================================
 if (isset($_POST['btn_update_empresa']) && $id_empresa) {
     $nome_emp = trim($_POST['nome_empresa'] ?? '');
-    // ALTERAÇÃO APLICADA AQUI: Remove máscara antes de salvar (garante apenas os 14 números)
     $cnpj_emp = preg_replace('/[^0-9]/', '', $_POST['cnpj'] ?? '');
     
     try {
-        // Atualiza os textos básicos da empresa
         $stmt = $pdo->prepare("UPDATE empresas SET nome_empresa = ?, cnpj = ? WHERE id_empresa = ?");
         $stmt->execute([$nome_emp, $cnpj_emp, $id_empresa]);
         
-        // Verifica se foi enviado um arquivo de logo válido
         if (isset($_FILES['logo_empresa']) && $_FILES['logo_empresa']['error'] === UPLOAD_ERR_OK) {
             $extensoes_permitidas = ['png', 'jpg', 'jpeg', 'svg'];
             $extensao = strtolower(pathinfo($_FILES['logo_empresa']['name'], PATHINFO_EXTENSION));
@@ -131,16 +130,17 @@ if (isset($_POST['btn_update_empresa']) && $id_empresa) {
             if (in_array($extensao, $extensoes_permitidas)) {
                 $diretorio_destino = '../uploads/';
                 if (!is_dir($diretorio_destino)) {
-                    mkdir($diretorio_destino, 0777, true); // Cria a pasta uploads se não existir
+                    mkdir($diretorio_destino, 0777, true); 
                 }
                 
                 $nome_arquivo = 'logo_empresa_' . $id_empresa . '_' . time() . '.' . $extensao;
                 $caminho_completo = $diretorio_destino . $nome_arquivo;
                 
                 if (move_uploaded_file($_FILES['logo_empresa']['tmp_name'], $caminho_completo)) {
-                    // Salva o caminho no banco de dados
                     $stmtLogo = $pdo->prepare("UPDATE empresas SET logo_path = ? WHERE id_empresa = ?");
                     $stmtLogo->execute([$caminho_completo, $id_empresa]);
+                    
+                    $_SESSION['logo_path'] = $caminho_completo; // ATUALIZA A SESSÃO IMEDIATAMENTE PARA AS SIDEBARS
                 }
             } else {
                 $mensagem_erro = "Formato de imagem inválido. Use PNG, JPG ou SVG.";
@@ -167,7 +167,6 @@ $empresa_atual = [];
 $receitas = [];
 $despesas = [];
 
-// Lista de categorias padrão para aparecerem sempre
 $categorias_padrao = [
     ['id_categoria' => '1000', 'nome_categoria' => 'Salário', 'tipo_categoria' => 'Receita'],
     ['id_categoria' => '1001', 'nome_categoria' => 'Aluguel', 'tipo_categoria' => 'Despesa'],
@@ -177,20 +176,23 @@ $categorias_padrao = [
 
 if ($id_empresa) {
     try {
-        // Busca Empresa
         $stmtEmp = $pdo->prepare("SELECT nome_empresa, cnpj, logo_path FROM empresas WHERE id_empresa = ?");
         $stmtEmp->execute([$id_empresa]);
         $empresa_atual = $stmtEmp->fetch(PDO::FETCH_ASSOC) ?: [];
         
-        // Busca Categorias
+        // Sincronização preventiva da sessão ao carregar a página
+        if (!empty($empresa_atual['logo_path'])) {
+            $_SESSION['logo_path'] = $empresa_atual['logo_path'];
+        } else {
+            $_SESSION['logo_path'] = null;
+        }
+        
         $stmtCat = $pdo->prepare("SELECT id_categoria, nome_categoria, tipo_categoria FROM categoria WHERE id_empresa = ? ORDER BY nome_categoria ASC");
         $stmtCat->execute([$id_empresa]);
         $user_cats = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
         
-        // Junta as categorias do banco com as padrão
         $todas_cats = array_merge($user_cats, $categorias_padrao);
         
-        // Separa em Receitas ('e') e Despesas ('s')
         foreach ($todas_cats as $cat) {
             if (strtolower($cat['tipo_categoria']) === 'e' || strtolower($cat['tipo_categoria']) === 'receita') {
                 $receitas[] = $cat;
@@ -331,49 +333,50 @@ if ($id_empresa) {
                         </button>
                     </div>
                 </section>
-            </form>
 
-            <section class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm mb-8">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 bg-meta-clara/10 flex items-center justify-center rounded-xl text-meta-clara">
-                        <i class="fa-solid fa-upload text-base"></i>
-                    </div>
-                    <h2 class="font-bold text-slate-800 text-lg">Sua Logo</h2>
-                </div>
-                
-                <div class="border-dashed border-2 border-slate-200 rounded-2xl p-8 flex flex-col items-start bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                    
-                    <?php if(!empty($empresa_atual['logo_path'])): ?>
-                        <div class="mb-5 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-                            <img src="<?= htmlspecialchars($empresa_atual['logo_path']) ?>" alt="Logo Atual" class="h-16 object-contain">
+                <section class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-meta-clara/10 flex items-center justify-center rounded-xl text-meta-clara">
+                            <i class="fa-solid fa-upload text-base"></i>
                         </div>
-                    <?php endif; ?>
-
-                    <form method="POST" class="flex gap-3 flex-wrap">
-                        <label class="bg-meta-btn1 text-white px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:opacity-90 transition-all shadow-sm cursor-pointer inline-flex items-center gap-2">
-                            <i class="fa-solid fa-image"></i> Escolher Novo Arquivo
-                            <input type="file" name="logo_empresa" class="hidden" accept="image/png, image/jpeg, image/svg+xml" onchange="document.getElementById('fileNameSpan').textContent = this.files[0].name; document.getElementById('btnSubmitLogo').classList.remove('hidden');">
-                        </label>
+                        <h2 class="font-bold text-slate-800 text-lg">Sua Logo</h2>
+                    </div>
+                    
+                    <div class="border-dashed border-2 border-slate-200 rounded-2xl p-8 flex flex-col items-start bg-slate-50/50 hover:bg-slate-50 transition-colors">
                         
                         <?php if(!empty($empresa_atual['logo_path'])): ?>
-                            <button type="submit" name="btn_remover_logo" class="bg-red-50 text-red-600 px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:bg-red-100 transition-all shadow-sm flex items-center gap-2">
-                                <i class="fa-solid fa-trash"></i> Remover Logo
-                            </button>
-                            <button type="submit" name="btn_reset_padrao_logo" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:bg-slate-200 transition-all shadow-sm flex items-center gap-2">
-                                <i class="fa-solid fa-undo"></i> Restaurar Padrão
-                            </button>
+                            <div class="mb-5 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+                                <img src="<?= htmlspecialchars($empresa_atual['logo_path']) ?>" alt="Logo Atual" class="h-16 object-contain">
+                            </div>
                         <?php endif; ?>
-                        
-                        <button type="submit" name="btn_update_empresa" id="btnSubmitLogo" class="hidden bg-meta-destaque text-white px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:opacity-90 transition-all shadow-sm">
-                            Salvar Upload
-                        </button>
-                    </form>
 
-                    <span id="fileNameSpan" class="text-xs text-meta-destaque font-bold mb-2"></span>
-                    <p class="text-[11px] text-slate-400 uppercase font-semibold tracking-wider">Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB</p>
-                </div>
-            </section>
+                        <div class="flex gap-3 flex-wrap">
+                            <label class="bg-meta-btn1 text-white px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:opacity-90 transition-all shadow-sm cursor-pointer inline-flex items-center gap-2">
+                                <i class="fa-solid fa-image"></i> Escolher Novo Arquivo
+                                <input type="file" name="logo_empresa" class="hidden" accept="image/png, image/jpeg, image/svg+xml" onchange="document.getElementById('fileNameSpan').textContent = this.files[0].name; document.getElementById('btnSubmitLogo').classList.remove('hidden');">
+                            </label>
+                            
+                            <?php if(!empty($empresa_atual['logo_path'])): ?>
+                                <button type="submit" name="btn_remover_logo" class="bg-red-50 text-red-600 px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:bg-red-100 transition-all shadow-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-trash"></i> Remover Logo
+                                </button>
+                                <button type="submit" name="btn_reset_padrao_logo" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:bg-slate-200 transition-all shadow-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-undo"></i> Restaurar Padrão
+                                </button>
+                            <?php endif; ?>
+                            
+                            <button type="submit" name="btn_update_empresa" id="btnSubmitLogo" class="hidden bg-meta-destaque text-white px-5 py-2.5 rounded-xl font-bold text-sm mb-3 hover:opacity-90 transition-all shadow-sm">
+                                Salvar Upload
+                            </button>
+                        </div>
+
+                        <span id="fileNameSpan" class="text-xs text-meta-destaque font-bold mb-2"></span>
+                        <p class="text-[11px] text-slate-400 uppercase font-semibold tracking-wider">Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB</p>
+                    </div>
+                </section>
                 
+            </form>
+
             <section class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm mb-8">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-10 h-10 bg-meta-clara/10 flex items-center justify-center rounded-xl text-meta-clara">

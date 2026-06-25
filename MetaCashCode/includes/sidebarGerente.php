@@ -13,6 +13,14 @@ $id_empresa = $_SESSION['id_empresa'] ?? null;
 
 $inicial_nome = strtoupper(substr(trim($nome_usuario), 0, 1));
 
+// ==========================================
+// LÓGICA DA LOGO DINÂMICA
+// ==========================================
+// Verifica se há uma logo personalizada salva na sessão. Se não, usa a padrão.
+$logoExibida = (isset($_SESSION['logo_path']) && !empty($_SESSION['logo_path'])) 
+    ? $_SESSION['logo_path'] 
+    : '../assets/img/logo_empresas.png';
+
 // 1. CORES PADRÃO (Caso a empresa não tenha personalizado nada ainda)
 $cor_menu     = '#0F2440';
 $cor_btn1     = '#204C73';
@@ -24,8 +32,6 @@ $cor_fundo    = '#FDFEFB';
 // 2. BUSCA AS CORES DO SEU BANCO DE DADOS
 if ($id_empresa && isset($pdo)) {
     try {
-        // ATENÇÃO: Ajuste o nome da tabela 'temas' e das colunas abaixo 
-        // para corresponder exatamente a como você criou no seu banco de dados!
         $stmt_cores = $pdo->prepare("SELECT cor_menu, cor_btn1, cor_destaque, cor_btn2, cor_clara, cor_fundo FROM temas WHERE id_empresa = :id_empresa LIMIT 1");
         $stmt_cores->execute([':id_empresa' => $id_empresa]);
         $tema = $stmt_cores->fetch();
@@ -82,7 +88,8 @@ if ($id_empresa && isset($pdo)) {
 
 <aside class="w-64 bg-meta-menu text-meta-active p-4 flex flex-col fixed h-screen shrink-0 z-40 text-sm">
     <div class="flex items-center gap-3 mb-10 px-2 pt-2">
-        <img src="../assets/img/logo_empresas.png" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-cover" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png';">
+        <!-- Renderiza a logo dinamicamente usando a variável $logoExibida -->
+        <img src="<?= htmlspecialchars($logoExibida) ?>" alt="MetaCash Logo" class="w-11 h-11 rounded-lg object-contain bg-white/5" onerror="this.onerror=null; this.src='../DashboardGerente/image_75793b.png';">
         <div class="flex flex-col">
             <span class="font-bold text-xl leading-tight text-meta-active">MetaCash</span>
             <span class="text-[10px] text-meta-text uppercase tracking-wider font-semibold">Gestão Empresarial</span>
@@ -206,3 +213,16 @@ if ($id_empresa && isset($pdo)) {
         </a>
     </div>
 </aside>
+
+<!-- Garante que a função de abrir o Modal do Relatório funcione se chamada dentro da sidebar -->
+<script>
+    if (typeof toggleModal !== 'function') {
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.toggle('hidden');
+                modal.classList.toggle('flex');
+            }
+        }
+    }
+</script>

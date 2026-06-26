@@ -5,8 +5,8 @@ require_once '../config.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-$nome_usuario = $_SESSION['nome_usuario'] ?? 'Admin Master';
-$email_usuario = $_SESSION['email_usuario'] ?? 'admin@metacash.com';
+$nome_usuario = $_SESSION['nome'] ?? 'Admin Master';
+$email_usuario = $_SESSION['email'] ?? 'admin@metacash.com';
 $iniciais = strtoupper(substr(trim($nome_usuario), 0, 1));
 $pagina_atual = strtolower(basename($_SERVER['PHP_SELF']));
 $id_empresa = $_SESSION['id_empresa'] ?? null;

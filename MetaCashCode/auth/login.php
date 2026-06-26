@@ -50,8 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Ativa o popup de sucesso e define a rota
                     $sucesso = true;
-                    if ($usuario['nivel_permissao'] === 'Gerente' || $usuario['nivel_permissao'] === 'Admin') {
+                    if ($usuario['nivel_permissao'] === 'Gerente') {
                         $urlRedirecionamento = "../app/dashboardGerente.php";
+                    } else if ($usuario['nivel_permissao'] === 'Admin') {
+                        $urlRedirecionamento = "../app/empresasADMIN.php";
                     } else {
                         $urlRedirecionamento = "../app/dashboardUsuario.php";
                     }
@@ -79,6 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
 </head>
 <body>
+
+    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold">
+     Senha alterada com sucesso!
+    </div>
 
     <div id="successPopup" class="<?= $sucesso ? 'fixed opacity-100' : 'hidden opacity-0' ?> inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-500">
         <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
@@ -125,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <form id="loginForm" method="POST" action="login.php" novalidate>
             <div class="form-group">
-                <label>E-mail</label>
+                <label>E-mail <span class="text-red-500">*</span></label>
                 <div class="input-container">
                     <i class="fa-regular fa-envelope left-icon"></i>
                     <input type="email" name="email" id="email" placeholder="seu@email.com" required>
@@ -133,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="form-group">
-                <label>Senha</label>
+                <label>Senha <span class="text-red-500">*</span></label>
                 <div class="input-container">
                     <i class="fa-solid fa-lock left-icon"></i>
                     <input type="password" name="senha" id="password" placeholder="••••••••" required>
@@ -198,6 +204,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             window.location.href = "<?= $urlRedirecionamento ?>";
         }, 1500);
     <?php endif; ?>
+</script>
+
+<script>
+    // Verifica se veio o status de senha atualizada na URL do login
+    window.addEventListener('load', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'senha_atualizada') {
+            const popup = document.getElementById('popupSucesso');
+            popup.style.display = 'block';
+            
+            // Esconde após 4 segundos
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 4000);
+        }
+    });
 </script>
 
 </body>

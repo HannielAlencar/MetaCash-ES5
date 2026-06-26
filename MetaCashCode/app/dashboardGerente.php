@@ -155,6 +155,7 @@ if (empty($categorias_agrupadas)) {
     $categorias_valores = array_values($categorias_agrupadas);
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full">
 <head>

@@ -118,19 +118,32 @@ if (!function_exists('formatarMoeda')) {
     }
 }
 
-// Adicione isto para buscar o saldo inicial da empresa
+// ... após o seu require_once e verificação de sessão
+
+$id_empresa = $_SESSION['id_empresa'] ?? 0;
 $saldo_inicial = 0;
+
+// 1. BUSCAR SALDO INICIAL NO BANCO
 try {
-    $stmtSaldo = $pdo->prepare("SELECT saldo_inicial FROM empresas WHERE id = ?");
+    $stmtSaldo = $pdo->prepare("SELECT saldo_inicial FROM empresas WHERE id_empresa = ?");
     $stmtSaldo->execute([$id_empresa]);
-    $empresa_data = $stmtSaldo->fetch(PDO::FETCH_ASSOC);
-    $saldo_inicial = (float)($empresa_data['saldo_inicial'] ?? 0);
+    $dadosEmpresa = $stmtSaldo->fetch(PDO::FETCH_ASSOC);
+    
+    if ($dadosEmpresa) {
+        $saldo_inicial = (float)$dadosEmpresa['saldo_inicial'];
+    }
 } catch (PDOException $e) {
     error_log("Erro ao buscar saldo inicial: " . $e->getMessage());
 }
 
-// Mude o cálculo do saldo total para incluir o saldo inicial:
-$saldo_total = $saldo_inicial + ($receita - $despesa);
+// ... (resto do seu código que busca as transações e calcula $receita e $despesa)
+
+// 2. CALCULAR O SALDO TOTAL CORRETAMENTE
+// Aqui está o segredo: somar o inicial com o saldo do período
+$saldoPeriodo = $receita - $despesa;
+$saldo_total = $saldo_inicial + $saldoPeriodo; 
+
+// ... (resto do código)
 ?>
 
 <!DOCTYPE html>

@@ -179,7 +179,7 @@ try {
                                     <?= htmlspecialchars($reg['desc'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                                 </p>
                                 <div class="flex flex-wrap gap-4 text-xs text-slate-400">
-                                    <span class="flex items-center gap-1.5 capitalize"><i class="far fa-user"></i> <?= htmlspecialchars($reg['perfil'] ?? 'Administrador', ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="flex items-center gap-1.5 capitalize"><i class="far fa-user"></i> <?= htmlspecialchars($reg['perfil'] ?? 'Gerente', ENT_QUOTES, 'UTF-8') ?></span>
                                     <span class="flex items-center gap-1.5"><i class="far fa-clock"></i> <?= htmlspecialchars($reg['data'] ?? date('d/m/Y'), ENT_QUOTES, 'UTF-8') ?>, <?= htmlspecialchars($reg['hora'] ?? '00:00:00', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                             </div>

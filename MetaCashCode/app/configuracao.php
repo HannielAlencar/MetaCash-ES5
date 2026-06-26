@@ -1,5 +1,5 @@
 <?php
-// LINHA 1: Inicia a sessão com segurança para evitar quebras se a sidebar depender de dados logados
+// LINHA 1: Inicia a sessão
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // 1. IMPORTA A CONEXÃO COM O BANCO DE DADOS
 require_once '../config.php'; 
 
-// Trava de segurança corrigida: impede acesso se não estiver logado OU se não possuir o nível exigido
+// Trava de segurança
 if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['nivel_permissao']) || ($_SESSION['nivel_permissao'] !== 'Gerente' && $_SESSION['nivel_permissao'] !== 'Admin')) {
     header("Location: dashboardUsuario.php");
     exit();
@@ -27,14 +27,13 @@ if (isset($_POST['btn_remover_logo']) && $id_empresa) {
         $emp = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($emp && !empty($emp['logo_path']) && file_exists($emp['logo_path'])) {
-            unlink($emp['logo_path']); // Remove arquivo do servidor
+            unlink($emp['logo_path']);
         }
 
         $stmt = $pdo->prepare("UPDATE empresas SET logo_path = NULL WHERE id_empresa = ?");
         $stmt->execute([$id_empresa]);
         
-        $_SESSION['logo_path'] = null; // ATUALIZA A SESSÃO IMEDIATAMENTE PARA AS SIDEBARS
-        
+        $_SESSION['logo_path'] = null;
         header("Location: " . $_SERVER['PHP_SELF'] . "?sucesso=logo_removida");
         exit;
     } catch (PDOException $e) {
@@ -52,14 +51,13 @@ if (isset($_POST['btn_reset_padrao_logo']) && $id_empresa) {
         $emp = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($emp && !empty($emp['logo_path']) && file_exists($emp['logo_path'])) {
-            unlink($emp['logo_path']); // Remove o arquivo personalizado do servidor
+            unlink($emp['logo_path']);
         }
 
         $stmt = $pdo->prepare("UPDATE empresas SET logo_path = NULL WHERE id_empresa = ?");
         $stmt->execute([$id_empresa]);
         
-        $_SESSION['logo_path'] = null; // ATUALIZA A SESSÃO IMEDIATAMENTE PARA AS SIDEBARS
-        
+        $_SESSION['logo_path'] = null;
         header("Location: " . $_SERVER['PHP_SELF'] . "?sucesso=logo_restaurada");
         exit;
     } catch (PDOException $e) {
@@ -68,7 +66,7 @@ if (isset($_POST['btn_reset_padrao_logo']) && $id_empresa) {
 }
 
 // ==========================================
-// LÓGICA 1: REMOVER CATEGORIA (Via GET)
+// LÓGICA 1: REMOVER CATEGORIA
 // ==========================================
 if (isset($_GET['delete_categoria']) && $id_empresa) {
     $id_del = (int) $_GET['delete_categoria'];
@@ -87,7 +85,7 @@ if (isset($_GET['delete_categoria']) && $id_empresa) {
 }
 
 // ==========================================
-// LÓGICA 2: ADICIONAR NOVA CATEGORIA (POST)
+// LÓGICA 2: ADICIONAR NOVA CATEGORIA
 // ==========================================
 if (isset($_POST['btn_add_categoria']) && $id_empresa) {
     $nome_cat = trim($_POST['nome_categoria']);
@@ -113,15 +111,17 @@ if (isset($_POST['btn_add_categoria']) && $id_empresa) {
 }
 
 // ==========================================
-// LÓGICA 3: ATUALIZAR EMPRESA E LOGO (POST)
+// LÓGICA 3: ATUALIZAR EMPRESA (COM DATA INÍCIO)
 // ==========================================
 if (isset($_POST['btn_update_empresa']) && $id_empresa) {
     $nome_emp = trim($_POST['nome_empresa'] ?? '');
     $cnpj_emp = preg_replace('/[^0-9]/', '', $_POST['cnpj'] ?? '');
+    $data_inicio = !empty($_POST['data_inicio']) ? $_POST['data_inicio'] : null; // Captura a data
     
     try {
-        $stmt = $pdo->prepare("UPDATE empresas SET nome_empresa = ?, cnpj = ? WHERE id_empresa = ?");
-        $stmt->execute([$nome_emp, $cnpj_emp, $id_empresa]);
+        // Atualiza inclusive a data_inicio
+        $stmt = $pdo->prepare("UPDATE empresas SET nome_empresa = ?, cnpj = ?, data_inicio = ? WHERE id_empresa = ?");
+        $stmt->execute([$nome_emp, $cnpj_emp, $data_inicio, $id_empresa]);
         
         if (isset($_FILES['logo_empresa']) && $_FILES['logo_empresa']['error'] === UPLOAD_ERR_OK) {
             $extensoes_permitidas = ['png', 'jpg', 'jpeg', 'svg'];
@@ -139,8 +139,7 @@ if (isset($_POST['btn_update_empresa']) && $id_empresa) {
                 if (move_uploaded_file($_FILES['logo_empresa']['tmp_name'], $caminho_completo)) {
                     $stmtLogo = $pdo->prepare("UPDATE empresas SET logo_path = ? WHERE id_empresa = ?");
                     $stmtLogo->execute([$caminho_completo, $id_empresa]);
-                    
-                    $_SESSION['logo_path'] = $caminho_completo; // ATUALIZA A SESSÃO IMEDIATAMENTE PARA AS SIDEBARS
+                    $_SESSION['logo_path'] = $caminho_completo;
                 }
             } else {
                 $mensagem_erro = "Formato de imagem inválido. Use PNG, JPG ou SVG.";
@@ -176,11 +175,11 @@ $categorias_padrao = [
 
 if ($id_empresa) {
     try {
-        $stmtEmp = $pdo->prepare("SELECT nome_empresa, cnpj, logo_path FROM empresas WHERE id_empresa = ?");
+        // Incluído data_inicio na busca
+        $stmtEmp = $pdo->prepare("SELECT nome_empresa, cnpj, logo_path, data_inicio FROM empresas WHERE id_empresa = ?");
         $stmtEmp->execute([$id_empresa]);
         $empresa_atual = $stmtEmp->fetch(PDO::FETCH_ASSOC) ?: [];
         
-        // Sincronização preventiva da sessão ao carregar a página
         if (!empty($empresa_atual['logo_path'])) {
             $_SESSION['logo_path'] = $empresa_atual['logo_path'];
         } else {

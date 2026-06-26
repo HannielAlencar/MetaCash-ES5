@@ -190,7 +190,7 @@ try {
                 </div>
                 <div class="relative w-full md:w-auto">
                     <select id="filtroCargo" class="w-full md:w-48 pl-10 pr-8 py-3 rounded-xl border-none bg-gray-50 appearance-none outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer text-sm">
-                        <option value="todos">Todos os Níveis</option>
+                        <option value="todos">Filtros</option>
                         <option value="gerente">Gerentes</option>
                         <option value="membro">Membros</option>
                     </select>
@@ -302,7 +302,7 @@ try {
                 </div>
 
                 <div class="flex gap-4 pt-4 border-t border-slate-100">
-                    <button type="button" onclick="toggleModal('modalMembro')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all text-sm">Cancel</button>
+                    <button type="button" onclick="toggleModal('modalMembro')" class="flex-1 py-4 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all text-sm">Cancelar</button>
                     <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-meta-menu to-meta-destaque text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition ">Criar Conta</button>
                 </div>
             </form>

@@ -29,6 +29,10 @@ if ($status === 'campos_vazios') {
 </head>
 <body class="min-h-screen bg-[url('../assets/img/fundo.png')] bg-cover bg-center bg-no-repeat flex items-center justify-center p-4">
 
+    <div id="popupSucesso" class="fixed top-5 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-6 py-3 rounded-xl shadow-lg hidden z-[100] font-bold">
+        Senha alterada com sucesso
+    </div>
+
     <div class="w-full max-w-md">
 
         <?php if ($linkInvalido): ?>
@@ -174,6 +178,18 @@ if ($status === 'campos_vazios') {
             lucide.createIcons();
         }
 
+        // Verifica se veio sucesso na URL
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('status') === 'sucesso') {
+                const popup = document.getElementById('popupSucesso');
+                popup.style.display = 'block';
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 3000);
+            }
+        });
+
         const novaSenha = document.getElementById('nova_senha');
         const confirmarSenha = document.getElementById('confirmar_senha');
         const avisoMatch = document.getElementById('avisoMatch');
@@ -181,10 +197,8 @@ if ($status === 'campos_vazios') {
         const matchIcon = document.getElementById('matchIcon');
         const btnSubmit = document.getElementById('btnSubmit');
 
-        // Monitora as senhas e atualiza os marcadores de bolinha (verde/cinza)
         function validarEstruturaERequisitos() {
             const valor = novaSenha.value;
-
             const regras = {
                 'req-length': valor.length >= 8,
                 'req-upper': /[A-Z]/.test(valor),
@@ -192,23 +206,20 @@ if ($status === 'campos_vazios') {
                 'req-special': /[^a-zA-Z0-9]/.test(valor)
             };
 
-            // Atualiza cada item da lista visualmente
             Object.keys(regras).forEach(id => {
                 const item = document.getElementById(id);
                 const bullet = item.querySelector('.bullet');
                 if (regras[id]) {
-                    bullet.className = 'bullet w-1.5 h-1.5 rounded-full bg-[#35C59A]'; // Verde
+                    bullet.className = 'bullet w-1.5 h-1.5 rounded-full bg-[#35C59A]';
                     item.classList.add('text-[#35C59A]');
                 } else {
-                    bullet.className = 'bullet w-1.5 h-1.5 rounded-full bg-gray-300'; // Cinza padrão
+                    bullet.className = 'bullet w-1.5 h-1.5 rounded-full bg-gray-300';
                     item.classList.remove('text-[#35C59A]');
                 }
             });
-
             verificarIgualdade();
         }
 
-        // Verifica se as senhas coincidem e gerencia o botão
         function verificarIgualdade() {
             const senha = novaSenha.value;
             const confirmacao = confirmarSenha.value;
@@ -217,7 +228,6 @@ if ($status === 'campos_vazios') {
                 avisoMatch.classList.add('hidden');
                 return;
             }
-
             avisoMatch.classList.remove('hidden');
 
             if (senha === confirmacao) {

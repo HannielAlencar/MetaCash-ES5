@@ -119,14 +119,12 @@
 
         <div class="grid grid-cols-3 gap-6">
             <div class="col-span-2 space-y-6">
-                <!-- Configurações Gerais -->
                 <section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                     <h4 class="font-bold text-slate-800 mb-4"><i class="fas fa-cog mr-2 text-slate-400"></i> Configurações Gerais</h4>
                     <label class="text-xs font-bold text-slate-500 uppercase">Fonte</label>
                     <select id="select-fonte" class="w-full border rounded-lg p-3 mt-1 mb-4 bg-white">
                         <option value="Inter">Inter</option>
                         <option value="Roboto">Roboto</option>
-                        <option value="Poppins">Poppins</option>
                     </select>
                     <label class="text-xs font-bold text-slate-500 uppercase">Tamanho da Fonte</label>
                     <div id="btn-group-fonte" class="grid grid-cols-2 gap-4 mt-1 mb-2">
@@ -137,61 +135,48 @@
                     </div>
                 </section>
 
-                <!-- Categorias dos Gráficos -->
-                <section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                    <h4 class="font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-filter mr-2 text-slate-400"></i> Categorias dos Gráficos</h4>
-                    <div class="space-y-4">
-                        <div id="grupo-receitas">
-                            <div class="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
-                                <span class="contador">Receitas (4/4)</span>
-                                <span class="text-meta-destaque cursor-pointer hover:underline btn-toggle-todas">Desmarcar Todas</span>
-                            </div>
-                            <div class="space-y-2 checkboxes-container">
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="receitas" value="venda_produtos" checked> Venda de Produtos</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="receitas" value="prestacao_servicos" checked> Prestação de Serviços</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="receitas" value="rendimentos" checked> Rendimentos</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="receitas" value="outras_receitas" checked> Outras Receitas</label>
-                            </div>
-                        </div>
-                        <hr>
-                        <div id="grupo-despesas">
-                            <div class="flex justify-between text-xs font-bold text-slate-500 uppercase mb-2">
-                                <span class="contador">Despesas (7/7)</span>
-                                <span class="text-meta-destaque cursor-pointer hover:underline btn-toggle-todas">Desmarcar Todas</span>
-                            </div>
-                            <div class="space-y-2 checkboxes-container">
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="despesas" value="folha_pagamento" checked> Folha de Pagamento</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="despesas" value="despesas_operacionais" checked> Despesas Operacionais</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="despesas" value="fornecedores" checked> Fornecedores</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="despesas" value="marketing_vendas" checked> Marketing e Vendas</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="despesas" value="impostos_taxas" checked> Impostos e Taxas</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="despesas" value="ti_equipamentos" checked> TI e Equipamentos</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="despesas" value="outras_despesas" checked> Outras Despesas</label>
-                            </div>
-                        </div>
-                    </div>
-                </section>
 
-                <!-- Textos Personalizados -->
                 <section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                     <h4 class="font-bold text-slate-800 mb-6 flex items-center"><i class="fas fa-pen mr-2 text-slate-400"></i> Textos Personalizados</h4>
                     <div class="space-y-4" id="container-textos">
-                        <div><label class="text-[10px] uppercase font-bold text-slate-500">Título da Página</label><input data-id="titulo_pagina" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Visão Geral Financeira"></div>
-                        <div><label class="text-[10px] uppercase font-bold text-slate-500">Card de Saldo</label><input data-id="card_saldo" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Saldo Total"></div>
-                        <div><label class="text-[10px] uppercase font-bold text-slate-500">Card de Receitas</label><input data-id="card_receitas" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Receitas"></div>
-                        <div><label class="text-[10px] uppercase font-bold text-slate-500">Card de Despesas</label><input data-id="card_despesas" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Despesas"></div>
-                        <div><label class="text-[10px] uppercase font-bold text-slate-500">Título do Gráfico de Receitas</label><input data-id="titulo_grafico_receitas" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Receitas vs Despesas"></div>
-                        <div><label class="text-[10px] uppercase font-bold text-slate-500">Título do Gráfico de Despesas</label><input data-id="titulo_grafico_despesas" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Despesas por Categoria"></div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500">Título da Página</label>
+                            <input data-id="titulo_pagina" maxlength="100" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Visão Geral Financeira">
+                            <div class="text-right text-[11px] text-slate-400 mt-0.5"><span id="char-titulo_pagina">0</span> / 100</div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500">Card de Saldo</label>
+                            <input data-id="card_saldo" maxlength="100" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Saldo Total">
+                            <div class="text-right text-[11px] text-slate-400 mt-0.5"><span id="char-card_saldo">0</span> / 100</div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500">Card de Receitas</label>
+                            <input data-id="card_receitas" maxlength="100" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Receitas">
+                            <div class="text-right text-[11px] text-slate-400 mt-0.5"><span id="char-card_receitas">0</span> / 100</div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500">Card de Despesas</label>
+                            <input data-id="card_despesas" maxlength="100" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Despesas">
+                            <div class="text-right text-[11px] text-slate-400 mt-0.5"><span id="char-card_despesas">0</span> / 100</div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500">Título do Gráfico de Receitas</label>
+                            <input data-id="titulo_grafico_receitas" maxlength="100" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Receitas vs Despesas">
+                            <div class="text-right text-[11px] text-slate-400 mt-0.5"><span id="char-titulo_grafico_receitas">0</span> / 100</div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-500">Título do Gráfico de Despesas</label>
+                            <input data-id="titulo_grafico_despesas" maxlength="100" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-meta-destaque outline-none" value="Despesas por Categoria">
+                            <div class="text-right text-[11px] text-slate-400 mt-0.5"><span id="char-titulo_grafico_despesas">0</span> / 100</div>
+                        </div>
                     </div>
                 </section>
             </div>
 
-            <!-- Widgets Ativos -->
             <div class="col-span-1">
                 <section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm sticky top-6">
                     <h4 class="font-bold text-slate-800 mb-4" id="contador-widgets">Widgets Ativos (5/5)</h4>
                     <div class="space-y-3" id="container-widgets">
-                        <!-- Widget 1 -->
                         <div class="border rounded-lg p-3 text-xs widget-item" data-widget="saldo_total">
                             <div class="flex justify-between items-center font-bold mb-2">
                                 <span>1 <i class="fas fa-dollar-sign ml-1"></i> Saldo Total</span>
@@ -199,34 +184,25 @@
                                     <i class="fas fa-eye cursor-pointer btn-visibilidade text-slate-800"></i>
                                 </div>
                             </div>
-                            <div class="flex gap-2 btn-sizes">
-                                <button data-size="P" class="border px-3 py-1 rounded hover:bg-slate-50 transition">Pequeno</button>
-                                <button data-size="M" class="border px-3 py-1 rounded hover:bg-slate-50 transition">Médio</button>
-                                <button data-size="G" class="bg-meta-destaque text-white px-3 py-1 rounded font-semibold transition">Grande</button>
-                            </div>
                         </div>
-                        <!-- Widget 2 -->
                         <div class="border rounded-lg p-3 flex justify-between items-center text-xs widget-item" data-widget="receitas">
                             <span>2 Receitas</span>
                             <div class="text-slate-800 flex gap-2">
                                 <i class="fas fa-eye cursor-pointer btn-visibilidade"></i>
                             </div>
                         </div>
-                        <!-- Widget 3 -->
                         <div class="border rounded-lg p-3 flex justify-between items-center text-xs widget-item" data-widget="despesas">
                             <span>3 Despesas</span>
                             <div class="text-slate-800 flex gap-2">
                                 <i class="fas fa-eye cursor-pointer btn-visibilidade"></i>
                             </div>
                         </div>
-                        <!-- Widget 4 -->
                         <div class="border rounded-lg p-3 flex justify-between items-center text-xs widget-item" data-widget="total_transacoes">
                             <span>4 Total de Transações</span>
                             <div class="text-slate-800 flex gap-2">
                                 <i class="fas fa-eye cursor-pointer btn-visibilidade"></i>
                             </div>
                         </div>
-                        <!-- Widget 5 -->
                         <div class="border rounded-lg p-3 flex justify-between items-center text-xs widget-item" data-widget="grafico_despesas">
                             <span>5 Gráfico de Despesas</span>
                             <div class="text-slate-800 flex gap-2">
@@ -242,7 +218,6 @@
         </div>
     </main>
 
-    <!-- Modal Relatório (Escondido por padrão) -->
     <div id="modalRelatorio" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -311,10 +286,13 @@
         });
         atualizarContadoresCategorias();
 
-        // 3. Textos
+        // 3. Textos e atualizadores de contadores de caracteres
         Object.keys(estado.textos).forEach(id => {
             const input = document.querySelector(`input[data-id="${id}"]`);
-            if(input) input.value = estado.textos[id];
+            if(input) {
+                input.value = estado.textos[id];
+                atualizarContadorCaracteresIndiv(id, input.value.length);
+            }
         });
 
         // 4. Widgets
@@ -377,10 +355,12 @@
             });
         });
 
-        // Eventos inputs de texto
+        // Eventos inputs de texto com contador de caracteres
         document.querySelectorAll('#container-textos input').forEach(input => {
             input.addEventListener('input', (e) => {
-                estado.textos[e.target.dataset.id] = e.target.value;
+                const id = e.target.dataset.id;
+                estado.textos[id] = e.target.value;
+                atualizarContadorCaracteresIndiv(id, e.target.value.length);
             });
         });
 
@@ -437,6 +417,19 @@
         const total = Object.keys(estado.widgets).length;
         const ativos = Object.values(estado.widgets).filter(w => w.visivel).length;
         document.getElementById('contador-widgets').innerText = `Widgets Ativos (${ativos}/${total})`;
+    }
+
+    function atualizarContadorCaracteresIndiv(id, totalCaracteres) {
+        const span = document.getElementById(`char-${id}`);
+        if(span) {
+            span.innerText = totalCaracteres;
+            // Se chegar no limite, muda a cor do texto para vermelho indicando aviso
+            if (totalCaracteres >= 100) {
+                span.parentNode.className = "text-right text-[11px] text-red-500 font-medium mt-0.5";
+            } else {
+                span.parentNode.className = "text-right text-[11px] text-slate-400 mt-0.5";
+            }
+        }
     }
 
     // Métodos de persistência principal

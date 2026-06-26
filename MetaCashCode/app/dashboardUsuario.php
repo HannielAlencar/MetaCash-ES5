@@ -259,7 +259,7 @@ if (empty($categorias_agrupadas)) {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <?php 
-                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBonecos.png'];
+                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBoneco.png'];
                 $i_card = 0;
                 foreach($cards as $titulo => $info): 
                     $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : '../assets/img/iconeSifrao.png';

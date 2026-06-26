@@ -9,7 +9,7 @@ require_once '../config.php';
 
 $id_usuario = $_SESSION['usuario_id'] ?? null;
 // Captura o perfil do usuário da sessão
-$perfil_usuario = $_SESSION['nome_completo'] ?? 'Administrador'; 
+$perfil_usuario = $_SESSION['nome_completo'] ?? 'Gerente'; 
 $registros = [];
 
 try {

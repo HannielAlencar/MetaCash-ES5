@@ -24,25 +24,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'fonte_pagina', 'tamanho_fonte', 'vis_receitas', 'vis_despesas', 'vis_saldo', 'vis_lista'
     ];
     
-    try {
-        $sql = "INSERT INTO configs_paginas (id_empresa, chave_config, valor_config) 
-                VALUES (:empresa, :chave, :valor)
-                ON CONFLICT (chave_config, id_empresa) 
-                DO UPDATE SET valor_config = EXCLUDED.valor_config";
+    // Lista de campos que exigem validação de tamanho máximo de 100 caracteres
+    $campos_com_limite = ['titulo_pagina', 'subtitulo_pagina', 'texto_botao', 'placeholder_busca', 'mensagem_vazio'];
     
-        $stmt = $pdo->prepare($sql);
-
-        foreach ($chaves_permitidas as $chave) {
-            if (isset($_POST[$chave])) {
-                $valor = trim($_POST[$chave]);
-                $stmt->execute([
-                    ':empresa' => $id_empresa, 
-                    ':chave'   => $chave, 
-                    ':valor'   => $valor
-                ]);
+    try {
+        $validacao_ok = true;
+        
+        // Validação no Back-end por segurança
+        foreach ($campos_com_limite as $campo_validar) {
+            if (isset($_POST[$campo_validar]) && mb_strlen(trim($_POST[$campo_validar])) > 100) {
+                $validacao_ok = false;
+                $mensagem_erro = "Erro: Os campos de texto personalizado não podem passar de 100 caracteres.";
+                break;
             }
         }
-        $mensagem_sucesso = "Configurações salvas com sucesso!";
+
+        if ($validacao_ok) {
+            $sql = "INSERT INTO configs_paginas (id_empresa, chave_config, valor_config) 
+                    VALUES (:empresa, :chave, :valor)
+                    ON CONFLICT (chave_config, id_empresa) 
+                    DO UPDATE SET valor_config = EXCLUDED.valor_config";
+        
+            $stmt = $pdo->prepare($sql);
+
+            foreach ($chaves_permitidas as $chave) {
+                if (isset($_POST[$chave])) {
+                    $valor = trim($_POST[$chave]);
+                    $stmt->execute([
+                        ':empresa' => $id_empresa, 
+                        ':chave'   => $chave, 
+                        ':valor'   => $valor
+                    ]);
+                }
+            }
+            $mensagem_sucesso = "Configurações salvas com sucesso!";
+        }
     } catch (Exception $e) {
         $mensagem_erro = "Erro ao salvar: " . $e->getMessage();
     }
@@ -139,7 +155,6 @@ function getVisibilityClasses($isActive) {
             --meta-clara: #38BDF8;
             --meta-fundo: #F8FAFC;
         }
-        /* Fix aplicado abaixo: removida a variável dinâmica para não afetar esta página */
         body { font-family: 'Inter', sans-serif; } 
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -160,6 +175,8 @@ function getVisibilityClasses($isActive) {
             </div>
         </header>
 
+        <div id="js-alert-container"></div>
+
         <?php if ($mensagem_sucesso): ?>
             <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center">
                 <i class="fas fa-check-circle mr-3 text-emerald-500"></i> <span class="font-medium"><?= $mensagem_sucesso ?></span>
@@ -171,7 +188,7 @@ function getVisibilityClasses($isActive) {
             </div>
         <?php endif; ?>
 
-        <form action="" method="POST" id="formConfig">
+        <form action="" method="POST" id="formConfig" onsubmit="return validarFormulario(event)">
             <input type="hidden" name="tamanho_fonte" id="input_tamanho_fonte" value="<?= htmlspecialchars($config_tamanho) ?>">
             <input type="hidden" name="vis_receitas" id="input_vis_receitas" value="<?= htmlspecialchars($config_vis_receitas) ?>">
             <input type="hidden" name="vis_despesas" id="input_vis_despesas" value="<?= htmlspecialchars($config_vis_despesas) ?>">
@@ -187,10 +204,6 @@ function getVisibilityClasses($isActive) {
                         <select name="fonte_pagina" class="w-full border border-slate-200 rounded-lg p-3 mt-1 mb-4 bg-white focus:ring-2 focus:ring-meta-destaque outline-none">
                             <option value="Inter" <?= $config_fonte == 'Inter' ? 'selected' : '' ?>>Inter</option>
                             <option value="Roboto" <?= $config_fonte == 'Roboto' ? 'selected' : '' ?>>Roboto</option>
-                            <option value="Poppins" <?= $config_fonte == 'Poppins' ? 'selected' : '' ?>>Poppins</option>
-                            <option value="Montserrat" <?= $config_fonte == 'Montserrat' ? 'selected' : '' ?>>Montserrat</option>
-                            <option value="Lato" <?= $config_fonte == 'Lato' ? 'selected' : '' ?>>Lato</option>
-                            <option value="OpenSans" <?= $config_fonte == 'OpenSans' ? 'selected' : '' ?>>Open Sans</option>
                         </select>
                         
                         <label class="text-xs font-bold text-slate-500 uppercase">Tamanho da Fonte</label>
@@ -203,30 +216,34 @@ function getVisibilityClasses($isActive) {
                     </section>
 
                     <section class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                        <h4 class="font-bold text-slate-800 mb-6 flex items-center"><i class="fas fa-pen mr-2 text-slate-400"></i> Textos Personalizados</h4>
+                        <h4 class="font-bold text-slate-800 mb-6 flex items-center"><i class="fas fa-pen mr-2 text-slate-400"></i> Textos Personalizados (Máx. 100 caracteres)</h4>
                         <div class="space-y-6">
                             <div>
                                 <label class="text-xs font-bold text-slate-500 uppercase">Título da Página</label>
-                                <input type="text" name="titulo_pagina" value="<?= htmlspecialchars($config_titulo) ?>" class="w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <input type="text" name="titulo_pagina" maxlength="100" value="<?= htmlspecialchars($config_titulo) ?>" class="input-valida w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <span class="text-xs text-slate-400 contador"></span>
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-slate-500 uppercase">Subtítulo da Página</label>
-                                <input type="text" name="subtitulo_pagina" value="<?= htmlspecialchars($config_subtitulo) ?>" class="w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <input type="text" name="subtitulo_pagina" maxlength="100" value="<?= htmlspecialchars($config_subtitulo) ?>" class="input-valida w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <span class="text-xs text-slate-400 contador"></span>
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-slate-500 uppercase">Texto do Botão Adicionar</label>
-                                <input type="text" name="texto_botao" value="<?= htmlspecialchars($config_botao) ?>" class="w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <input type="text" name="texto_botao" maxlength="100" value="<?= htmlspecialchars($config_botao) ?>" class="input-valida w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <span class="text-xs text-slate-400 contador"></span>
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-slate-500 uppercase">Texto de Busca (Placeholder)</label>
-                                <input type="text" name="placeholder_busca" value="<?= htmlspecialchars($config_busca) ?>" class="w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <input type="text" name="placeholder_busca" maxlength="100" value="<?= htmlspecialchars($config_busca) ?>" class="input-valida w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <span class="text-xs text-slate-400 contador"></span>
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-slate-500 uppercase">Mensagem Quando Vazio</label>
-                                <input type="text" name="mensagem_vazio" value="<?= htmlspecialchars($config_vazio) ?>" class="w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <input type="text" name="mensagem_vazio" maxlength="100" value="<?= htmlspecialchars($config_vazio) ?>" class="input-valida w-full border border-slate-200 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-meta-destaque outline-none">
+                                <span class="text-xs text-slate-400 contador"></span>
                             </div>
                         </div>
-                        <p class="text-xs text-slate-400 mt-4 italic"><i class="fas fa-lightbulb text-meta-clara mr-1"></i> Personalize os textos para adequar ao seu contexto de negócio</p>
                     </section>
                 </div>
 
@@ -234,7 +251,6 @@ function getVisibilityClasses($isActive) {
                     <section class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-6">Colunas Visíveis</h4>
                         <div class="space-y-3">
-                            
                             <?php $cls = getVisibilityClasses($config_vis_receitas); ?>
                             <div id="card_vis_receitas" class="border rounded-xl p-3 flex justify-between items-center transition <?= $cls[0] ?>">
                                 <div class="flex items-center gap-3">
@@ -278,7 +294,6 @@ function getVisibilityClasses($isActive) {
                                     <i onclick="toggleVisibility('vis_lista')" id="icon_vis_lista" class="<?= $cls[1] ?> cursor-pointer transition"></i>
                                 </div>
                             </div>
-
                         </div>
                     </section>
 
@@ -292,6 +307,56 @@ function getVisibilityClasses($isActive) {
     </main>
 
     <script>
+        // Contador regressivo de caracteres em tempo real
+        document.querySelectorAll('.input-valida').forEach(input => {
+            const contador = input.nextElementSibling;
+            
+            function atualizarContador() {
+                const total = input.value.trim().length;
+                const restantes = 100 - total;
+                contador.textContent = `${restantes} caracteres restantes`;
+                
+                if(restantes < 0) {
+                    contador.className = "text-xs text-rose-500 font-medium block mt-1";
+                } else if(restantes <= 15) {
+                    contador.className = "text-xs text-amber-500 font-medium block mt-1";
+                } else {
+                    contador.className = "text-xs text-slate-400 font-medium block mt-1";
+                }
+            }
+            
+            input.addEventListener('input', atualizarContador);
+            atualizarContador();
+        });
+
+        function validarFormulario(event) {
+            const inputs = document.querySelectorAll('.input-valida');
+            let formValido = true;
+            
+            inputs.forEach(input => {
+                if (input.value.trim().length > 100) {
+                    formValido = false;
+                    input.classList.add('border-rose-400', 'ring-2', 'ring-rose-200');
+                } else {
+                    input.classList.remove('border-rose-400', 'ring-2', 'ring-rose-200');
+                }
+            });
+
+            if (!formValido) {
+                event.preventDefault();
+                const container = document.getElementById('js-alert-container');
+                container.innerHTML = `
+                    <div class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center shadow-sm">
+                        <i class="fas fa-exclamation-circle mr-3 text-rose-500 text-lg"></i> 
+                        <span class="font-medium">Atenção: Um ou mais campos ultrapassaram o limite máximo de 100 caracteres!</span>
+                    </div>
+                `;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return false;
+            }
+            return true;
+        }
+
         function setTamanhoFonte(tamanho, btnSelecionado) {
             document.getElementById('input_tamanho_fonte').value = tamanho;
             const botoes = document.querySelectorAll('.btn-fonte');

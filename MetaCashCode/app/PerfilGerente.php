@@ -12,6 +12,11 @@ $id_empresa = $_SESSION['id_empresa'] ?? 27;
 
 $alerta_js = ""; // Variável para exibir alertas
 
+// VERIFICAÇÃO PARA O POPUP DE SUCESSO (Adicionado)
+if (isset($_GET['sucesso']) && $_GET['sucesso'] === 'perfil_atualizado') {
+    $alerta_js = "<script>alert('Informações pessoais atualizadas com sucesso!');</script>";
+}
+
 // ==========================================
 // LÓGICA 1: ATUALIZAR INFORMAÇÕES PESSOAIS (PERFIL)
 // ==========================================

@@ -281,6 +281,10 @@ $saldo_total = $saldo_inicial + $saldoPeriodo;
 
             <?php if ($cfg['vis_lista'] == '1'): ?>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800">Transações Recentes</h3>
+                    <a href="../app/transacoesGerente.php" class="text-xs font-bold text-meta-destaque hover:underline uppercase">Ver todas</a>
+                </div>
                 <?php 
                     if (empty($transacoes)) {
                         echo "<p class='p-6 text-center text-gray-500'>Nenhuma transação encontrada no ID Empresa " . htmlspecialchars($id_empresa) . ".</p>";

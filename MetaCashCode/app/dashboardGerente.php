@@ -218,6 +218,11 @@ if (empty($categorias_agrupadas)) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/dashboardGerente.css">
+
+    <?php
+    // Inclui as cores dinâmicas para esta página e sobrepõe as variáveis base do CSS
+    require_once __DIR__ . '/carregar_tema.php';
+    ?>
 </head>
 <body class="bg-meta-fundo text-slate-800 font-sans transition-colors duration-200 min-h-screen antialiased flex overflow-x-hidden">
 
@@ -261,7 +266,7 @@ if (empty($categorias_agrupadas)) {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <?php 
-                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBonecos.png'];
+                $icones_cards = ['../assets/img/iconeSifrao.png', '../assets/img/iconeSeta.png', '../assets/img/iconeCartao.png', '../assets/img/iconeBoneco.png'];
                 $i_card = 0;
                 foreach($cards as $titulo => $info): 
                     $icone_atual = isset($icones_cards[$i_card]) ? $icones_cards[$i_card] : '../assets/img/iconeSifrao.png';
@@ -325,7 +330,6 @@ if (empty($categorias_agrupadas)) {
         </div>
     </main>
 
-    <!-- MODAL RELATÓRIO -->
     <div id="modalRelatorio" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-8">
             <div class="flex justify-between items-center mb-8">

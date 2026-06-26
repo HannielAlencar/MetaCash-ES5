@@ -117,6 +117,20 @@ if (!function_exists('formatarMoeda')) {
         return 'R$ ' . number_format($valor, 2, ',', '.');
     }
 }
+
+// Adicione isto para buscar o saldo inicial da empresa
+$saldo_inicial = 0;
+try {
+    $stmtSaldo = $pdo->prepare("SELECT saldo_inicial FROM empresas WHERE id = ?");
+    $stmtSaldo->execute([$id_empresa]);
+    $empresa_data = $stmtSaldo->fetch(PDO::FETCH_ASSOC);
+    $saldo_inicial = (float)($empresa_data['saldo_inicial'] ?? 0);
+} catch (PDOException $e) {
+    error_log("Erro ao buscar saldo inicial: " . $e->getMessage());
+}
+
+// Mude o cálculo do saldo total para incluir o saldo inicial:
+$saldo_total = $saldo_inicial + ($receita - $despesa);
 ?>
 
 <!DOCTYPE html>
@@ -335,8 +349,7 @@ if (!function_exists('formatarMoeda')) {
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Data</label>
-                    <input type="date" name="data" value="<?php echo date('Y-m-d'); ?>" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
-                </div>
+                    <input type="date" name="data" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleModal('modalTransacao')" class="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition">Cancelar</button>
                     <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-meta-menu to-meta-destaque text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Adicionar</button>

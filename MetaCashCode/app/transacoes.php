@@ -19,6 +19,43 @@ $transacoes = [];
 $receita = 0;
 $despesa = 0;
 
+// =========================================================================
+// BLOCO ADICIONADO: VALIDAÇÃO DO GERENTE / USUÁRIO VIA URL (SEM ALTERAR O NATIVO)
+// =========================================================================
+$filtro_usuario_url = "";
+$parametros_adicionais = [];
+
+if (isset($_GET['usuario']) && !empty($_GET['usuario'])) {
+    $slug_usuario_url = $_GET['usuario'];
+    $nivel_permissao_logado = $_SESSION['nivel_permissao'] ?? 'Membro'; 
+
+    try {
+        // Busca se o usuário digitado na URL existe
+        $sql_busca_permissao = "SELECT id_usuario, id_empresa FROM usuarios WHERE nome_usuario = :slug_user LIMIT 1";
+        $stmt_busca_permissao = $pdo->prepare($sql_busca_permissao);
+        $stmt_busca_permissao->execute([':slug_user' => $slug_usuario_url]);
+        $usuario_alvo_sistema = $stmt_busca_permissao->fetch();
+
+        if ($usuario_alvo_sistema) {
+            // Trava de escopo: Só deixa ver se o alvo for da mesma empresa E quem está logado for Gerente/Admin
+            if ($usuario_alvo_sistema['id_empresa'] == $id_empresa && ($nivel_permissao_logado === 'Gerente' || $nivel_permissao_logado === 'Admin')) {
+                $filtro_usuario_url = " AND t.id_usuario = :id_usuario_url ";
+                $parametros_adicionais = [':id_usuario_url' => $usuario_alvo_sistema['id_usuario']];
+            } else if ($usuario_alvo_sistema['id_usuario'] != $_SESSION['usuario_id']) {
+                // Se um membro comum tentar mudar a URL ou se for de outra empresa: Bloqueia imediatamente
+                header("Location: transacoes.php?erro=acesso_negado");
+                exit();
+            }
+        } else {
+            header("Location: transacoes.php?erro=usuario_nao_encontrado");
+            exit();
+        }
+    } catch (PDOException $e) {
+        error_log("Erro no controle de acesso do gerente: " . $e->getMessage());
+    }
+}
+// =========================================================================
+
 // Busca categorias personalizadas da empresa E as categorias padrão do sistema
 $categorias_banco = [];
 try {
@@ -32,7 +69,7 @@ try {
 date_default_timezone_set('America/Sao_Paulo');
 
 try {
-    // --- BUSCA NORMAL RESTAURADA E BLINDADA ---
+    // --- BUSCA NORMAL RESTAURADA E BLINDADA (Injetada com o filtro dinâmico) ---
     $sql = "SELECT 
                 t.id_transacao,
                 t.descricao_transacao AS titulo, 
@@ -43,11 +80,11 @@ try {
                 t.id_transacao AS id
             FROM transacoes t
             LEFT JOIN categoria c ON t.id_categoria = c.id_categoria
-            WHERE t.id_empresa = :empresa
+            WHERE t.id_empresa = :empresa" . $filtro_usuario_url . "
             ORDER BY t.data_transacao DESC, t.id_transacao DESC";
             
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':empresa' => $id_empresa]);
+    $stmt->execute(array_merge([':empresa' => $id_empresa], $parametros_adicionais));
     $transacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Formata a data direto no PHP
@@ -276,7 +313,7 @@ $dados_financeiros = [
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-500 uppercase">Data</label>
-                    <input type="date" name="data" value="<?php echo date('Y-m-d'); ?>" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
+                    <input type="date" name="data" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>" required class="w-full border rounded-xl px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-teal-500 transition">
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="toggleModal('modalTransacao')" class="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition">Cancelar</button>

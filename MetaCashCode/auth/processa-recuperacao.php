@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 
 if (!$email) {
-    header('Location: esqueceuSenha.php?erro=email_invalido');
+    header('Location: esqueceuSenha.php?step=error');
     exit();
 }
 
@@ -47,11 +47,12 @@ try {
             ':data_expiracao' => $data_expiracao
         ]);
     } else {
-        header('Location: esqueceuSenha.php?erro=email_nao_encontrado');
+        // Redireciona para a tela de erro caso o e-mail não exista no banco
+        header('Location: esqueceuSenha.php?step=error');
         exit();
     }
 } catch (Exception $e) {
-    header('Location: esqueceuSenha.php?erro=erro_banco');
+    header('Location: esqueceuSenha.php?step=error');
     exit();
 }
 
@@ -60,12 +61,12 @@ $mail = new PHPMailer(true);
 try {
     // Configurações do Servidor SMTP do Gmail
     $mail->isSMTP();
-    $mail->Host       = 'smtp.gmail.com';                     // Servidor do Gmail
-    $mail->SMTPAuth   = true;                                 // Ativa autenticação SMTP
-    $mail->Username   = 'metacashprojeto@gmail.com';          // Seu e-mail
-    $mail->Password   = 'eqkvlxqmeuettorn';                // ABAIXO: Cole aqui a Senha de App de 16 dígitos (sem espaços)
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Ativa criptografia TLS
-    $mail->Port       = 587;                                  // Porta de conexão TLS
+    $mail->Host       = 'smtp.gmail.com';                                 // Servidor do Gmail
+    $mail->SMTPAuth   = true;                                             // Ativa autenticação SMTP
+    $mail->Username   = 'metacashprojeto@gmail.com';                      // Seu e-mail
+    $mail->Password   = 'eqkvlxqmeuettorn';                               // Senha de App de 16 dígitos
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;                   // Ativa criptografia TLS
+    $mail->Port       = 587;                                              // Porta de conexão TLS
     $mail->CharSet    = 'UTF-8';
 
     // Remetente e Destinatário
@@ -92,13 +93,12 @@ try {
 
     $mail->send();
     
-    header('Location: esqueceuSenha.php?status=enviado');
+    // Sucesso: Passa o step=sent e o e-mail sanitizado para a URL
+    $email_url = urlencode($email);
+    header("Location: esqueceuSenha.php?step=sent&email=" . $email_url);
     exit();
 
 } catch (Exception $e) {
-    // Para te ajudar a debugar se algo der errado, descomente a linha abaixo temporariamente:
-    // echo "Erro no envio: {$mail->ErrorInfo}"; exit;
-    
-    header('Location: esqueceuSenha.php?erro=erro_envio');
+    header('Location: esqueceuSenha.php?step=error');
     exit();
 }

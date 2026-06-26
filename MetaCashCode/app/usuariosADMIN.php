@@ -1,43 +1,36 @@
 <?php
-// Simulação de banco de dados baseado exatamente nos dados do print fornecido
-$usuarios = [
-    [
-        'nome' => 'João Silva',
-        'email' => 'joao.silva@techsolutions.com',
-        'empresa' => 'Tech Solutions LTDA',
-        'funcao' => 'Gerente'
-    ],
-    [
-        'nome' => 'Maria Santos',
-        'email' => 'maria.santos@comerciobrasil.com',
-        'empresa' => 'Comércio Brasil',
-        'funcao' => 'Gerente'
-    ],
-    [
-        'nome' => 'Pedro Oliveira',
-        'email' => 'pedro@startupinovacao.com',
-        'empresa' => 'Startup Inovação',
-        'funcao' => 'Gerente'
-    ],
-    [
-        'nome' => 'Ana Costa',
-        'email' => 'ana.costa@techsolutions.com',
-        'empresa' => 'Tech Solutions LTDA',
-        'funcao' => 'Membro'
-    ]
-];
+// Inclui a conexão com o banco de dados
+require_once '../config.php';
 
-// Função auxiliar para obter as iniciais de cada nome
-function obterIniciais($nome) {
-    $palavras = explode(' ', $nome);
-    $iniciais = '';
-    if (isset($palavras[0])) {
-        $iniciais .= mb_substr($palavras[0], 0, 1, 'UTF-8');
-    }
-    if (isset($palavras[1])) {
-        $iniciais .= mb_substr($palavras[1], 0, 1, 'UTF-8');
-    }
-    return mb_strtoupper($iniciais, 'UTF-8');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$nome_usuario = $_SESSION['nome_usuario'] ?? 'Admin Master';
+$email_usuario = $_SESSION['email_usuario'] ?? 'admin@metacash.com';
+$iniciais = strtoupper(substr(trim($nome_usuario), 0, 1));
+$pagina_atual = strtolower(basename($_SERVER['PHP_SELF']));
+$id_empresa = $_SESSION['id_empresa'] ?? null;
+
+try {
+    // Consulta SQL adaptada para o seu banco real!
+    $query = "SELECT 
+            u.id_usuario, 
+            u.nome_completo AS nome, 
+            u.email, 
+            COALESCE(e.nome_empresa, 'Sistema (Sem Empresa)') AS empresa, 
+            u.nivel_permissao AS funcao 
+          FROM usuarios u 
+          LEFT JOIN empresas e ON u.id_empresa = e.id_empresa";
+    
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+    
+    $usuarios = $stmt->fetchAll(); 
+    
+} catch (PDOException $e) {
+    // CORRIGIDO: Alterado de $empresas para $usuarios
+    $usuarios = []; 
+    $erro_db = "Erro ao buscar usuários: " . $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -61,9 +54,7 @@ function obterIniciais($nome) {
 </head>
 <body class="flex min-h-screen text-slate-800">
 
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-sidebar text-white flex flex-col fixed h-screen z-40 border-r border-slate-800">
-        <!-- Logo -->
+   <aside class="w-64 bg-sidebar text-white flex flex-col fixed h-screen z-40 border-r border-slate-800">
         <div class="flex items-center gap-3 p-6 mb-2 border-b border-slate-700/50">
             <div class="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg">
                 <i class="fas fa-shield-halved text-xl"></i>
@@ -74,38 +65,38 @@ function obterIniciais($nome) {
             </div>
         </div>
 
-        <!-- Navegação -->
         <nav class="flex-1 px-4 py-6 space-y-2">
-            <!-- Item inativo -->
             <a href="empresasADMIN.php" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-xl transition">
                 <i class="far fa-building w-5 text-lg"></i>
                 <span class="font-semibold text-sm">Empresas</span>
             </a>
             
-            <!-- Item Ativo -->
             <a href="usuariosADMIN.php" class="flex items-center gap-3 px-4 py-3 bg-accent text-white rounded-xl shadow-md transition">
                 <i class="fas fa-user-group w-5 text-lg"></i>
                 <span class="font-medium text-sm">Usuários</span>
             </a>
         </nav>
 
-        <!-- Perfil e Sair -->
-        <div class="p-4 border-t border-slate-700/50">
-            <div class="bg-sidebar-darker p-3 rounded-xl flex items-center gap-3 mb-4 border border-slate-700/50">
-                <div class="w-9 h-9 bg-accent rounded-full flex items-center justify-center text-white shrink-0">
-                    <i class="fas fa-shield-halved text-sm"></i>
-                </div>
-                <div class="flex flex-col overflow-hidden">
-                    <span class="text-sm font-bold truncate text-white">Admin Master</span>
-                    <span class="text-[11px] text-slate-400 truncate">admin@metacash.com</span>
-                </div>
+        <div class="mt-auto pt-6 border-t border-slate-800 space-y-4 pb-2">
+        <a class="bg-[#1e3a5f]/40 p-3 rounded-2xl flex items-center gap-3 border <?= $pagina_atual === 'usuariosADMIN.php' ? 'border-[#2dd4bf]' : 'border-slate-700/50' ?> hover:bg-[#1e3a5f]/60 transition block group">
+            <div class="w-10 h-10 bg-[#2dd4bf] rounded-full flex items-center justify-center text-[#0f172a] font-bold text-lg shrink-0 group-hover:scale-105 transition-transform">
+                <?= htmlspecialchars($iniciais, ENT_QUOTES, 'UTF-8') ?>
             </div>
-            <a href="../auth/loginADMIN.php" class="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition">
-                <i class="fas fa-arrow-right-from-bracket w-5"></i>
-                <span class="font-medium text-sm">Sair</span>
-            </a>
-        </div>
-    </aside>
+            <div class="flex flex-col overflow-hidden">
+                <span class="text-sm font-bold truncate text-white"><?= htmlspecialchars($nome_usuario, ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="text-[10px] text-gray-400 truncate"><?= htmlspecialchars($email_usuario, ENT_QUOTES, 'UTF-8') ?></span>
+            </div>
+        </a>
+    </div>
+
+    <div class="border-t border-slate-700 pt-4">
+        <form method="POST" action="../auth/logout.php">
+            <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-slate-800 hover:text-red-300 transition text-left">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i><span class="font-medium">Sair</span>
+            </button>
+        </form>
+    </div>
+</aside>
 
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="ml-64 flex-1 p-10">
@@ -142,15 +133,16 @@ function obterIniciais($nome) {
                 <!-- Corpo da Tabela -->
                 <tbody class="divide-y divide-slate-200" id="tabelaCorpo">
                     <?php foreach ($usuarios as $usuario): ?>
-                    <tr class="hover:bg-slate-50/50 transition row-usuario" 
-                        data-nome="<?= htmlspecialchars(strtolower($usuario['nome'])) ?>" 
+                    <tr class="hover:bg-slate-50/50 transition row-usuario"
+                        data-id="<?= $usuario['id_usuario'] ?>"
+                        data-nome="<?= htmlspecialchars(strtolower($usuario['nome'])) ?>"
                         data-email="<?= htmlspecialchars(strtolower($usuario['email'])) ?>" 
                         data-empresa="<?= htmlspecialchars(strtolower($usuario['empresa'])) ?>">
                         
                         <!-- Coluna Usuário (Avatar + Nome e E-mail) -->
                         <td class="py-5 px-6 flex items-center gap-4">
                             <div class="w-11 h-11 bg-teal-500/10 text-teal-600 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border border-teal-500/20">
-                                <?= obterIniciais($usuario['nome']) ?>
+                                <?= $iniciais; ?>
                             </div>
                             <div>
                                 <p class="font-bold text-sm text-[#0b192c]"><?= htmlspecialchars($usuario['nome']) ?></p>
@@ -163,9 +155,13 @@ function obterIniciais($nome) {
                             <?= htmlspecialchars($usuario['empresa']) ?>
                         </td>
                         
-                        <!-- Coluna Funções (Badges Dinâmicos com ícones idênticos) -->
                         <td class="py-5 px-6">
-                            <?php if ($usuario['funcao'] === 'Gerente'): ?>
+                            <?php if ($usuario['funcao'] === 'Admin'): ?>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-black text-white shadow-sm">
+                                    <i class="fas fa-user-shield text-[10px]"></i>
+                                    Admin
+                                </span>
+                            <?php elseif ($usuario['funcao'] === 'Gerente'): ?>
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#14b8a6] text-white shadow-sm">
                                     <i class="fas fa-shield-halved text-[10px]"></i>
                                     Gerente
@@ -197,9 +193,34 @@ function obterIniciais($nome) {
 
     </main>
 
-    <!-- LOGICA INTERATIVA CLIENT-SIDE (JS) -->
+   <div id="modalConfirmacao" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div id="modalContent" class="bg-white rounded-[2rem] w-full max-w-[390px] shadow-2xl overflow-hidden border border-slate-100 transform scale-95 transition-all duration-300">
+            <div class="p-8 pb-5 flex justify-between items-start">
+                <h3 id="modalTitulo" class="text-[22px] font-bold text-[#0f2440] leading-snug tracking-tight">Tem certeza?</h3>
+                <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-600 transition-colors mt-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="border-b-2 border-[#0b192c] mx-8"></div>
+            
+            <div class="p-8 pt-6 flex gap-4">
+                <button onclick="fecharModal()" class="flex-1 py-3 border-2 border-[#0f2440] text-[#0f2440] font-bold rounded-2xl hover:bg-slate-50 transition-all text-sm">
+                    Não
+                </button>
+                <button id="btnConfirmarAcao" class="flex-1 py-3 bg-[#ff3b30] text-white font-bold rounded-2xl hover:bg-[#e03128] transition-all text-sm shadow-[0_4px_12px_rgba(255,59,48,0.25)]">
+                    Sim
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Função de filtro em tempo real ao digitar na barra de busca
+        let elementoAlvo = null;
+
+        // Barra de Busca
         document.getElementById('inputBusca').addEventListener('input', function() {
             const query = this.value.toLowerCase().trim();
             const rows = document.querySelectorAll('.row-usuario');
@@ -212,40 +233,84 @@ function obterIniciais($nome) {
 
                 if (nome.includes(query) || email.includes(query) || empresa.includes(query)) {
                     row.classList.remove('hidden');
-                    encontrouAlguma = true;
+                    encontrouAlgum = true;
                 } else {
                     row.classList.add('hidden');
                 }
             });
 
-            // Mostra ou esconde mensagem de feedback para tabela sem resultados
             const msgVazia = document.getElementById('buscaVazia');
-            if (encontrouAlguma) {
-                msgVazia.classList.add('hidden');
-            } else {
-                msgVazia.classList.remove('hidden');
-            }
+            if (encontrouAlgum) msgVazia.classList.add('hidden');
+            else msgVazia.classList.remove('hidden');
         });
 
-        // Função para remover usuário dinamicamente da lista
+        // Controles do Pop-up
+        function abrirModal(titulo, botao) {
+            elementoAlvo = botao;
+            document.getElementById('modalTitulo').textContent = titulo;
+            const modal = document.getElementById('modalConfirmacao');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                document.getElementById('modalContent').classList.remove('scale-95');
+                document.getElementById('modalContent').classList.add('scale-100');
+            }, 10);
+        }
+
+        function fecharModal() {
+            const modal = document.getElementById('modalConfirmacao');
+            document.getElementById('modalContent').classList.remove('scale-100');
+            document.getElementById('modalContent').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                elementoAlvo = null;
+            }, 150);
+        }
+
+        document.getElementById('modalConfirmacao').addEventListener('click', function(e) {
+            if (e.target === this) fecharModal();
+        });
+
+        // Clique no Botão da Lixeira
         function excluirUsuario(button) {
             const row = button.closest('.row-usuario');
-            const nomeUsuario = row.querySelector('p').textContent;
-            
-            if (confirm(`Tem certeza que deseja remover o usuário "${nomeUsuario}" do sistema?`)) {
-                row.style.transition = 'all 0.3s ease';
-                row.style.opacity = '0';
-                setTimeout(() => {
-                    row.remove();
-                    
-                    // Valida se a tabela inteira ficou vazia após exclusão
-                    const remainingRows = document.querySelectorAll('.row-usuario');
-                    if (remainingRows.length === 0) {
-                        document.getElementById('buscaVazia').classList.remove('hidden');
-                    }
-                }, 300);
-            }
+            const nomeUsuario = row.querySelector('p').textContent; // Pega o nome do usuário
+            abrirModal(`Tem certeza que deseja remover o usuário "${nomeUsuario}" do sistema?`, button);
         }
+
+        // Confirmação para apagar o Usuário
+        document.getElementById('btnConfirmarAcao').addEventListener('click', function() {
+            if (!elementoAlvo) return;
+            
+            const row = elementoAlvo.closest('.row-usuario');
+            const idUsuario = row.getAttribute('data-id');
+
+            fetch('acoes_admin.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `acao=excluir_usuario&id=${idUsuario}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.sucesso) {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '0';
+                    fecharModal();
+                    setTimeout(() => {
+                        row.remove();
+                        const remainingRows = document.querySelectorAll('.row-usuario');
+                        if (remainingRows.length === 0) {
+                            document.getElementById('buscaVazia').classList.remove('hidden');
+                        }
+                    }, 300);
+                } else {
+                    alert("Erro ao excluir no banco: " + data.erro);
+                    fecharModal();
+                }
+            })
+            .catch(erro => console.error("Erro na requisição:", erro));
+        });
     </script>
 </body>
 </html>

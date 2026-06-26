@@ -9,8 +9,7 @@
 
 body {
     /* Camada escura + sua imagem */
-    background:
-                url('../img/fundo.png') no-repeat center center fixed;
+    background: url('../img/fundo.png') no-repeat center center fixed;
 
     /* Aumente o valor de 110% para 120% ou 130% se quiser "aproximar" ainda mais */
     background-size: 115%; 
@@ -28,6 +27,7 @@ body {
     /* Suaviza o movimento se você redimensionar a tela */
     transition: background-size 0.5s ease;
 }
+
 /* Logo e Título */
 .header-logo {
     text-align: center;
@@ -36,7 +36,7 @@ body {
 
 .header-logo .icon {
     background: #1e3a5f;
-    width: 60px; /* Aumentado levemente para a imagem */
+    width: 60px;
     height: 60px;
     margin: 0 auto 15px;
     display: flex;
@@ -44,12 +44,11 @@ body {
     justify-content: center;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    overflow: hidden; /* Garante que a logo não saia do quadrado */
+    overflow: hidden;
 }
 
-/* Estilo para a imagem da logo dentro do quadrado */
 .header-logo .icon img {
-    width: 80%; /* Ajuste aqui se quiser a logo maior ou menor dentro do azul */
+    width: 80%;
     height: 80%;
     object-fit: contain;
 }
@@ -83,6 +82,53 @@ body {
     font-weight: 700;
 }
 
+/* ---------------------------------------------------
+   MENSAGENS DE ALERTA (POPUPS NO FORMULÁRIO)
+   --------------------------------------------------- */
+
+/* Esconde as caixas caso estejam vazias (evita a barra vermelha sem nada) */
+.error-msg:empty,
+.success-msg:empty,
+.warning-msg:empty {
+    display: none;
+}
+
+/* Erro Padrão (vermelho) */
+.error-msg {
+    background: #fee2e2;
+    color: #ef4444;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #fecaca;
+}
+
+/* Sucesso (verde - para "Logado com sucesso") */
+.success-msg {
+    background: #dcfce7;
+    color: #16a34a;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #bbf7d0;
+}
+
+/* Aviso (laranja - para "Conta desativada ou excluída") */
+.warning-msg {
+    background: #ffedd5;
+    color: #ea580c;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #fed7aa;
+}
+
 /* Grupos de Formulário */
 .form-group {
     margin-bottom: 20px;
@@ -101,9 +147,11 @@ body {
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
-.input-container i {
+.input-container i, 
+.input-container i.left-icon {
     position: absolute;
     left: 15px;
     color: #94a3b8;
@@ -118,17 +166,21 @@ body {
     outline: none;
     font-size: 15px;
     transition: all 0.3s;
+    box-sizing: border-box;
 }
 
+.input-container input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.right-icon,
 .input-container .right-icon {
+    position: absolute;
     right: 15px;
     left: auto;
     top: 50%;
     transform: translateY(-50%);
-}
-
-.right-icon {
-    position: absolute;
     font-size: 18px;
     color: #94a3b8;
     cursor: pointer;
@@ -138,19 +190,6 @@ body {
     opacity: 0.35;
     cursor: default;
     pointer-events: none;
-}
-
-.right-icon {
-    position: absolute;
-    right: 15px;
-    font-size: 18px;
-    color: #94a3b8;
-    cursor: pointer;
-}
-
-.input-container input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 /* Opções (Lembrar e Esqueceu Senha) */
@@ -216,42 +255,4 @@ body {
     font-size: 12px;
     color: #ffffff;
     opacity: 0.8;
-}
-
-.error-msg {
-    background: #fee2e2;
-    color: #ef4444;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    margin-bottom: 20px;
-    text-align: center;
-    border: 1px solid #fecaca;
-}
-
-
-.input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-.input-container input {
-    width: 100%;
-    padding: 12px 15px 12px 40px; 
-    box-sizing: border-box;
-}
-.input-container i.left-icon {
-    position: absolute;
-    left: 15px;
-    color: #666;
-}
-.error-msg {
-    background: #fee2e2;
-    color: #b91c1c;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    font-size: 14px;
-    text-align: center;
 }

@@ -147,44 +147,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome da Empresa <span class="text-red-500">*</span></label>
-                        <input type="text" id="empresa" name="nome_empresa" placeholder="Empresa LTDA" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="text" id="empresa" name="nome_empresa" placeholder="Empresa LTDA" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Nome do Responsável <span class="text-red-500">*</span></label>
-                        <input type="text" id="responsavel" name="nome_completo" placeholder="Joao Silva" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="text" id="responsavel" name="nome_completo" placeholder="Joao Silva" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" >
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">E-mail <span class="text-red-500">*</span></label>
-                        <input type="email" id="email" name="email" placeholder="email@gmail.com" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="email" id="email" name="email" placeholder="email@gmail.com" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" >
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Matricula <span class="text-red-500">*</span></label>
-                        <input type="text" id="matricula" name="matricula" placeholder="M29L0" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="text" id="matricula" name="matricula" placeholder="M29L0" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" >
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CNPJ <span class="text-red-500">*</span></label>
-                        <input type="text" id="cnpj" name="cnpj" maxlength="18" placeholder="00.000.000/0000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="text" id="cnpj" name="cnpj" maxlength="18" placeholder="00.000.000/0000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" >
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">CPF <span class="text-red-500">*</span></label>
-                        <input type="text" id="cpf" name="cpf" maxlength="14" placeholder="000.000.000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="text" id="cpf" name="cpf" maxlength="14" placeholder="000.000.000-00" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" >
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Senha <span class="text-red-500">*</span></label>
-                        <input type="password" id="senha" name="senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="password" id="senha" name="senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" >
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Confirmar Senha <span class="text-red-500">*</span></label>
-                        <input type="password" id="confirmaSenha" name="confirmar_senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <input type="password" id="confirmaSenha" name="confirmar_senha" placeholder="********" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" >
                     </div>
                 </div>
 

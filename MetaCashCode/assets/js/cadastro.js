@@ -103,7 +103,7 @@ form.addEventListener('submit', (e) => {
     clientErr.textContent = '';
 
     if (!emailRegex.test(document.getElementById('email').value)) {
-        clientErr.textContent = 'Por favor, insira um e-mail válido.';
+        clientErr.textContent = 'Preencha todos os campos obrigatórios corretamente!';
         return clientErr.scrollIntoView({behavior: 'smooth'});
     }
     if (!cpfRegex.test(document.getElementById('cpf').value)) {

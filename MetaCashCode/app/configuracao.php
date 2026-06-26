@@ -377,6 +377,27 @@ if ($id_empresa) {
                 
             </form>
 
+              <section class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm mb-8">
+                  <div class="flex items-center gap-3 mb-6">
+                  <div class="w-10 h-10 bg-meta-clara/10 flex items-center justify-center rounded-xl text-meta-clara">
+                  <i class="fa-solid fa-building text-base"></i>
+                  </div>
+                  <h2 class="font-bold text-slate-800 text-lg">SALDO INICIAL</h2>
+                  </div>
+    
+                  <form action="../app/salvarSaldo.php" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                  <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Saldo Total (R$) <span class="text-red-500">*</span></label>
+                  <input type="number" step="0.01" name="saldo_inicial" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 bg-slate-50 outline-none focus:bg-white focus:border-meta-destaque focus:ring-4 focus:ring-meta-destaque/20 transition-all duration-200 mt-2" value="<?= htmlspecialchars($saldo_inicial) ?>" required>
+                  </div>
+                  <div>
+                  <button type="submit" class="bg-meta-destaque text-white px-6 py-3 rounded-xl font-bold hover:bg-teal-600 transition">
+                  Atualizar Saldo
+                 </button>
+                </div>
+             </form>
+            </section>
+
             <section class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm mb-8">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-10 h-10 bg-meta-clara/10 flex items-center justify-center rounded-xl text-meta-clara">

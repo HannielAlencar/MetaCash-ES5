@@ -6,14 +6,23 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../config.php';
 
 $erro = null;
+$aviso = null;
+$sucesso = false;
+$urlRedirecionamento = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $senha = $_POST['senha'] ?? '';
 
+    // Verifica se os campos estão vazios
     if ($email === '' || $senha === '') {
-        $erro = 'Preencha e-mail e senha.';
-    } else {
+        $erro = 'Preencha todos os campos obrigatórios.';
+    } 
+    // NOVA VALIDAÇÃO: Verifica se o formato do e-mail é válido no PHP
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $erro = 'Por favor, insira um e-mail válido.';
+    } 
+    else {
         try {
             // Busca o usuário pelo e-mail
             $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = :email LIMIT 1");
@@ -22,26 +31,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Verifica se o usuário existe e se a senha está correta
             if ($usuario && password_verify($senha, $usuario['senha'])) {
-                // Salva os dados na Sessao para usar em todas as outras telas
-                $_SESSION['usuario_id'] = $usuario['id_usuario']; // CHAVE PADRONIZADA PARA O DASHBOARD LIBERAR O ACESSO
-                $_SESSION['id_usuario'] = $usuario['id_usuario'];
-                $_SESSION['id_empresa'] = $usuario['id_empresa'];
-                $_SESSION['nome'] = $usuario['nome_completo'];
-                $_SESSION['email'] = $usuario['email'];
-                $_SESSION['matricula'] = $usuario['matricula'];
-                $_SESSION['cpf_usuario'] = $usuario['cpf'];
-                $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
-
-                // Redirecionamento condicional baseado no nível de permissão
-                if ($usuario['nivel_permissao'] === 'Gerente' || $usuario['nivel_permissao'] === 'Admin') {
-                    header("Location: ../app/dashboardGerente.php");
+                
+                // VERIFICAÇÃO DE CONTA DESATIVADA: 
+                $statusConta = isset($usuario['status']) ? strtolower((string)$usuario['status']) : '';
+                
+                if ($statusConta === 'inativo' || $statusConta === 'desativado' || $statusConta === '0') {
+                    $aviso = 'Sua conta foi desativada ou excluída pelo administrador do sistema.';
                 } else {
-                    header("Location: ../app/dashboardUsuario.php");
-                }
-                exit();
-            }
+                    // Salva os dados na Sessao
+                    $_SESSION['usuario_id'] = $usuario['id_usuario'];
+                    $_SESSION['id_usuario'] = $usuario['id_usuario'];
+                    $_SESSION['id_empresa'] = $usuario['id_empresa'];
+                    $_SESSION['nome'] = $usuario['nome_completo'];
+                    $_SESSION['email'] = $usuario['email'];
+                    $_SESSION['matricula'] = $usuario['matricula'];
+                    $_SESSION['cpf_usuario'] = $usuario['cpf'];
+                    $_SESSION['nivel_permissao'] = $usuario['nivel_permissao'];
 
-            $erro = 'E-mail ou senha incorretos.';
+                    // Ativa o popup de sucesso e define a rota
+                    $sucesso = true;
+                    if ($usuario['nivel_permissao'] === 'Gerente' || $usuario['nivel_permissao'] === 'Admin') {
+                        $urlRedirecionamento = "../app/dashboardGerente.php";
+                    } else {
+                        $urlRedirecionamento = "../app/dashboardUsuario.php";
+                    }
+                }
+            } else {
+                $erro = 'E-mail ou senha incorretos.';
+            }
         } catch (PDOException $e) {
             $erro = 'Erro no sistema: ' . $e->getMessage();
         }
@@ -63,15 +80,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-    <div id="successPopup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-500">
+    <div id="successPopup" class="<?= $sucesso ? 'fixed opacity-100' : 'hidden opacity-0' ?> inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-500">
         <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-check text-2xl text-green-600"></i>
             </div>
             <h3 class="text-lg font-bold text-slate-800">Login realizado com sucesso</h3>
+            <p class="text-sm text-slate-500 mt-2">Redirecionando...</p>
         </div>
     </div>
 
+    <div id="warningPopup" class="<?= $aviso ? 'fixed opacity-100' : 'hidden opacity-0' ?> inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-500">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-2xl text-orange-600"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Acesso Negado</h3>
+            <p class="text-sm text-slate-600"><?= htmlspecialchars($aviso ?? '', ENT_QUOTES, 'UTF-8') ?></p>
+            <button onclick="document.getElementById('warningPopup').classList.add('hidden'); document.getElementById('warningPopup').classList.remove('fixed');" class="mt-6 px-4 py-2 bg-orange-500 hover:bg-orange-600 transition-colors text-white font-semibold rounded-lg w-full">Entendi</button>
+        </div>
+    </div>
+
+    <div id="errorPopup" class="<?= $erro ? 'fixed opacity-100' : 'hidden opacity-0' ?> inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-500">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-times-circle text-2xl text-red-600"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Atenção</h3>
+            <p id="errorMsgText" class="text-sm text-slate-600"><?= htmlspecialchars($erro ?? '', ENT_QUOTES, 'UTF-8') ?></p>
+            <button onclick="fecharPopupErro()" class="mt-6 px-4 py-2 bg-red-500 hover:bg-red-600 transition-colors text-white font-semibold rounded-lg w-full">Fechar</button>
+        </div>
+    </div>
+    
     <div class="header-logo">
         <div class="icon">
             <img src="../assets/img/logo.png" alt="Logo MetaCash">
@@ -82,14 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="login-card">
         <h2>Entrar</h2>
-
-        <?php if ($erro): ?>
-            <div class="error-msg" id="msgErro">
-                <?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?>
-            </div>
-        <?php endif; ?>
         
-        <form id="loginForm" method="POST" action="login.php">
+        <form id="loginForm" method="POST" action="login.php" novalidate>
             <div class="form-group">
                 <label>E-mail</label>
                 <div class="input-container">
@@ -123,5 +157,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class="copyright">© 2026 MetaCash. Todos os direitos reservados.</p>
 
 <script src="../assets/js/login.js"></script>
+
+<script>
+    // Função para fechar o popup de erro
+    function fecharPopupErro() {
+        const popup = document.getElementById('errorPopup');
+        popup.classList.add('hidden', 'opacity-0');
+        popup.classList.remove('fixed', 'opacity-100');
+    }
+
+    // Intercepta o envio do formulário para validar os campos antes do PHP
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const email = document.getElementById('email').value.trim();
+        const senha = document.getElementById('password').value.trim();
+        
+        // Expressão regular para validar o formato do e-mail
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        let mensagemErro = '';
+
+        if (email === '' || senha === '') {
+            mensagemErro = 'Preencha todos os campos obrigatórios.';
+        } else if (!emailRegex.test(email)) {
+            mensagemErro = 'Por favor, insira um e-mail válido (ex: nome@empresa.com).';
+        }
+
+        // Se houver algum erro, impede o envio e mostra o popup
+        if (mensagemErro !== '') {
+            e.preventDefault(); 
+            document.getElementById('errorMsgText').innerText = mensagemErro;
+            
+            const popup = document.getElementById('errorPopup');
+            popup.classList.remove('hidden', 'opacity-0');
+            popup.classList.add('fixed', 'opacity-100');
+        }
+    });
+
+    <?php if ($sucesso): ?>
+        setTimeout(function() {
+            window.location.href = "<?= $urlRedirecionamento ?>";
+        }, 1500);
+    <?php endif; ?>
+</script>
+
 </body>
 </html>

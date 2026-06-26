@@ -101,7 +101,7 @@ if ($id_empresa && isset($pdo)) {
         $links = [
             ['url' => '../app/dashboardGerente.php', 'icon' => 'fa-th-large', 'label' => 'Dashboard', 'file' => 'dashboardgerente.php'],
             ['url' => '../app/TransacoesGerente.php', 'icon' => 'fa-exchange-alt', 'label' => 'Transações', 'file' => 'transacoesgerente.php'],
-            ['url' => '../app/gerenciaEquipe.php', 'icon' => 'fa-users', 'label' => 'Equipe', 'file' => 'gerenciaequipe.php'],
+            ['url' => '../app/gerenciaEquipe.php', 'icon' => 'fa-users', 'label' => 'Membros', 'file' => 'gerenciaequipe.php'],
             ['url' => '../app/gerenciaPaginas.php', 'icon' => 'fa-file-alt', 'label' => 'Gerenciar Páginas', 'file' => 'gerenciapaginas.php'],
             ['url' => '../app/historico.php', 'icon' => 'fa-history', 'label' => 'Histórico', 'file' => 'historico.php'],
             ['url' => '../app/configuracao.php', 'icon' => 'fa-cog', 'label' => 'Configurações', 'file' => 'configuracao.php'],
